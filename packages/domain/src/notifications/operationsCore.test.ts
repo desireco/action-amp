@@ -72,7 +72,7 @@ describe("buildReminderBody", () => {
 describe("buildReminderPayload", () => {
   it("wraps the body in the SW payload contract ({title, body, url})", () => {
     expect(buildReminderPayload("Today: A")).toBe(
-      JSON.stringify({ title: "ActionAmp", body: "Today: A", url: "/do/today" }),
+      JSON.stringify({ title: "ActionAmp", body: "Today: A", url: "/today" }),
     );
   });
 });

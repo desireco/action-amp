@@ -80,7 +80,7 @@ export function checkoutSuccessUrl(
 ): string {
   return priceKey === "founder"
     ? `${origin}/founding-100/welcome`
-    : `${origin}/do/settings/billing?checkout=success`;
+    : `${origin}/settings/billing?checkout=success`;
 }
 
 export function checkoutCancelUrl(
@@ -89,7 +89,7 @@ export function checkoutCancelUrl(
 ): string {
   return priceKey === "founder"
     ? `${origin}/founding-100`
-    : `${origin}/do/settings/billing?checkout=cancelled`;
+    : `${origin}/settings/billing?checkout=cancelled`;
 }
 
 /**
@@ -156,7 +156,7 @@ export function buildPortalSessionParams(options: {
 }): { customer: string; return_url: string } {
   return {
     customer: options.customerId,
-    return_url: `${options.origin}/do/settings/billing`,
+    return_url: `${options.origin}/settings/billing`,
   };
 }
 

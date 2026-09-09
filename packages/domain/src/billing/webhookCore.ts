@@ -384,7 +384,7 @@ export async function handleCheckoutCompletedCore(
         {
           name: "PAYMENT_CONFIRMED",
           visitorId: `user_${userId}`,
-          route: priceKey === "founder" ? "/founding-100" : "/do/settings/billing",
+          route: priceKey === "founder" ? "/founding-100" : "/settings/billing",
           metadata: { plan: priceKey },
         },
         userId,
@@ -463,7 +463,7 @@ export async function handleInvoicePaidCore(
         {
           name: "PAYMENT_CONFIRMED",
           visitorId: `user_${userId}`,
-          route: "/do/settings/billing",
+          route: "/settings/billing",
           metadata: { plan: priceKey ?? "subscription" },
         },
         userId,

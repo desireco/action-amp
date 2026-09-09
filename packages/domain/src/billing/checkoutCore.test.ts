@@ -97,10 +97,10 @@ describe("buildCheckoutSessionParams — the exact Stripe session shapes", () =>
     );
     expect(checkoutCancelUrl("founder", ORIGIN)).toBe(`${ORIGIN}/founding-100`);
     expect(checkoutSuccessUrl("proYearly", ORIGIN)).toBe(
-      `${ORIGIN}/do/settings/billing?checkout=success`,
+      `${ORIGIN}/settings/billing?checkout=success`,
     );
     expect(checkoutCancelUrl("proPrepaid", ORIGIN)).toBe(
-      `${ORIGIN}/do/settings/billing?checkout=cancelled`,
+      `${ORIGIN}/settings/billing?checkout=cancelled`,
     );
   });
 
@@ -151,7 +151,7 @@ describe("portal + billing status", () => {
   it("portal params return to the Billing tab", () => {
     expect(buildPortalSessionParams({ customerId: "cus_1", origin: ORIGIN })).toEqual({
       customer: "cus_1",
-      return_url: `${ORIGIN}/do/settings/billing`,
+      return_url: `${ORIGIN}/settings/billing`,
     });
   });
 

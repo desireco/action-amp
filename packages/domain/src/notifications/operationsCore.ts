@@ -123,7 +123,7 @@ export interface ReminderPayload {
 
 /** The payload JSON the job sends — SW renders `title`, routes `url`. */
 export function buildReminderPayload(body: string): string {
-  const payload: ReminderPayload = { title: "ActionAmp", body, url: "/do/today" };
+  const payload: ReminderPayload = { title: "ActionAmp", body, url: "/today" };
   return JSON.stringify(payload);
 }
 
