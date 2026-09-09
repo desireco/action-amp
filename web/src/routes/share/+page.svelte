@@ -165,6 +165,16 @@
       const composed = composeShareCapture(pending.fields);
       const text = composeShareText({ ...pending.fields, title });
       if (!text && pending.files.length === 0) throw new Error("Nothing to capture.");
+      // The images ride every destination (webapp parity): base64 parts the
+      // contract's AttachmentInputSchema carries; the core validates count,
+      // mime, and size server-side.
+      const attachments = await Promise.all(
+        pending.files.map(async (file) => ({
+          filename: file.filename,
+          mimeType: file.mimeType,
+          dataBase64: await blobToBase64(file.blob),
+        })),
+      );
       const [destinationType, destinationId] = destination.split(":", 2);
 
       if (destinationType === "list" && destinationId) {
@@ -177,6 +187,7 @@
           text: text || pending.files[0]?.filename || "Shared image",
           content: description.trim() || undefined,
           sourceUrl: composed.url || undefined,
+          attachments: attachments.length ? attachments : undefined,
         });
         await clearPendingShare(pending.id);
         await goto(`/projects/${listProject.permalink}`, { replaceState: true });
@@ -205,6 +216,7 @@
           title: title.trim() || text || pending.files[0]?.filename || "Shared item",
           url: httpUrl,
           notes,
+          attachments: attachments.length ? attachments : undefined,
         });
         await clearPendingShare(pending.id);
         await goto(`/projects/${targetProject.permalink}`, { replaceState: true });
@@ -219,6 +231,7 @@
         title: title.trim() || undefined,
         content: description.trim() || undefined,
         sourceUrl: composed.url || undefined,
+        attachments: attachments.length ? attachments : undefined,
       });
       await clearPendingShare(pending.id);
       // `?item=` is the Inbox page's scroll/highlight contract.

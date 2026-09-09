@@ -181,6 +181,13 @@ export interface ResolverProject {
   lensColor: string | null;
 }
 
+/** A capture-time image as the wire carries it (AttachmentInputSchema). */
+export interface ShareAttachmentInput {
+  filename: string;
+  mimeType: string;
+  dataBase64: string;
+}
+
 interface InboxClientSlice {
   create(input: {
     text: string;
@@ -189,12 +196,19 @@ interface InboxClientSlice {
     sourceUrl?: string;
     projectId?: string;
     timeZone?: string;
+    attachments?: ShareAttachmentInput[];
   }): Promise<{ id: string }>;
   projectsForResolver(): Promise<ResolverProject[]>;
 }
 
 interface ResourcesClientSlice {
-  create(input: { projectId: string; title: string; url?: string; notes?: string }): Promise<{
+  create(input: {
+    projectId: string;
+    title: string;
+    url?: string;
+    notes?: string;
+    attachments?: ShareAttachmentInput[];
+  }): Promise<{
     id: string;
   }>;
 }
@@ -205,6 +219,7 @@ interface TasksClientSlice {
     text: string;
     content?: string;
     sourceUrl?: string;
+    attachments?: ShareAttachmentInput[];
   }): Promise<{ id: string }>;
 }
 
@@ -228,6 +243,7 @@ export function createInboxCapture(input: {
   title?: string;
   content?: string;
   sourceUrl?: string;
+  attachments?: ShareAttachmentInput[];
 }): Promise<{ id: string }> {
   return inboxRpc.create({
     ...input,
@@ -241,6 +257,7 @@ export function createProjectResource(input: {
   title: string;
   url?: string;
   notes?: string;
+  attachments?: ShareAttachmentInput[];
 }): Promise<{ id: string }> {
   return resourcesRpc.create(input);
 }
@@ -251,6 +268,7 @@ export function createSimpleListItem(input: {
   text: string;
   content?: string;
   sourceUrl?: string;
+  attachments?: ShareAttachmentInput[];
 }): Promise<{ id: string }> {
   return tasksRpc.createListItem(input);
 }

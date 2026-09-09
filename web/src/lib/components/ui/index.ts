@@ -11,6 +11,10 @@
  */
 export { default as Button } from "./Button.svelte";
 export { default as BottomSheet } from "./BottomSheet.svelte";
+export { default as AttachmentCover } from "./AttachmentCover.svelte";
+export { default as AttachmentGallery } from "./AttachmentGallery.svelte";
+export { default as AttachmentLightbox } from "./AttachmentLightbox.svelte";
+export { default as AttachmentThumbs } from "./AttachmentThumbs.svelte";
 export { default as Card } from "./Card.svelte";
 export { default as Chip } from "./Chip.svelte";
 export { default as CloseButton } from "./CloseButton.svelte";

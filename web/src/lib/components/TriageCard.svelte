@@ -4,10 +4,12 @@
    * (ported from webapp/src/components/ui/TriageCard.tsx; styles from
    * styles/TriageCard.css). The body is a reading surface (URLs linkified)
    * until clicked / the pencil toggles its editor. Exit direction encodes
-   * the dispatch decision. Captured-image media is S12 — the card renders
-   * without it and nothing here requires attachments.
+   * the dispatch decision. Captured images (S12) render as the
+   * AttachmentGallery between the body and the meta line — the item is
+   * judged by what was actually shared.
    */
   import type { Snippet } from "svelte";
+  import AttachmentGallery from "./ui/AttachmentGallery.svelte";
   import Chip from "./ui/Chip.svelte";
   import Linkify from "./ui/Linkify.svelte";
   import type { TriageChip, TriageExit } from "../triage/flow";
@@ -21,6 +23,7 @@
     bodyLabel = "Title",
     meta,
     chips,
+    attachments = [],
     exit = null,
     dispatched = false,
     entering = false,
@@ -34,6 +37,8 @@
     bodyLabel?: string;
     meta?: string;
     chips?: TriageChip[];
+    /** Captured-image metadata (S12) — the gallery renders above the meta. */
+    attachments?: { id: string; filename: string }[];
     exit?: TriageExit;
     dispatched?: boolean;
     entering?: boolean;
@@ -111,6 +116,11 @@
           </svg>
         </button>
       {/if}
+    </div>
+  {/if}
+  {#if attachments.length > 0}
+    <div class="aa-triage-card__gallery">
+      <AttachmentGallery {attachments} />
     </div>
   {/if}
   {#if meta}

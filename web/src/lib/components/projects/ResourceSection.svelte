@@ -11,10 +11,12 @@
    * shared ConfirmDialog with the exact webapp copy. The `#resource-<id>`
    * hash anchor scrolls + highlights the search-target row.
    *
-   * Attachment thumbs are S12 (share target) — the contract carries none yet.
+   * Captured images (S12 share target) render as inline thumbs under the
+   * row (the image is the indicator — no separate chip).
    */
   import { page } from "$app/stores";
   import { client } from "../../api";
+  import AttachmentThumbs from "../ui/AttachmentThumbs.svelte";
   import BottomSheet from "../ui/BottomSheet.svelte";
   import ConfirmDialog from "../ui/ConfirmDialog.svelte";
   import { projects, messageFromError, type ProjectResourceRef } from "../../stores/projects.svelte";
@@ -130,6 +132,9 @@
             {/if}
             {#if resource.notes}
               <p class="aa-project__resource-notes">{resource.notes}</p>
+            {/if}
+            {#if resource.attachments.length > 0}
+              <AttachmentThumbs attachments={resource.attachments} size="xs" />
             {/if}
           </div>
           <div class="aa-project__resource-actions">

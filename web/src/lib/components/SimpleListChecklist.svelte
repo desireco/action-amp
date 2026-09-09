@@ -3,6 +3,7 @@
   // (webapp simpleLists port): add form, Open / "Checked N" sections,
   // clear-checked confirm, and the n/j/k/space/e/Delete/Esc keyset.
   // Completion stays inside the list — never feeds Today, focus, or Review.
+  import AttachmentThumbs from "./ui/AttachmentThumbs.svelte";
   import ConfirmDialog from "./ui/ConfirmDialog.svelte";
   import { simpleListStore } from "../stores/simpleList.svelte";
 
@@ -198,6 +199,9 @@
                           <a href={safeSourceUrl(item.sourceUrl) ?? "#"} target="_blank" rel="noreferrer">
                             Open source
                           </a>
+                        {/if}
+                        {#if item.attachments.length > 0}
+                          <AttachmentThumbs attachments={item.attachments} size="xs" />
                         {/if}
                       </div>
                     {/if}

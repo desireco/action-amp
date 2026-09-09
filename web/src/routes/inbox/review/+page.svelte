@@ -633,6 +633,7 @@
           autoFocusBody={editingBody}
           bodyLabel={step === "spec" ? "Title" : "Captured text"}
           meta={`captured ${formatAgo(item.createdAt)}`}
+          attachments={item.attachments}
           chips={working.type === "list-item" ? [] : triageChips}
           {exit}
           {dispatched}

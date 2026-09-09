@@ -75,6 +75,8 @@ export interface ProjectResourceRef {
   url: string | null;
   notes: string | null;
   createdAt: string;
+  /** Captured-image metadata (S12 share target); bytes via the attachment route. */
+  attachments: { id: string; filename: string; mimeType: string }[];
 }
 
 export interface ProjectSummary {

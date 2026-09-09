@@ -11,6 +11,7 @@
   import Chip from "../../lib/components/ui/Chip.svelte";
   import Icon from "../../lib/components/ui/Icon.svelte";
   import Linkify from "../../lib/components/ui/Linkify.svelte";
+  import AttachmentCover from "../../lib/components/ui/AttachmentCover.svelte";
   import { capture } from "../../lib/stores/capture.svelte";
   import { inbox, type InboxItem } from "../../lib/stores/inbox.svelte";
   import { formatAgo, formatRelativeDay, formatSnoozedUntil } from "../../lib/format/dates";
@@ -139,7 +140,10 @@
             id="inbox-item-{item.id}"
             class="aa-inbox__item{item.id === targetItemId ? " is-search-target" : ""}"
           >
-            <div class="aa-inbox__row">
+            <div class="aa-inbox__row{item.attachments.length > 0 ? " aa-inbox__row--media" : ""}">
+              {#if item.attachments.length > 0}
+                <AttachmentCover attachments={item.attachments} />
+              {/if}
               <div class="aa-inbox__row-main">
                 <div class="aa-inbox__row-content">
                   <p class="aa-inbox__row-text">

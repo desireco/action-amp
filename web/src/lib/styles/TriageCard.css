@@ -214,3 +214,9 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Captured-image gallery (S12) — sits between the body and the meta line,
+   so the shared image is seen before the decision is made. */
+.aa-triage-card__gallery {
+  margin: 0 0 var(--aa-space-md);
+}
