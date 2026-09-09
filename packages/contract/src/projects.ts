@@ -44,6 +44,8 @@ export const ProjectResourceSchema = z.object({
   url: z.string().nullable(),
   notes: z.string().nullable(),
   createdAt: datetime(),
+  /** Captured-image metadata (S12 share target); bytes via the attachment route. */
+  attachments: z.array(z.object({ id: z.string(), filename: z.string(), mimeType: z.string() })),
 });
 
 /**

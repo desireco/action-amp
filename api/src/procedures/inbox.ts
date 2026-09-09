@@ -145,6 +145,9 @@ const inboxCreate = ORPC.inbox.create.handler(async ({ context, input }) => {
       // The acting-user row carries no timeZone yet (S10 hydration); the
       // client always sends its IANA zone, so the fallback matches webapp.
       timeZone: input.timeZone ?? "UTC",
+      // Captured images (S12 share target / CLI --file) — the core's
+      // prepareImageAttachments validates count, mime, and size.
+      attachments: input.attachments,
     });
   } catch (err) {
     asBadRequest(err);

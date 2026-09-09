@@ -507,6 +507,64 @@ app.post("/api/auth/logout", async (c) => {
 // primary path is the service-worker interception; see src/share.ts).
 app.post("/api/share", createShareRoute({ db, entities }));
 
+import {
+  attachmentHeaders,
+  findOwnedAttachment,
+  isAttachmentId,
+} from "./cli/attachments.js";
+
+// --- S12 attachment bytes (GET /api/attachments/:id) ---------------------------
+// The web app's <img> srcs: captured-image bytes served to their owner.
+// Cookie-authed GET (the resolveActingUser CSRF stance exempts GETs — <img>
+// loads can't set headers by design) with Bearer also accepted. Same
+// owner-gated walk + headers as the CLI twin /api/cli/attachment/:id; the
+// ONLY other reader of the attachment data column. Unknown and foreign ids
+// both 404 (no existence leak).
+app.get("/api/attachments/:id", async (c) => {
+  const resolution = await resolveActingUser(
+    { sessionPort, patPort },
+    {
+      method: c.req.method,
+      authorization: c.req.header("authorization"),
+      cookie: c.req.header("cookie"),
+      requestedWith: c.req.header("x-requested-with"),
+      actionAmpApi: c.req.header("x-actionamp-api"),
+    },
+  );
+  if (resolution.kind === "reject") {
+    return c.json(resolution.body, resolution.status);
+  }
+  if (resolution.kind !== "authenticated") {
+    return c.json({ error: "Not authenticated." }, 401);
+  }
+  const id = c.req.param("id");
+  if (!isAttachmentId(id)) {
+    return c.json({ error: "Not found." }, 404);
+  }
+  try {
+    const record = await findOwnedAttachment(db, {
+      id,
+      userId: resolution.user.id,
+    });
+    if (!record) {
+      return c.json({ error: "Not found." }, 404);
+    }
+    const headers = attachmentHeaders(record);
+    if (!headers) {
+      // Non-image mime → 404 (every write path validates image/*; a stale or
+      // forged row must never be served as executable content).
+      return c.json({ error: "Not found." }, 404);
+    }
+    for (const [name, value] of Object.entries(headers)) {
+      c.header(name, value);
+    }
+    return c.body(new Uint8Array(record.data), 200);
+  } catch (err) {
+    console.error("[attachments/serve] failed:", err);
+    return c.json({ error: "Could not load the image." }, 500);
+  }
+});
+
 // --- production single-service mount (the built web SPA) ---------------------
 // WEB_DIST_DIR is set only in the deployed image: the API then serves the
 // SvelteKit static build on the same origin — /rpc and /api stay same-origin

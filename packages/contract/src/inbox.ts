@@ -18,7 +18,7 @@
 
 import { oc } from "@orpc/contract";
 import { z } from "zod";
-import { PrioritySchema } from "./tasks.js";
+import { AttachmentInputSchema, PrioritySchema } from "./tasks.js";
 // The triage 402 entitlement gate — the same DECLARED error ontology S5/S6
 // attach to their Pro-gated procedures, so the wire status is 402 (not a
 // `defined:false` 500) and clients can catch it by code.
@@ -129,6 +129,9 @@ export const createInboxItem = oc
       /** IANA zone for relative-date resolution; server falls back to the
        *  user's saved zone, then UTC. */
       timeZone: z.string().optional(),
+      /** Captured images (S12 share target + CLI --file) — up to 4,
+       *  ≤5 MB each, validated by the core's prepareImageAttachments. */
+      attachments: z.array(AttachmentInputSchema).optional(),
     }),
   )
   .output(

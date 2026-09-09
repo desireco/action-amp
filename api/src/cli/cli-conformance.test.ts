@@ -817,7 +817,7 @@ d("S18 — projects (§1.6)", () => {
     const res0 = (first.resources as Record<string, unknown>[])[0];
     if (res0) {
       expect(Object.keys(res0).sort()).toEqual(
-        ["createdAt", "id", "notes", "title", "url"].sort(),
+        ["attachments", "createdAt", "id", "notes", "title", "url"].sort(),
       );
     }
   });

@@ -131,6 +131,7 @@ function toProjectSummaryDto(row: ProjectSummaryRow) {
       url: r.url,
       notes: r.notes,
       createdAt: r.createdAt.toISOString(),
+      attachments: r.attachments,
     })),
   };
 }
@@ -174,6 +175,7 @@ function toProjectDetailDto(row: NonNullable<ProjectDetailResult>) {
       url: r.url,
       notes: r.notes,
       createdAt: r.createdAt.toISOString(),
+      attachments: r.attachments,
     })),
     attachments: row.attachments,
   };

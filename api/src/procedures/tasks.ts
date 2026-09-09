@@ -809,6 +809,8 @@ const tasksCreateListItem = ORPC.tasks.createListItem.handler(async ({ context, 
       text: input.text,
       content: input.content,
       sourceUrl: input.sourceUrl,
+      // Captured images (S12 share target) — validated in the core.
+      attachments: input.attachments,
     });
     return toListItemDto(row);
   });

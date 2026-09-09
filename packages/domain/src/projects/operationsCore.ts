@@ -141,6 +141,7 @@ export async function getProjectsData(
           url: true,
           notes: true,
           createdAt: true,
+          attachments: { select: { id: true, filename: true, mimeType: true } },
         },
       },
       // Open count excludes declined tasks — they live in the Logbook, not in

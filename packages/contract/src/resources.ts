@@ -14,14 +14,15 @@
  * — FREE users cannot file into a non-included lens), `NOT_FOUND` (unknown/
  * foreign project or resource), `BAD_REQUEST` (SIMPLE_LIST parent → "A
  * Simple-list Project keeps only checklist items.", empty title, bad url).
- * Image attachments are S12's share-target surface (the contract carries
- * none; webapp's triage/share callers pass them server-side).
+ * Image attachments are S12's share-target surface — `create` accepts up to
+ * 4 (≤5 MB each, AttachmentInputSchema) alongside the share fields.
  */
 
 import { oc } from "@orpc/contract";
 import { z } from "zod";
 
 import { ProGateErrorMap } from "./projects.js";
+import { AttachmentInputSchema } from "./tasks.js";
 
 /** Create a resource in a project → `{ id, title }`. */
 export const createResource = oc
@@ -32,6 +33,8 @@ export const createResource = oc
       title: z.string(),
       url: z.string().optional(),
       notes: z.string().optional(),
+      /** Captured images (S12 share target) — up to 4, ≤5 MB each. */
+      attachments: z.array(AttachmentInputSchema).optional(),
     }),
   )
   .output(z.object({ id: z.string(), title: z.string() }));

@@ -1670,7 +1670,10 @@ function projectListWith(include: ProjectListInclude): ProjectRelationalWith {
       orderBy: taskRelationOrder(include.tasks.orderBy),
       limit: include.tasks.take,
     },
-    resources: { orderBy: [desc(resource.createdAt)] },
+    resources: {
+      orderBy: [desc(resource.createdAt)],
+      with: { resourceAttachments: true },
+    },
   };
 }
 
@@ -1796,6 +1799,7 @@ function assembleProjectListRow(
       url: r.url,
       notes: r.notes,
       createdAt: r.createdAt,
+      attachments: attachmentsOfProjectRow(r.resourceAttachments),
     })),
     // The include's count wheres drive the grouped queries above; the shape
     // (tasks + listItems) is fixed by ProjectListInclude._count.

@@ -97,6 +97,8 @@ const create = ORPC.create.handler(async ({ context, input }) =>
       title: input.title,
       url: input.url,
       notes: input.notes,
+      // Captured images (S12 share target) — validated in the core.
+      attachments: input.attachments,
     });
     return { id: resource.id, title: resource.title };
   }),

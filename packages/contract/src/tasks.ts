@@ -106,6 +106,18 @@ const AttachmentDtoSchema = z.object({
   filename: z.string(),
   mimeType: z.string(),
 });
+/**
+ * A capture-time image attachment (S12 share target): raw bytes as bare
+ * base64 (no data: URL prefix), the shape `prepareImageAttachments`
+ * (domain) validates and every write core accepts. The metadata-only
+ * `AttachmentDtoSchema` is what reads return — bytes leave the server
+ * exclusively through the owner-gated attachment route.
+ */
+export const AttachmentInputSchema = z.object({
+  filename: z.string().min(1),
+  mimeType: z.string().min(1),
+  dataBase64: z.string().min(1),
+});
 const GoalRefSchema = z.object({
   id: z.string(),
   permalink: z.string(),
@@ -451,6 +463,8 @@ export const createListItem = oc
       text: z.string(),
       content: z.string().optional(),
       sourceUrl: z.string().optional(),
+      /** Captured images (S12 share target) — up to 4, ≤5 MB each. */
+      attachments: z.array(AttachmentInputSchema).optional(),
     }),
   )
   .output(ListItemSchema);

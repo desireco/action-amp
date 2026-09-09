@@ -1051,7 +1051,14 @@ export interface ProjectListInclude {
   };
   resources: {
     orderBy: Array<{ createdAt: SortOrder }>;
-    select: { id: true; title: true; url: true; notes: true; createdAt: true };
+    select: {
+      id: true;
+      title: true;
+      url: true;
+      notes: true;
+      createdAt: true;
+      attachments: { select: { id: true; filename: true; mimeType: true } };
+    };
   };
   _count: {
     select: {
@@ -1154,6 +1161,7 @@ export interface ProjectListRow extends Project {
     url: string | null;
     notes: string | null;
     createdAt: Date;
+    attachments: Array<{ id: string; filename: string; mimeType: string }>;
   }>;
   _count: { tasks: number; listItems: number };
 }
