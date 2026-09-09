@@ -51,6 +51,7 @@ import {
   getTaskData,
   getTodayTasksData,
   getDoneTodayData,
+  sweepStaleToSomedayCore,
   getTopTaskData,
   hydrateTopTaskData,
   toggleTaskDoneCore,
@@ -618,6 +619,66 @@ export function createCliRoutes(deps: {
       return c.json({ task });
     } catch (err) {
       return taskWriteErrorResponse(c, err, "move");
+    }
+  });
+
+  // POST /api/cli/task/sweep — body { olderThanDays?, lensId?, apply? }.
+  // New-stack addition (no webapp ancestor): the bulk "push old things to
+  // Someday" demotion. Dry run by default — only `apply: true` writes, so a
+  // bare probe can never mutate. Lens semantics match Today: an explicit
+  // lensId is gated (tenancy 404 → FREE 402); omitted sweeps the whole
+  // accessible-lens set.
+  rest.post("/api/cli/task/sweep", async (c) => {
+    const user = requirePat(c);
+    if (user instanceof Response) return user;
+    const body = await parseBody(c.req.raw);
+    const olderThanRaw: unknown = body.olderThanDays;
+    let olderThanDays = 30;
+    if (olderThanRaw !== undefined && olderThanRaw !== null) {
+      if (
+        typeof olderThanRaw !== "number" ||
+        !Number.isInteger(olderThanRaw) ||
+        olderThanRaw < 1 ||
+        olderThanRaw > 365
+      ) {
+        return c.json(
+          { error: "olderThanDays must be a whole number between 1 and 365." },
+          400,
+        );
+      }
+      olderThanDays = olderThanRaw;
+    }
+    const entUser = toEntUser(user);
+    const lensId = bodyString(body, "lensId");
+    let lensIds: string[];
+    if (lensId) {
+      const gate = await gateLens(entities, entUser, user.id, lensId);
+      const gateRes = lensGateResponse(c, gate);
+      if (gateRes) return gateRes;
+      lensIds = [lensId];
+    } else {
+      const accessible = await resolveAccessibleLenses(
+        entities,
+        entUser,
+        user.id,
+      );
+      lensIds = accessible.map((l) => l.id);
+    }
+    try {
+      const preferences = await entities.User.findUnique({
+        where: { id: user.id },
+      });
+      const result = await sweepStaleToSomedayCore(entities, {
+        userId: user.id,
+        lensIds,
+        olderThanDays,
+        dryRun: body.apply !== true,
+        timeZone: preferences?.timeZone ?? "UTC",
+      });
+      return c.json(result);
+    } catch (err) {
+      console.error("[cli/task/sweep] failed:", err);
+      return c.json({ error: "Could not sweep tasks." }, 500);
     }
   });
 

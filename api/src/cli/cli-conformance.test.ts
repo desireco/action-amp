@@ -17,9 +17,9 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import type { Hono } from "hono";
 import type { DomainDb, Entities } from "@actionamp/domain/db";
-import { createDb, createEntities } from "@actionamp/domain/db";
-import { eq } from "drizzle-orm";
-import { session as sessionTable } from "@actionamp/domain/db";
+import { createDb, createEntities, mintId } from "@actionamp/domain/db";
+import { and, eq } from "drizzle-orm";
+import { session as sessionTable, task as taskTable } from "@actionamp/domain/db";
 import { isLocalDatabaseUrl } from "../db.js";
 import { drizzleSessionIssuePort, issueSessionCore } from "../auth/issue.js";
 import { createCliRoutes } from "./routes.js";
@@ -728,6 +728,132 @@ d("S18 — tasks (§1.4)", () => {
     expect(
       (r.body as { task: { scheduledDate: string | null } }).task.scheduledDate,
     ).toMatch(/^2026-09-15T00:00:00/);
+  });
+
+  it("task/sweep → dry run by default, apply parks stale rows; boundary errors exact", async () => {
+    // A stale Upcoming row: untouched for 40 days, snooze expired long ago.
+    // Seeded straight via drizzle (the fixture seeds don't age rows), reset on
+    // every run so the suite is deterministic.
+    const PERMALINK = "conformance-stale-sweep-row";
+    const found = await db
+      .select({ id: taskTable.id })
+      .from(taskTable)
+      .where(
+        and(
+          eq(taskTable.userId, fx.pro.userId),
+          eq(taskTable.permalink, PERMALINK),
+        ),
+      )
+      .limit(1);
+    const staleId =
+      found[0]?.id ??
+      (
+        await db
+          .insert(taskTable)
+          .values({
+            id: mintId(),
+            permalink: PERMALINK,
+            description: "Conformance: stale sweep row",
+            userId: fx.pro.userId,
+            lensId: fx.pro.lensMeId,
+            projectId: null,
+            goalId: null,
+            status: "UPCOMING",
+            priority: "NORMAL",
+            size: "M",
+            isDone: false,
+            completedAt: null,
+            outcome: null,
+            order: 0,
+            updatedAt: new Date(Date.now() - 40 * 86_400_000),
+          })
+          .returning({ id: taskTable.id })
+      )[0].id;
+    await db
+      .update(taskTable)
+      .set({
+        status: "UPCOMING",
+        isDone: false,
+        scheduledDate: new Date("2026-08-16T00:00:00.000Z"),
+        snoozedUntil: new Date("2026-09-06T14:00:00.000Z"),
+        updatedAt: new Date(Date.now() - 40 * 86_400_000),
+      })
+      .where(eq(taskTable.id, staleId));
+
+    // Boundary: non-numeric olderThanDays → 400 (exact body).
+    let r = await req("/api/cli/task/sweep", {
+      method: "POST",
+      token: fx.pro.token,
+      body: { olderThanDays: "soon" },
+    });
+    expect(r.status).toBe(400);
+    expect(r.body).toEqual({
+      error: "olderThanDays must be a whole number between 1 and 365.",
+    });
+
+    // Lens gate parity: FREE + explicit non-included lens → 402.
+    r = await req("/api/cli/task/sweep", {
+      method: "POST",
+      token: fx.free.token,
+      body: { lensId: fx.free.lensWorkId },
+    });
+    expect(r.status).toBe(402);
+
+    // Dry run (default): the stale row is reported, NOT written.
+    r = await req("/api/cli/task/sweep", {
+      method: "POST",
+      token: fx.pro.token,
+      body: { olderThanDays: 30 },
+    });
+    expect(r.status).toBe(200);
+    expect(Object.keys(r.body as object)).toEqual(["dryRun", "tasks"]);
+    const dry = r.body as { dryRun: boolean; tasks: { id: string }[] };
+    expect(dry.dryRun).toBe(true);
+    expect(dry.tasks.map((t) => t.id)).toContain(staleId);
+    const midRow = await db
+      .select({ status: taskTable.status })
+      .from(taskTable)
+      .where(eq(taskTable.id, staleId));
+    expect(midRow[0].status).toBe("UPCOMING");
+
+    // Apply: parks the row — SOMEDAY, schedule and snooze dropped.
+    r = await req("/api/cli/task/sweep", {
+      method: "POST",
+      token: fx.pro.token,
+      body: { olderThanDays: 30, apply: true },
+    });
+    expect(r.status).toBe(200);
+    const applied = r.body as {
+      dryRun: boolean;
+      tasks: {
+        id: string;
+        status: string;
+        scheduledDate: string | null;
+        snoozedUntil: string | null;
+      }[];
+    };
+    expect(applied.dryRun).toBe(false);
+    const swept = applied.tasks.find((t) => t.id === staleId);
+    expect(swept).toMatchObject({
+      status: "SOMEDAY",
+      scheduledDate: null,
+      snoozedUntil: null,
+    });
+    const endRow = await db
+      .select({ status: taskTable.status })
+      .from(taskTable)
+      .where(eq(taskTable.id, staleId));
+    expect(endRow[0].status).toBe("SOMEDAY");
+
+    // Re-sweep: the parked row no longer matches (status filter proof).
+    r = await req("/api/cli/task/sweep", {
+      method: "POST",
+      token: fx.pro.token,
+      body: { apply: true },
+    });
+    expect(r.status).toBe(200);
+    const again = r.body as { tasks: { id: string }[] };
+    expect(again.tasks.map((t) => t.id)).not.toContain(staleId);
   });
 });
 
