@@ -173,7 +173,7 @@ describe("safeAuthReturnTo / buildMagicLoginUrl — returnTo.ts port", () => {
 
   it("buildMagicLoginUrl: /login?magic=<token>&returnTo=<safe>", () => {
     const url = buildMagicLoginUrl("http://localhost:4000", "tok", "/");
-    expect(url).toBe("http://localhost:4000/login?magic=tok&returnTo=%2Fdo");
+    expect(url).toBe("http://localhost:4000/login?magic=tok&returnTo=%2F");
   });
 });
 

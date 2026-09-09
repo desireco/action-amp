@@ -406,6 +406,14 @@ export async function seedCliFixtures(db: DomainDb): Promise<CliFixtures> {
     outcome: "Verified.",
     order: 1,
   });
+  // ensureTask only INSERTs — a row left by an earlier seed run keeps its
+  // original completedAt, which goes stale the next day and drops the task
+  // out of today/done (§1.5 filters completedAt ≥ local midnight). Refresh
+  // the stamp so the fixture means "done today" on every run.
+  await db
+    .update(taskTable)
+    .set({ isDone: true, completedAt: new Date(), outcome: "Verified." })
+    .where(eq(taskTable.id, doneTaskId));
   const wontDoTaskId = await ensureTask(db, proUserId, lensMeId, "Conformance: declined task", {
     status: "WONT_DO",
     updatedAt: new Date(),

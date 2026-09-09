@@ -343,6 +343,20 @@ describe("getTaskAlternativesData", () => {
 
     const call = m.entities.Task.findMany.mock.calls[0][0];
     const expected = activePoolWhere({ userId: "user-1", lensId: "lens-1" });
+    // activePoolWhere stamps `now` internally — the call under test and this
+    // expectation each take their own clock reading, so the two
+    // snoozedUntil.lte instants can sit a millisecond apart (a strict
+    // toMatchObject flakes ~1 run in 5 on the ms boundary). Compare that
+    // one leaf by proximity, everything else exactly.
+    const snoozeAt = (where: unknown) =>
+      (
+        (where as { AND: { OR: { snoozedUntil?: { lte?: Date } }[] }[] }).AND[1]
+          .OR[1].snoozedUntil as { lte: Date }
+      ).lte;
+    expect(
+      Math.abs(snoozeAt(call.where).getTime() - snoozeAt(expected).getTime()),
+    ).toBeLessThanOrEqual(2000);
+    snoozeAt(expected).setTime(snoozeAt(call.where).getTime());
     expect(call.where).toMatchObject(expected);
     expect(call.include).toEqual({
       project: { select: { id: true, name: true } },
