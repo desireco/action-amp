@@ -162,7 +162,7 @@ const inboxCreate = ORPC.inbox.create.handler(async ({ context, input }) => {
 });
 
 /**
- * The queue snapshot — UNPROCESSED items, newest first. Both the /do/inbox
+ * The queue snapshot — UNPROCESSED items, newest first. Both the /inbox
  * list and the review wizard's fixed walkthrough queue read this.
  */
 const inboxList = ORPC.inbox.list.handler(async ({ context }) => {

@@ -163,16 +163,16 @@ describe("constants + helpers — webapp magicLogin.ts parity", () => {
 
 describe("safeAuthReturnTo / buildMagicLoginUrl — returnTo.ts port", () => {
   it("accepts same-origin relative paths only", () => {
-    expect(safeAuthReturnTo("/do/inbox?a=1#frag")).toBe("/do/inbox?a=1#frag");
-    expect(safeAuthReturnTo(undefined)).toBe("/do");
-    expect(safeAuthReturnTo("https://evil.co/do")).toBe("/do");
-    expect(safeAuthReturnTo("//evil.co/do")).toBe("/do");
-    expect(safeAuthReturnTo("/\\evil.co")).toBe("/do");
-    expect(safeAuthReturnTo("javascript:alert(1)")).toBe("/do");
+    expect(safeAuthReturnTo("/inbox?a=1#frag")).toBe("/inbox?a=1#frag");
+    expect(safeAuthReturnTo(undefined)).toBe("/");
+    expect(safeAuthReturnTo("https://evil.co/do")).toBe("/");
+    expect(safeAuthReturnTo("//evil.co/do")).toBe("/");
+    expect(safeAuthReturnTo("/\\evil.co")).toBe("/");
+    expect(safeAuthReturnTo("javascript:alert(1)")).toBe("/");
   });
 
   it("buildMagicLoginUrl: /login?magic=<token>&returnTo=<safe>", () => {
-    const url = buildMagicLoginUrl("http://localhost:4000", "tok", "/do");
+    const url = buildMagicLoginUrl("http://localhost:4000", "tok", "/");
     expect(url).toBe("http://localhost:4000/login?magic=tok&returnTo=%2Fdo");
   });
 });
@@ -195,7 +195,7 @@ describe("requestMagicLoginCore", () => {
     const { port, spies } = mockRequestPort(null);
     const result = await requestMagicLoginCore(
       port,
-      { email: "  User@Test.dev ", returnTo: "/do/inbox" },
+      { email: "  User@Test.dev ", returnTo: "/inbox" },
       ENV,
     );
     expect(result).toEqual({ sent: true });

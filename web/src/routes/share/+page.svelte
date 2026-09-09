@@ -179,7 +179,7 @@
           sourceUrl: composed.url || undefined,
         });
         await clearPendingShare(pending.id);
-        await goto(`/do/projects/${listProject.permalink}`, { replaceState: true });
+        await goto(`/projects/${listProject.permalink}`, { replaceState: true });
         return;
       }
 
@@ -207,7 +207,7 @@
           notes,
         });
         await clearPendingShare(pending.id);
-        await goto(`/do/projects/${targetProject.permalink}`, { replaceState: true });
+        await goto(`/projects/${targetProject.permalink}`, { replaceState: true });
         return;
       }
 
@@ -222,7 +222,7 @@
       });
       await clearPendingShare(pending.id);
       // `?item=` is the Inbox page's scroll/highlight contract.
-      await goto(`/do/inbox?item=${encodeURIComponent(created.id)}`, { replaceState: true });
+      await goto(`/inbox?item=${encodeURIComponent(created.id)}`, { replaceState: true });
     } catch (err) {
       submitError = err instanceof Error ? err.message : "Could not add this to your inbox.";
     } finally {
@@ -232,7 +232,7 @@
 
   async function discardPending(): Promise<void> {
     if (pending) await clearPendingShare(pending.id);
-    await goto("/do", { replaceState: true });
+    await goto("/", { replaceState: true });
   }
 
   function sourceLabel(url: string): string {
@@ -254,7 +254,7 @@
     <main class="aa-share">
       <div class="aa-share__card">
         <h1 class="aa-share__title">{ERROR_COPY.get("empty") ?? MISSING_ERROR_COPY}</h1>
-        <a class="aa-share__link" href="/do">Back to ActionAmp</a>
+        <a class="aa-share__link" href="/">Back to ActionAmp</a>
       </div>
     </main>
   {:else}
@@ -367,7 +367,7 @@
   <main class="aa-share">
     <div class="aa-share__card">
       <h1 class="aa-share__title">{ERROR_COPY.get(errorParam) ?? MISSING_ERROR_COPY}</h1>
-      <a class="aa-share__link" href="/do">Back to ActionAmp</a>
+      <a class="aa-share__link" href="/">Back to ActionAmp</a>
     </div>
   </main>
 {/if}

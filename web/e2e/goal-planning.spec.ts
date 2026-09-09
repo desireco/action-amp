@@ -17,7 +17,7 @@ import { apiPost, loginAs, DEV_EMAIL, activeLensId } from "./helpers";
  *   /operations/create-goal path).
  * - The two projects are created via /rpc/projects/create (triage's project
  *   branch is S2/S3's surface).
- * - Steps 6–7 (Logbook row + Reopen) are ported as test.fixme: /do/logbook is
+ * - Steps 6–7 (Logbook row + Reopen) are ported as test.fixme: /logbook is
  *   S8's surface. Reopen calls the same /rpc/goals/set-done endpoint the
  *   Complete step exercises.
  */
@@ -44,7 +44,7 @@ test("goal → link projects → complete → focus advances", async ({ page }) 
   await loginAs(page, DEV_EMAIL);
 
   // ---- 1. Create a goal from the Goals page ----
-  await page.goto("/do/goals");
+  await page.goto("/goals");
   await page.getByRole("button", { name: /^new goal$/i }).click();
   const goalName = `Run a 10k ${suffix}`;
   await page.getByPlaceholder(/grow audience/i).fill(goalName);
@@ -64,11 +64,11 @@ test("goal → link projects → complete → focus advances", async ({ page }) 
   await createProject(page, `Bridge to 10k ${suffix}`);
 
   for (const projectName of [`Couch to 5k ${suffix}`, `Bridge to 10k ${suffix}`]) {
-    await page.goto("/do/projects");
+    await page.goto("/projects");
     // Click the card and WAIT for the detail route (the list card's title is
     // also a heading — a bare toBeVisible could match the list page itself).
     await page.getByRole("link", { name: projectName }).click();
-    await expect(page).toHaveURL(new RegExp(`/do/projects/.+`), { timeout: 10_000 });
+    await expect(page).toHaveURL(new RegExp(`/projects/.+`), { timeout: 10_000 });
     await expect(page.getByRole("heading", { name: projectName })).toBeVisible({
       timeout: 10_000,
     });
@@ -79,7 +79,7 @@ test("goal → link projects → complete → focus advances", async ({ page }) 
   }
 
   // ---- 3. Open the goal; "Focus:" surfaces the first non-done project ----
-  await page.goto("/do/goals");
+  await page.goto("/goals");
   await page.getByRole("link", { name: goalName }).click();
   await expect(page.getByRole("heading", { name: goalName })).toBeVisible({ timeout: 10_000 });
   // Both linked projects surface in the goal's project list.
@@ -97,9 +97,9 @@ test("goal → link projects → complete → focus advances", async ({ page }) 
   expect(focusedName).toBeTruthy();
 
   // ---- 4. Complete the focused project; "Focus:" advances to the other ----
-  await page.goto("/do/projects");
+  await page.goto("/projects");
   await page.getByRole("link", { name: focusedName ?? "" }).click();
-  await expect(page).toHaveURL(new RegExp(`/do/projects/.+`), { timeout: 10_000 });
+  await expect(page).toHaveURL(new RegExp(`/projects/.+`), { timeout: 10_000 });
   await expect(page.getByRole("heading", { name: focusedName ?? "" })).toBeVisible({
     timeout: 10_000,
   });
@@ -109,7 +109,7 @@ test("goal → link projects → complete → focus advances", async ({ page }) 
   await page.getByRole("button", { name: /^complete project$/i }).click();
 
   // Back to the goal — "Focus:" now names the remaining project.
-  await page.goto("/do/goals");
+  await page.goto("/goals");
   await page.getByRole("link", { name: goalName }).click();
   const otherName = focusedName?.startsWith("Couch")
     ? `Bridge to 10k ${suffix}`
@@ -118,13 +118,13 @@ test("goal → link projects → complete → focus advances", async ({ page }) 
 
   // ---- 5. Complete the goal; it leaves the active list ----
   await page.getByRole("button", { name: /^complete$/i }).click();
-  await expect(page).toHaveURL(/\/do\/goals/, { timeout: 10_000 });
+  await expect(page).toHaveURL(/\/goals/, { timeout: 10_000 });
   await expect(page.getByRole("link", { name: goalName })).toHaveCount(0, { timeout: 10_000 });
 });
 
-// Ported from webapp steps 6–7 — the completed goal surfaces in /do/logbook
+// Ported from webapp steps 6–7 — the completed goal surfaces in /logbook
 // (S8) as a row with the teal Goal chip; Reopen drives /rpc/goals/setDone
-// {isDone:false} and the goal returns to /do/goals. Self-contained: creates +
+// {isDone:false} and the goal returns to /goals. Self-contained: creates +
 // completes its own goal over the RPC wire.
 test("completed goals appear in the Logbook and reopen from there", async ({ page }) => {
   await loginAs(page);
@@ -139,13 +139,13 @@ test("completed goals appear in the Logbook and reopen from there", async ({ pag
   expect(created.id).toBeTruthy();
   await apiPost(page, "/rpc/goals/setDone", { id: created.id, isDone: true });
 
-  await page.goto("/do/logbook");
+  await page.goto("/logbook");
   const row = page.locator(".aa-logbook-row", { hasText: name }).first();
   await expect(row).toBeVisible({ timeout: 10_000 });
   await expect(row.locator(".aa-logbook-row__meta").getByText("Goal")).toBeVisible();
   await row.getByRole("button", { name: "Reopen" }).click();
   await expect(row).toHaveCount(0, { timeout: 10_000 });
   // The goal is active again.
-  await page.goto("/do/goals");
+  await page.goto("/goals");
   await expect(page.getByRole("link", { name })).toBeVisible({ timeout: 10_000 });
 });

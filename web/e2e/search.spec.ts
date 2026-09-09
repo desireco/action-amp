@@ -19,7 +19,7 @@ import { apiPost, loginAs, DEV_EMAIL } from "./helpers";
  *   S2/S3's surface and its endpoint path reaches the same Today state.
  * - the response wait targets `/rpc/search/site` (was
  *   `/operations/search-site`);
- * - webapp's `/do` home is this stack's `/` (routes/do/+page.svelte has not
+ * - webapp's `/` home is this stack's `/` (routes/+page.svelte has not
  *   composed yet — S1 hosts WhatNow at the root), and an OPEN task renders
  *   its title in the "Task title" input on the task page (the readonly h1 is
  *   for done tasks), so the destination assertion reads the input's value.
@@ -59,7 +59,7 @@ test("active-paid command search reaches a Task permalink", async ({ page }) => 
   expect((await searchResponse).ok()).toBeTruthy();
   await dialog.getByRole("option", { name: new RegExp(title, "i") }).click();
 
-  await expect(page).toHaveURL(/\/do\/tasks\//);
+  await expect(page).toHaveURL(/\/tasks\//);
   await expect(page.getByLabel("Task title")).toHaveValue(title);
 });
 
@@ -70,7 +70,7 @@ test("active-paid slash search reaches the exact Inbox item", async ({ page }) =
     text: title,
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   });
-  await page.goto("/do/inbox");
+  await page.goto("/inbox");
   await expect(page.getByText(title, { exact: true })).toBeVisible();
 
   await page.locator("body").click();
@@ -85,7 +85,7 @@ test("active-paid slash search reaches the exact Inbox item", async ({ page }) =
   expect((await searchResponse).ok()).toBeTruthy();
   await dialog.getByRole("option", { name: new RegExp(title, "i") }).click();
 
-  await expect(page).toHaveURL(/\/do\/inbox\?item=/);
+  await expect(page).toHaveURL(/\/inbox\?item=/);
   await expect(
     page.locator(".aa-inbox__item.is-search-target", { hasText: title }),
   ).toBeVisible();
@@ -138,7 +138,7 @@ test("resources section creates, edits anchor, and removes a resource", async ({
     { name: `Resource host ${Date.now()}` },
   );
 
-  await page.goto(`/do/projects/${project.permalink}`);
+  await page.goto(`/projects/${project.permalink}`);
   await expect(
     page.getByRole("heading", { name: "Resources" }),
   ).toBeVisible({ timeout: 10_000 });
@@ -163,12 +163,12 @@ test("resources section creates, edits anchor, and removes a resource", async ({
     page.locator(".aa-project__resource", { hasText: "Spec handbook v2" }),
   ).toBeVisible({ timeout: 10_000 });
 
-  // The search anchor: /do/projects/<permalink>#resource-<id> highlights the
+  // The search anchor: /projects/<permalink>#resource-<id> highlights the
   // row (the resource result's href lands here from the palette).
   const rowId = await page
     .locator(".aa-project__resource", { hasText: "Spec handbook v2" })
     .getAttribute("id");
-  await page.goto(`/do/projects/${project.permalink}#resource-${rowId?.replace(/^resource-/, "")}`);
+  await page.goto(`/projects/${project.permalink}#resource-${rowId?.replace(/^resource-/, "")}`);
   await expect(page.locator(".aa-project__resource.is-search-target")).toHaveCount(1);
 
   // Remove through the confirm.

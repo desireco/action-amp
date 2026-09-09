@@ -33,7 +33,7 @@
   let saving = $state(false);
   let toDelete = $state<ProjectResourceRef | null>(null);
 
-  // The search anchor: /do/projects/<permalink>#resource-<id> — highlighted
+  // The search anchor: /projects/<permalink>#resource-<id> — highlighted
   // only once the row exists (the search lands after a fresh create).
   const targetResourceId = $derived(
     $page.url.hash.startsWith("#resource-") ? decodeURIComponent($page.url.hash.slice("#resource-".length)) : null,

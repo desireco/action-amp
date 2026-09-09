@@ -105,7 +105,7 @@ describe("runDailyReminderPass — per-user gates", () => {
     expect(JSON.parse(world.sends[0]!.payload)).toEqual({
       title: "ActionAmp",
       body: "Today: Write tests",
-      url: "/do/today",
+      url: "/today",
     });
   });
 

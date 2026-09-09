@@ -114,7 +114,7 @@
     />
     <a
       class="aa-row-editor__edit"
-      href="/do/tasks/{task.permalink ?? task.id}"
+      href="/tasks/{task.permalink ?? task.id}"
       aria-label="Edit {task.description}"
       onclick={(e) => e.stopPropagation()}
     >

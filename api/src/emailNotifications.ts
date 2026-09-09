@@ -150,7 +150,7 @@ export function buildWelcomeEmail(
 ): BuiltEmail {
   // The webapp's name fallback chain (preferredName → firstName → "there").
   const firstName = user.preferredName?.trim() || user.firstName?.trim() || "there";
-  const url = `${baseUrl}/do`;
+  const url = `${baseUrl}/`;
   return {
     to: user.email,
     subject: "Your first task is waiting",

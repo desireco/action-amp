@@ -145,7 +145,7 @@ export async function devAutologin(email: string): Promise<void> {
 
 // --- returnTo.ts (client mirror) ------------------------------------------------
 
-export const DEFAULT_AUTH_RETURN_TO = "/do";
+export const DEFAULT_AUTH_RETURN_TO = "/";
 
 const RETURN_TO_BASE = "https://actionamp.local";
 

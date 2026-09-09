@@ -126,7 +126,7 @@ export function displayNameFromEmail(email: string): EmailDisplayName {
 
 // --- returnTo.ts port ---------------------------------------------------------
 
-export const DEFAULT_AUTH_RETURN_TO = "/do";
+export const DEFAULT_AUTH_RETURN_TO = "/";
 
 const RETURN_TO_BASE = "https://actionamp.local";
 

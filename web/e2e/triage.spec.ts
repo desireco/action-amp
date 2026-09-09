@@ -12,7 +12,7 @@ import { DEV_EMAIL, apiPost, loginAs } from "./helpers";
  *  - The wizard has no Archive row (removed upstream in 001ae76); the archive
  *    behavior is exercised at the wire (the decision remains fully
  *    server-supported) and its on-screen Logbook assertions land with S8.
- *  - Project/checklist landing pages (/do/projects, /do/upcoming) belong to
+ *  - Project/checklist landing pages (/projects, /upcoming) belong to
  *    S4/S5; where a landing surface does not exist yet the spec asserts the
  *    dispatch response kind + the created record through the wire. The
  *    Upcoming landing asserts on-screen (S4 is live).
@@ -81,9 +81,9 @@ async function openCapture(page: Page) {
   return dialog.getByRole("textbox", { name: "Capture" });
 }
 
-/** Walk to /do/inbox/review and wait for the item's text on the card. */
+/** Walk to /inbox/review and wait for the item's text on the card. */
 async function openReview(page: Page, text: string): Promise<void> {
-  await page.goto("/do/inbox/review");
+  await page.goto("/inbox/review");
   // .first(): a resolved project destination renders the capture text twice
   // (card body + "Destination: <name> · <lens>" banner).
   await expect(page.getByText(text).first()).toBeVisible({ timeout: 10_000 });
@@ -124,7 +124,7 @@ test("a #project capture token preselects the project link (type stays Task)", a
   // would be ambiguous across lenses).
   await loginAs(page, DEV_EMAIL);
   await drainInbox(page);
-  await page.goto("/do/inbox");
+  await page.goto("/inbox");
 
   // Unique per run — the shared dev user accumulates filed tasks.
   const brief = `Draft the brief ${Date.now().toString(36)}`;
@@ -162,7 +162,7 @@ test("a #project capture token preselects the project link (type stays Task)", a
 test("becoming a Project uses the item text as the name", async ({ page }) => {
   await loginAs(page, DEV_EMAIL);
   await drainInbox(page);
-  await page.goto("/do/inbox");
+  await page.goto("/inbox");
 
   // Unique per run AND free of substrings that could free-text-match an
   // accumulated project (a match routes the capture into a destination
@@ -189,14 +189,14 @@ test("becoming a Project uses the item text as the name", async ({ page }) => {
   expect(projects.map((p) => p.name)).toContain(text);
 
   // The queue drained — the inbox is clear.
-  await page.goto("/do/inbox");
+  await page.goto("/inbox");
   await expect(page.getByText(/inbox clear/i)).toBeVisible();
 });
 
 test("becoming a Resource requires a parent before Ready", async ({ page }) => {
   await loginAs(page, DEV_EMAIL);
   await drainInbox(page);
-  await page.goto("/do/inbox");
+  await page.goto("/inbox");
 
   const text = "Competitor pricing PDF";
   await capture(page, text);
@@ -237,7 +237,7 @@ test("Archive keeps the note — it leaves the inbox and Restore returns it", as
   // calls.
   await loginAs(page, DEV_EMAIL);
   await drainInbox(page);
-  await page.goto("/do/inbox");
+  await page.goto("/inbox");
 
   const text = "Decline this for now";
   await capture(page, text);

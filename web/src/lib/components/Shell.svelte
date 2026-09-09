@@ -81,9 +81,9 @@
   // (the friendly surface; the server guard is the boundary). Defaults to
   // entitled until the Account read lands (the prefs-store convention).
   const entitled = $derived(prefs.account?.entitled ?? true);
-  const inSettings = $derived(path.startsWith("/do/settings"));
-  const inFocus = $derived(path.startsWith("/do/focus"));
-  const isWeekPlanning = $derived(path === "/do/week");
+  const inSettings = $derived(path.startsWith("/settings"));
+  const inFocus = $derived(path.startsWith("/focus"));
+  const isWeekPlanning = $derived(path === "/week");
 
   // Nav counts, re-scoped to the active lens (the store re-reads appData on
   // every switch). The contract's appData carries today/upcoming/someday only
@@ -130,22 +130,18 @@
 
   const selectLens = (id: string) => void lenses.switch(id, prefs.account);
 
-  // "/" is this stack's host for the Do screen (the webapp's /do), so the Do
-  // item reads active on both.
-  const isActive = (to: string) =>
-    to === "/do"
-      ? path === "/do" || path === "/"
-      : path.startsWith(to);
+  // "/" hosts the Do screen; every other nav item owns its path prefix.
+  const isActive = (to: string) => (to === "/" ? path === "/" : path.startsWith(to));
 
   // Section-level active state for the mobile dock (Plan/Review dock items
   // each represent a whole section, not one route).
   const inPlan = $derived(
     ["upcoming", "projects", "goals", "someday"].some((p) =>
-      path.startsWith(`/do/${p}`),
+      path.startsWith(`/${p}`),
     ),
   );
   const inReview = $derived(
-    path.startsWith("/do/review") || path.startsWith("/do/logbook"),
+    path.startsWith("/review") || path.startsWith("/logbook"),
   );
 
   // ---- Keyboard: the useKeyboardShortcuts parity set ---------------------
@@ -154,15 +150,15 @@
   //
   // One grammar: Shift + the first letter of the destination (webapp
   // useKeyboardShortcuts SHIFT_NAV). R deviates deliberately: the webapp's
-  // /do/review hub has no route in this stack yet, so R lands on Logbook —
+  // /review hub has no route in this stack yet, so R lands on Logbook —
   // the review surface that exists.
   const SHIFT_NAV: Record<string, string> = {
-    I: "/do/inbox",
-    N: "/do",
-    T: "/do/today",
-    G: "/do/inbox/review", // triaGe
-    P: "/do/projects",
-    R: "/do/logbook",
+    I: "/inbox",
+    N: "/",
+    T: "/today",
+    G: "/inbox/review", // triaGe
+    P: "/projects",
+    R: "/logbook",
   };
 
   function closeOverlays() {
@@ -224,7 +220,7 @@
       if (target?.closest("button, a, [role='button'], [role='link']")) return;
       e.preventDefault();
       setTimeout(() => {
-        if (!e.defaultPrevented) void goto("/do");
+        if (!e.defaultPrevented) void goto("/");
       });
       return;
     }
@@ -430,7 +426,7 @@
 <div class="aa-app" class:is-in-settings={inSettings} class:is-in-focus={inFocus}>
   <!-- ============================ SIDEBAR ============================ -->
   <aside class="aa-app-side">
-    <a class="aa-app-brand" href="/do" title="Next">
+    <a class="aa-app-brand" href="/" title="Next">
       <span class="aa-app-mark" aria-hidden="true">{@render brandMark()}</span>
       <span class="aa-app-brand-name">ActionAmp</span>
     </a>
@@ -464,7 +460,7 @@
       <!-- Mobile-only avatar → Settings (desktop hides it; the sidebar footer
           is display:none at ≤768px — AppShell.css). -->
       <a
-        href="/do/settings"
+        href="/settings"
         class="aa-app-mobile-avatar"
         class:active={inSettings}
         title="Settings"
@@ -476,15 +472,15 @@
 
     <!-- ---- Primary nav — always-visible destinations ---- -->
     <nav class="aa-app-nav">
-      {@render navItem({ icon: inboxIcon, label: "Inbox", active: isActive("/do/inbox"), to: "/do/inbox" })}
+      {@render navItem({ icon: inboxIcon, label: "Inbox", active: isActive("/inbox"), to: "/inbox" })}
       {@render navItem({
         icon: clockIcon,
         label: isWeekPlanning ? "Week" : "Today",
-        active: isWeekPlanning || isActive("/do/today"),
-        to: isWeekPlanning ? "/do/week" : "/do/today",
+        active: isWeekPlanning || isActive("/today"),
+        to: isWeekPlanning ? "/week" : "/today",
         count: counts.today,
       })}
-      {@render navItem({ icon: starIcon, label: "Do", active: isActive("/do"), to: "/do" })}
+      {@render navItem({ icon: starIcon, label: "Do", active: isActive("/"), to: "/" })}
     </nav>
 
     <!-- ---- Group nav — always-open Plan + Review labeled groups ----
@@ -495,17 +491,17 @@
       <div class="aa-focus-group">
         <div class="aa-focus-label" aria-hidden="true">Plan</div>
         <div class="aa-focus-items">
-          {@render navItem({ icon: calendarIcon, label: "Upcoming", active: isActive("/do/upcoming"), to: "/do/upcoming", count: counts.upcoming })}
-          {@render navItem({ icon: projectsIcon, label: "Projects", active: isActive("/do/projects"), to: "/do/projects" })}
-          {@render navItem({ icon: goalsIcon, label: "Goals", active: isActive("/do/goals"), to: "/do/goals" })}
-          {@render navItem({ icon: somedayIcon, label: "Someday", active: isActive("/do/someday"), to: "/do/someday", count: counts.someday })}
+          {@render navItem({ icon: calendarIcon, label: "Upcoming", active: isActive("/upcoming"), to: "/upcoming", count: counts.upcoming })}
+          {@render navItem({ icon: projectsIcon, label: "Projects", active: isActive("/projects"), to: "/projects" })}
+          {@render navItem({ icon: goalsIcon, label: "Goals", active: isActive("/goals"), to: "/goals" })}
+          {@render navItem({ icon: somedayIcon, label: "Someday", active: isActive("/someday"), to: "/someday", count: counts.someday })}
         </div>
       </div>
 
       <div class="aa-focus-group">
         <div class="aa-focus-label" aria-hidden="true">Review</div>
         <div class="aa-focus-items">
-          {@render navItem({ icon: logbookIcon, label: "Logbook", active: isActive("/do/logbook"), to: "/do/logbook" })}
+          {@render navItem({ icon: logbookIcon, label: "Logbook", active: isActive("/logbook"), to: "/logbook" })}
         </div>
       </div>
 
@@ -513,11 +509,11 @@
         <div class="aa-focus-group aa-admin-nav-group">
           <div class="aa-focus-label" aria-hidden="true">Admin</div>
           <div class="aa-focus-items">
-            {@render navItem({ icon: overviewIcon, label: "Overview", active: isActive("/do/admin/overview"), to: "/do/admin/overview" })}
-            {@render navItem({ icon: clockIcon, label: "Activity", active: isActive("/do/admin/activity"), to: "/do/admin/activity" })}
-            {@render navItem({ icon: userIcon, label: "Users", active: isActive("/do/admin/users"), to: "/do/admin/users" })}
-            {@render navItem({ icon: funnelIcon, label: "Funnel", active: isActive("/do/admin/funnel"), to: "/do/admin/funnel" })}
-            {@render navItem({ icon: loudspeakerIcon, label: "Feedback", active: isActive("/do/admin/feedback"), to: "/do/admin/feedback" })}
+            {@render navItem({ icon: overviewIcon, label: "Overview", active: isActive("/admin/overview"), to: "/admin/overview" })}
+            {@render navItem({ icon: clockIcon, label: "Activity", active: isActive("/admin/activity"), to: "/admin/activity" })}
+            {@render navItem({ icon: userIcon, label: "Users", active: isActive("/admin/users"), to: "/admin/users" })}
+            {@render navItem({ icon: funnelIcon, label: "Funnel", active: isActive("/admin/funnel"), to: "/admin/funnel" })}
+            {@render navItem({ icon: loudspeakerIcon, label: "Feedback", active: isActive("/admin/feedback"), to: "/admin/feedback" })}
           </div>
         </div>
       {/if}
@@ -534,11 +530,11 @@
           active={lenses.activeLensId ?? ""}
           onSelect={selectLens}
           onClose={() => {}}
-          onNewLens={entitled ? () => void goto("/do/settings/lenses") : undefined}
+          onNewLens={entitled ? () => void goto("/settings/lenses") : undefined}
           newLensProLocked={!entitled}
         />
       </div>
-      <a href="/do/settings" class="aa-app-user-btn" class:active={inSettings} title="Settings">
+      <a href="/settings" class="aa-app-user-btn" class:active={inSettings} title="Settings">
         <span class="aa-app-user-avatar" aria-hidden="true">
           {#if initials}{initials}{:else}{@render userIcon()}{/if}
         </span>
@@ -595,19 +591,19 @@
       </div>
     {/if}
     <div class="aa-mobile-dock__row">
-      <a class="aa-mobile-dock__item" class:active={isActive("/do/inbox")} href="/do/inbox" aria-label="Inbox">
+      <a class="aa-mobile-dock__item" class:active={isActive("/inbox")} href="/inbox" aria-label="Inbox">
         {@render inboxIcon()}
         <span>Inbox</span>
       </a>
-      <a class="aa-mobile-dock__item" class:active={isActive("/do")} href="/do" aria-label="Do">
+      <a class="aa-mobile-dock__item" class:active={isActive("/")} href="/" aria-label="Do">
         {@render starIcon()}
         <span>Do</span>
       </a>
-      <a class="aa-mobile-dock__item" class:active={inPlan} href="/do/projects" aria-label="Plan">
+      <a class="aa-mobile-dock__item" class:active={inPlan} href="/projects" aria-label="Plan">
         {@render projectsIcon()}
         <span>Plan</span>
       </a>
-      <a class="aa-mobile-dock__item" class:active={inReview} href="/do/logbook" aria-label="Review">
+      <a class="aa-mobile-dock__item" class:active={inReview} href="/logbook" aria-label="Review">
         {@render logbookIcon()}
         <span>Review</span>
       </a>

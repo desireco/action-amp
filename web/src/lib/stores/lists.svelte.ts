@@ -3,8 +3,8 @@
  * lens-scoped Upcoming + Someday), F9a class-singleton pattern.
  *
  * Lens scoping rides the shell's active lens (lenses.activeLensId, first lens
- * as fallback): the LensSwitcher's switch re-points the id and the /do/upcoming
- * + /do/someday screens re-run their loads off it.
+ * as fallback): the LensSwitcher's switch re-points the id and the /upcoming
+ * + /someday screens re-run their loads off it.
  */
 import { client } from "../api";
 import type { TaskLensListRowDto, TaskListRowDto, AppData, TaskStatus } from "../dto";

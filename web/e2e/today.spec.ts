@@ -23,7 +23,7 @@ test.describe("Today", () => {
     page,
   }) => {
     await loginAs(page, EMAIL);
-    await page.goto("/do/today");
+    await page.goto("/today");
 
     // The hero counts the total, so over-capacity reads "7 of 5 committed".
     await expect(page.getByRole("heading", { name: /of 5 committed/ })).toBeVisible();
@@ -38,7 +38,7 @@ test.describe("Today", () => {
 
     // Demote: expand the row drawer, open the When chip, pick Upcoming.
     // (The capped rows host the row editor; overflow rows carry only "Do".)
-    await page.goto("/do/today");
+    await page.goto("/today");
     const row = page.locator(".aa-task-row", { hasText: "Focus task 1" }).first();
     await expect(row).toBeVisible();
     await row.click();
@@ -49,7 +49,7 @@ test.describe("Today", () => {
     await expect(page.getByText("Focus task 1")).toHaveCount(0);
 
     // …on the bench…
-    await page.goto("/do/upcoming");
+    await page.goto("/upcoming");
     await expect(page.getByText("Focus task 1")).toBeVisible();
 
     // …promote back via the same When chip.
@@ -59,7 +59,7 @@ test.describe("Today", () => {
     await page.getByRole("button", { name: /^Today/ }).click();
 
     // Back on Today.
-    await page.goto("/do/today");
+    await page.goto("/today");
     await expect(page.getByText("Focus task 1")).toBeVisible();
   });
 });

@@ -7,7 +7,7 @@
  * slice keeps the store typechecking either way.
  *
  * Every op is admin-gated SERVER-side (`isAdmin` → 403 "Admin only."); the
- * browser layout gate (routes/do/admin/+layout.svelte) is presentation —
+ * browser layout gate (routes/admin/+layout.svelte) is presentation —
  * the same boundary as the webapp.
  */
 import { client } from "../api";

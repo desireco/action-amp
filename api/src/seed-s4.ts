@@ -5,14 +5,14 @@
  * helper) with a "Me" lens and exactly the rows the S1/S4 specs assert
  * against:
  *
- *   s4-next@test.local   "Bench task" (Upcoming, undated — the /do
+ *   s4-next@test.local   "Bench task" (Upcoming, undated — the home
  *                        empty-pool probe) + "Deep work task" (Someday —
  *                        the spec promotes it to Today, then starts and
  *                        completes it through focus).
  *   s4-today@test.local  "Focus task 1..6" (Today — the cap test's six
  *                        commits) + "Swap me around" (Today — the When-chip
  *                        demote/promote round-trip).
- *   s4-lists@test.local  SIMPLE_LIST projects "Packing" (/do/projects/
+ *   s4-lists@test.local  SIMPLE_LIST projects "Packing" (/projects/
  *                        packing) and "Groceries" (empty checklist).
  *
  * `lastTodayRolloverAt` is stamped to now for every seeded user so the lazy

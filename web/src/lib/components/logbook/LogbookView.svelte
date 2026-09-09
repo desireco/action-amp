@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * LogbookView — the /do/logbook surface (webapp LogbookPage parity): the
+   * LogbookView — the /logbook surface (webapp LogbookPage parity): the
    * record of things no longer active, grouped by day. Five kinds share the
    * timeline — completed tasks (with markdown outcome), wont-do tasks,
    * completed projects (with their goal chip), completed goals, archived

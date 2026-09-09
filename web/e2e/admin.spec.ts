@@ -16,7 +16,7 @@ const ADMIN_EMAIL = "admin@local.test";
 
 test("admin Users route preserves filter and sort URL state", async ({ page }) => {
   await loginAs(page, ADMIN_EMAIL);
-  await page.goto("/do/admin/users?sort=last_login_desc&access=friend");
+  await page.goto("/admin/users?sort=last_login_desc&access=friend");
   await expect(page.getByRole("heading", { name: "Users" })).toBeVisible();
   await expect(page.getByLabel("Sort")).toHaveValue("last_login_desc");
   await expect(page.getByLabel("Access")).toHaveValue("friend");
@@ -24,13 +24,13 @@ test("admin Users route preserves filter and sort URL state", async ({ page }) =
 
 test("non-admin cannot use the Users directory", async ({ page }) => {
   await loginAs(page);
-  await page.goto("/do/admin/users");
+  await page.goto("/admin/users");
   await expect(page.getByText(/admin access required|don't have access/i)).toBeVisible();
 });
 
 test("admin can select visible users and cancel one bulk-delete confirmation", async ({ page }) => {
   await loginAs(page, ADMIN_EMAIL);
-  await page.goto("/do/admin/users");
+  await page.goto("/admin/users");
   await expect(page.getByRole("heading", { name: "Users" })).toBeVisible();
   await page.getByRole("button", { name: "Select visible users" }).click();
   await expect(page.getByText(/selected on this page/)).toBeVisible();
@@ -42,7 +42,7 @@ test("admin can select visible users and cancel one bulk-delete confirmation", a
 
 test("admin overview renders live stats tiles", async ({ page }) => {
   await loginAs(page, ADMIN_EMAIL);
-  await page.goto("/do/admin/overview");
+  await page.goto("/admin/overview");
   await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
   // The stats query answers with real numbers (never NaN) — the tiles flip
   // from the "—" placeholder to a formatted count.
@@ -57,7 +57,7 @@ test("admin overview renders live stats tiles", async ({ page }) => {
 
 test("admin can change a feedback status without leaving the feedback page", async ({ page }) => {
   await loginAs(page, ADMIN_EMAIL);
-  await page.goto("/do/admin/feedback?status=all");
+  await page.goto("/admin/feedback?status=all");
   await expect(page.getByRole("heading", { name: "Feedback" })).toBeVisible();
 
   const row = page
@@ -84,14 +84,14 @@ test("admin can change a feedback status without leaving the feedback page", asy
   ).toBe(true);
   await page.getByRole("option", { name: nextStatus }).click();
 
-  await expect(page).toHaveURL(/\/do\/admin\/feedback/);
+  await expect(page).toHaveURL(/\/admin\/feedback/);
   await expect(page.getByRole("heading", { name: "Feedback" })).toBeVisible();
   await expect(row.getByRole("button", { name: nextStatus })).toBeVisible();
 });
 
 test("admin feedback remains usable when a status update fails", async ({ page }) => {
   await loginAs(page, ADMIN_EMAIL);
-  await page.goto("/do/admin/feedback?status=all");
+  await page.goto("/admin/feedback?status=all");
   await expect(page.getByRole("heading", { name: "Feedback" })).toBeVisible();
 
   const row = page
@@ -124,7 +124,7 @@ test("admin can grant and revoke a manual access grant (roundtrip)", async ({ pa
   await loginAs(page, ADMIN_EMAIL);
   // Unfiltered view: a grant changes the row's access, which would drop it
   // from a filtered view (the refetch applies the same filter).
-  await page.goto("/do/admin/users");
+  await page.goto("/admin/users");
   await expect(page.getByRole("heading", { name: "Users" })).toBeVisible();
 
   // A deletable (non-admin) row: grant Friend → confirm → the row's access

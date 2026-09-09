@@ -71,7 +71,7 @@ test.describe("Billing tab — plan display (the seeded fixtures)", () => {
     page,
   }) => {
     await loginAs(page, PRO_EMAIL);
-    await page.goto("/do/settings/billing");
+    await page.goto("/settings/billing");
 
     await expect(page.getByRole("heading", { name: "Current plan" })).toBeVisible();
     await expect(page.getByText("Pro", { exact: true })).toBeVisible();
@@ -98,7 +98,7 @@ test.describe("Billing tab — plan display (the seeded fixtures)", () => {
     page,
   }) => {
     await loginAs(page, FOUNDER_EMAIL);
-    await page.goto("/do/settings/billing");
+    await page.goto("/settings/billing");
 
     await expect(page.getByText("Founding Member")).toBeVisible();
     await expect(page.getByText("Lifetime access")).toBeVisible();
@@ -113,7 +113,7 @@ test.describe("Billing tab — plan display (the seeded fixtures)", () => {
     page,
   }) => {
     await loginAs(page, FREE_EMAIL);
-    await page.goto("/do/settings/billing");
+    await page.goto("/settings/billing");
 
     await expect(page.getByText("Free plan")).toBeVisible();
     await expect(page.getByText("No payment method")).toBeVisible();
@@ -146,7 +146,7 @@ test.describe("Billing tab — plan display (the seeded fixtures)", () => {
     page,
   }) => {
     await loginAs(page, MANUAL_EMAIL);
-    await page.goto("/do/settings/billing");
+    await page.goto("/settings/billing");
 
     // plan=FREE + manualAccessGrant=PRO → the status view (isPaidPlan(plan))
     // says FREE — manual grants add ACCESS without inventing billing facts.
@@ -186,7 +186,7 @@ test.describe("Billing tab — checkout/portal button wiring", () => {
       route.fulfill({ status: 200, contentType: "text/html", body: "test checkout" }),
     );
 
-    await page.goto("/do/settings/billing");
+    await page.goto("/settings/billing");
     await page.getByRole("button", { name: /Choose yearly Pro/i }).click();
     await page.waitForURL("https://checkout.stripe.com/c/pay/test_wiring");
     await expect(page.getByText("test checkout")).toBeVisible();
@@ -210,7 +210,7 @@ test.describe("Billing tab — checkout/portal button wiring", () => {
       route.fulfill({ status: 200, contentType: "text/html", body: "test portal" }),
     );
 
-    await page.goto("/do/settings/billing");
+    await page.goto("/settings/billing");
     await page.getByRole("button", { name: "Update payment in Stripe" }).click();
     await page.waitForURL("https://billing.stripe.com/p/session/test_wiring");
     await expect(page.getByText("test portal")).toBeVisible();
@@ -238,14 +238,14 @@ test.describe("ProGate — the S9 deferred trigger + upgrade links (S16 complete
 
     const seePlans = gate.getByRole("link", { name: "See plans" });
     await expect(seePlans).toBeVisible();
-    await expect(seePlans).toHaveAttribute("href", "/do/settings/billing");
+    await expect(seePlans).toHaveAttribute("href", "/settings/billing");
     const founding = gate.getByRole("link", { name: "Founding 100 · $99 lifetime" });
     await expect(founding).toBeVisible();
     await expect(founding).toHaveAttribute("href", "/founding-100");
 
     // The upgrade path completes: See plans → the Billing tab's plans.
     await seePlans.click();
-    await expect(page).toHaveURL(/\/do\/settings\/billing$/);
+    await expect(page).toHaveURL(/\/settings\/billing$/);
     await expect(page.getByRole("heading", { name: "Upgrade to Pro" })).toBeVisible();
   });
 });

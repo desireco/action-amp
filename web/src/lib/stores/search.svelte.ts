@@ -11,8 +11,8 @@
  * temporarily there.
  *
  * Blocking parity (webapp AppShell's isPaletteBlocked inputs, re-derived from
- * this stack's own state): focus mode and triage are routes (`/do/focus`,
- * `/do/inbox/review`), capture is the capture store's open flag, the
+ * this stack's own state): focus mode and triage are routes (`/focus`,
+ * `/inbox/review`), capture is the capture store's open flag, the
  * cheatsheet is the shell store's keysHint. ⌘K capture is intentionally NOT
  * blocked in focus mode — the focus-protector lives in the capture store.
  */
@@ -68,8 +68,8 @@ class SearchStore {
   get blocked(): boolean {
     const path = get(page).url.pathname;
     return isPaletteBlocked({
-      working: path.startsWith("/do/focus"),
-      triage: path.startsWith("/do/inbox/review"),
+      working: path.startsWith("/focus"),
+      triage: path.startsWith("/inbox/review"),
       capture: capture.open,
       shortcuts: shell.keysHint,
       confirmation: false, // logout confirm — no shell surface yet

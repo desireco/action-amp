@@ -73,7 +73,7 @@ test.describe("What Now home", () => {
     await expect(page.getByText("Deep work task")).toBeVisible();
 
     await page.getByRole("button", { name: /^start$/i }).click();
-    await expect(page).toHaveURL(/\/do\/focus$/);
+    await expect(page).toHaveURL(/\/focus$/);
     await expect(page.getByLabel(/focus:/i)).toBeVisible();
   });
 
@@ -90,13 +90,13 @@ test.describe("What Now home", () => {
 
     // The task is Now — Start just navigates.
     await page.getByRole("button", { name: /^start$/i }).click();
-    await expect(page).toHaveURL(/\/do\/focus$/);
+    await expect(page).toHaveURL(/\/focus$/);
 
     // Wrap up → composer → Mark complete (current labels per the redesign).
     await page.getByRole("button", { name: /wrap up/i }).click();
     await page.getByRole("button", { name: /mark complete/i }).click();
 
-    await expect(page).toHaveURL(/\/do$/);
+    await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?$/);
     await expect(page.getByText("Deep work task")).toHaveCount(0);
   });
 });

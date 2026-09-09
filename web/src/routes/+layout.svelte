@@ -4,7 +4,7 @@
   // Global overlays + the app shell. ⌘K capture, / search and ⌘\ command
   // palette work on every page; the shell (lib/components/Shell.svelte — the
   // AppShell.tsx port) frames the app home "/" (this stack's What Now screen)
-  // and every /do route. Flow pages — /welcome, /login, /signup,
+  // and every app section. Flow pages — /welcome, /login, /signup,
   // /founding-100, /share, /cli — stay outside it (the webapp framed only the
   // authed app). The shell owns the lens switch + the data loads it needs.
   import type { Snippet } from "svelte";
@@ -25,10 +25,11 @@
   import { registerServiceWorker } from "../lib/push";
   let { children }: { children: Snippet } = $props();
 
-  // The app shell's territory: "/" + the whole /do subtree.
-  const inApp = $derived(
-    page.url.pathname === "/" || page.url.pathname.startsWith("/do"),
-  );
+  // The app shell's territory: "/" + every app section (/today, /inbox,
+  // /settings, … — they sit at the root now, no prefix). Flow pages
+  // render outside it (the webapp framed only the authed app).
+  const FLOW_PAGES = ["/login", "/signup", "/welcome", "/founding-100", "/share", "/cli"];
+  const inApp = $derived(!FLOW_PAGES.some((p) => page.url.pathname.startsWith(p)));
 
   let swRegistered = false;
   $effect(() => {

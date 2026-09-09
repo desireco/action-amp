@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { DEV_EMAIL, apiPost, loginAs, activeLensId } from "./helpers";
 
 /**
- * Logbook — /do/logbook (S8 port of webapp/e2e/logbook.spec.ts).
+ * Logbook — /logbook (S8 port of webapp/e2e/logbook.spec.ts).
  *
  * Guards the wont-do lifecycle end-to-end: declining a task from its detail
  * page must surface it in the Logbook (getLogbook once queried Task on a
@@ -17,8 +17,8 @@ import { DEV_EMAIL, apiPost, loginAs, activeLensId } from "./helpers";
  * - the Logbook load is awaited on /rpc/logbook/data (the webapp waited on
  *   /operations/get-logbook) — the same "getLogbook answered, not a 500"
  *   regression;
- * - declining navigates to /do (the new detail page's returnTo) instead of
- *   back to /do/upcoming — the "gone from the bench" check navigates there.
+ * - declining navigates home "/" (the new detail page's returnTo) instead of
+ *   back to /upcoming — the "gone from the bench" check navigates there.
  */
 
 interface InboxItemDto {
@@ -50,27 +50,27 @@ test("declining a task surfaces it in the Logbook; Restore returns it to Upcomin
 
   // Open the task from the Upcoming bench and decline it (row → Edit → × →
   // confirm).
-  await page.goto("/do/upcoming");
+  await page.goto("/upcoming");
   const row = page.locator(".aa-task-row", { hasText: title });
   await row.first().waitFor({ state: "visible", timeout: 10_000 });
   await row.click();
   await row.getByRole("link", { name: `Edit ${title}` }).click();
-  await expect(page).toHaveURL(/\/do\/tasks\//, { timeout: 10_000 });
+  await expect(page).toHaveURL(/\/tasks\//, { timeout: 10_000 });
 
   await page.getByRole("button", { name: "Mark as won't do" }).click();
   await page.getByRole("button", { name: "Mark won't do" }).click();
 
   // Declining drops the task from the active surface — the detail page
-  // returns to /do, and the bench no longer lists it.
-  await expect(page).toHaveURL(/\/do\/?$/, { timeout: 10_000 });
-  await page.goto("/do/upcoming");
+  // returns home ("/"), and the bench no longer lists it.
+  await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?$/, { timeout: 10_000 });
+  await page.goto("/upcoming");
   await expect(page.getByText(title)).toHaveCount(0, { timeout: 10_000 });
 
   // The Logbook loads (getLogbook answered, not a 500) and lists the decline.
   const logbookRes = page.waitForResponse((r) =>
     r.url().includes("/rpc/logbook/data"),
   );
-  await page.goto("/do/logbook");
+  await page.goto("/logbook");
   expect((await logbookRes).ok()).toBeTruthy();
   const declined = page.locator(".aa-logbook-row", { hasText: title });
   await expect(declined).toBeVisible({ timeout: 10_000 });
@@ -82,6 +82,6 @@ test("declining a task surfaces it in the Logbook; Restore returns it to Upcomin
     0,
     { timeout: 10_000 },
   );
-  await page.goto("/do/upcoming");
+  await page.goto("/upcoming");
   await expect(page.getByText(title).first()).toBeVisible({ timeout: 10_000 });
 });

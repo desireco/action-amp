@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * ProjectsView — the /do/projects surface (webapp ProjectsPage parity).
+   * ProjectsView — the /projects surface (webapp ProjectsPage parity).
    * Active cards + collapsible completed/archived sections + create composer
    * with two kinds (project / simple list) + the ProGate panel on a 402.
    * Styles: ../styles/projects.css (shared planning-surface classes).
@@ -56,7 +56,7 @@
     const done = isList ? p.checkedItems : p.doneCount;
     const pct = total === 0 ? 0 : Math.round((done / total) * 100);
     return {
-      href: `/do/projects/${p.permalink}`,
+      href: `/projects/${p.permalink}`,
       title: p.name,
       description: p.description,
       progress: pct,

@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { apiPost, loginAs, DEV_EMAIL, activeLensId } from "./helpers";
 
 /**
- * Project detail page — /do/projects/:permalink (S5 port of
+ * Project detail page — /projects/:permalink (S5 port of
  * webapp/e2e/project-detail.spec.ts).
  *
  * Adaptations for the new stack (behavior identical, setup re-authed):
@@ -15,8 +15,8 @@ import { apiPost, loginAs, DEV_EMAIL, activeLensId } from "./helpers";
  *   assertions must not match a previous run's cards.
  *
  * Case 3 of the webapp spec (decline from the task page) runs against S4's
- * /do/tasks/[permalink] page; the only adaptation is navigation — the task
- * page's returnTo is /do (not the project), so the spec returns manually.
+ * /tasks/[permalink] page; the only adaptation is navigation — the task
+ * page's returnTo is "/" (not the project), so the spec returns manually.
  */
 
 function uniqueName(base: string): string {
@@ -41,7 +41,7 @@ test("opening a project shows its tasks; add + horizon move work", async ({ page
   await createProject(page, projectName);
 
   // Open the project from the Projects list.
-  await page.goto("/do/projects");
+  await page.goto("/projects");
   await page.getByText(projectName).click();
 
   // We're on the detail page: the project name shows as the title.
@@ -73,7 +73,7 @@ test("lifecycle actions sit behind ⋯; Edit and Add task stay visible (desktop)
 
   const projectName = uniqueName("Overflow menu project");
   await createProject(page, projectName);
-  await page.goto("/do/projects");
+  await page.goto("/projects");
   await page.getByText(projectName).click();
   await expect(page.getByRole("heading", { name: projectName })).toBeVisible({ timeout: 10_000 });
 
@@ -90,16 +90,16 @@ test("lifecycle actions sit behind ⋯; Edit and Add task stay visible (desktop)
   await expect(page.getByText(/archive this project/i)).toBeVisible({ timeout: 10_000 });
 });
 
-// Case 3 of the webapp spec — the decline flow through S4's /do/tasks page
+// Case 3 of the webapp spec — the decline flow through S4's /tasks page
 // ("Mark as won't do" + its confirm live there; the task page's returnTo is
-// hard-coded to /do for now, so the spec navigates back to the project itself).
+// hard-coded to "/" for now, so the spec navigates back to the project itself).
 test("declining a project task from its page removes it from the project", async ({ page }) => {
   await loginAs(page, DEV_EMAIL);
 
   const projectName = uniqueName("Decline flow project");
   const created = await createProject(page, projectName);
 
-  await page.goto("/do/projects");
+  await page.goto("/projects");
   await page.getByRole("link", { name: projectName }).click();
   await expect(page.getByRole("heading", { name: projectName })).toBeVisible({ timeout: 10_000 });
 
@@ -113,16 +113,16 @@ test("declining a project task from its page removes it from the project", async
   // too).
   await page.getByText("The episode we cancelled").click();
   await page.getByRole("button", { name: /edit on task page/i }).click();
-  await expect(page).toHaveURL(/\/do\/tasks\//, { timeout: 10_000 });
+  await expect(page).toHaveURL(/\/tasks\//, { timeout: 10_000 });
 
   // Decline: × button → confirm. One-way from here (restore in the Logbook).
   await page.getByRole("button", { name: /mark as won't do/i }).click();
   await page.getByRole("button", { name: /^mark won't do$/i }).click();
 
-  // The task page's returnTo is /do — come back to the project and assert the
+  // The task page's returnTo is "/" — come back to the project and assert the
   // declined task left its surface (WONT_DO is excluded from this page, not
   // re-filed into a horizon group).
-  await page.goto(`/do/projects/${created.permalink}`);
+  await page.goto(`/projects/${created.permalink}`);
   await expect(page.getByRole("heading", { name: projectName })).toBeVisible({ timeout: 10_000 });
   await expect(page.getByText("The episode we cancelled")).toHaveCount(0);
   // And the project reads as empty again.

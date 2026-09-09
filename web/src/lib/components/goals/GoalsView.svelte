@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * GoalsView — the /do/goals surface (webapp GoalsPage parity): lens-scoped
+   * GoalsView — the /goals surface (webapp GoalsPage parity): lens-scoped
    * ACTIVE goals with rollup progress + the muted "Focus: <name>" line
    * (hidden when there is no next project — "never lies"), plus the create
    * composer and the ProGate panel on a 402.
@@ -135,7 +135,7 @@
     <div class="aa-grid aa-goals__grid">
       {#each goals.goals as g (g.id)}
         <ProgressCard
-          href="/do/goals/{g.permalink}"
+          href="/goals/{g.permalink}"
           title={g.name}
           description={g.description}
           progress={g.progress}

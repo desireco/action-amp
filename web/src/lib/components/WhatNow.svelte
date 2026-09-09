@@ -1,7 +1,7 @@
 <script lang="ts">
   // WhatNow — the home screen (the NextPage port). One task card, not a
   // list. Now/Next state machine: Start → focus; Pause / Defer / Done exit
-  // Now. `pickedToken` (/do/today/:permalink or ?task=) puts a chosen
+  // Now. `pickedToken` (/today/:permalink or ?task=) puts a chosen
   // alternative on the stage; alternatives render only while deciding.
   //
   // Composition (webapp NextPage.tsx + NextPage.css): a centered ritual —
@@ -59,17 +59,17 @@
     if (!task) return;
     await whatNow.snooze(task.id, preset);
     await whatNow.load(pickedToken);
-    if (pickedToken) void goto("/do/today", { replaceState: true });
+    if (pickedToken) void goto("/today", { replaceState: true });
   }
 
   async function handleStart() {
     if (!task) return;
     if (isNow) {
-      void goto("/do/focus");
+      void goto("/focus");
       return;
     }
     await whatNow.start(task.id);
-    void goto("/do/focus");
+    void goto("/focus");
   }
 
   async function handlePause() {
@@ -112,7 +112,7 @@
       <h1 class="aa-wn-empty">…</h1>
     </div>
   {:else if task}
-    <a href="/do/today" class="aa-wn-today-link">See Today →</a>
+    <a href="/today" class="aa-wn-today-link">See Today →</a>
 
     <WhatNowCard
       task={cardFor(task as WhatNowTask)}
@@ -141,7 +141,7 @@
             size: sizeLabel(t.size),
             suggested: t.id === whatNow.topTask?.id,
           }))}
-        onChoose={(t) => goto(`/do/today/${encodeURIComponent(t.permalink)}`)}
+        onChoose={(t) => goto(`/today/${encodeURIComponent(t.permalink)}`)}
       />
     {/if}
 
@@ -154,7 +154,7 @@
     {/if}
   {:else}
     <div class="aa-wn">
-      <a href="/do/today" class="aa-wn-today-link">See Today →</a>
+      <a href="/today" class="aa-wn-today-link">See Today →</a>
 
       <div class="aa-wn-eyebrow">What now</div>
       <h1 class="aa-wn-empty">

@@ -116,7 +116,7 @@
     outcomeDraft = "";
     void (async () => {
       await whatNow.complete(task.id, note);
-      goto("/do");
+      goto("/");
     })().catch(() => {
       completedLocally = false;
       completingTask = false;
@@ -185,7 +185,7 @@
 
   async function exitFocus() {
     await whatNow.pause(task.id);
-    goto("/do");
+    goto("/");
   }
 
   // Window-scoped keyboard. Esc — layered: snooze sheet → composer → cancel
@@ -513,7 +513,7 @@
       taskTitle={task.description}
       onSnooze={async (preset) => {
         await whatNow.snooze(task.id, preset);
-        goto("/do");
+        goto("/");
       }}
       onClose={() => (snoozeOpen = false)}
     />

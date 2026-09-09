@@ -3,7 +3,7 @@
   (packages/contract/src/s13-onboarding/README.md §1).
 
   An authed user with `hasSeenOnboarding === false` on the app home ("/" —
-  this stack's What Now screen; "/do*" once the /do move composes) is
+  this stack's What Now screen) is
   redirected to /welcome exactly once per account. Scoped to the app home
   ONLY — never yanks an un-onboarded user off /founding-100, /welcome, or any
   future public path. Skips while the status read is still resolving, and
@@ -23,18 +23,12 @@
   import { goto } from "$app/navigation";
   import { onboarding } from "../stores/onboarding.svelte";
 
-  // The app home: "/" today (this stack's What Now screen; the webapp's /do),
-  // plus exact "/do" for when that move composes. Deliberately NOT the whole
-  // /do subtree — the webapp ran the bootstrap from AppShell on every /do*
-  // route, but firing on deep links (e.g. /do/settings) seeds the General
+  // The app home: "/" (this stack's What Now screen). Deliberately NOT every
+  // app route — the webapp ran the bootstrap from AppShell on every authed
+  // route, but firing on deep links (e.g. /settings) seeds the General
   // projects under fixtures that predate onboarding; a fresh session always
   // passes the home, which is where the bootstrap belongs (wiring doc §3).
-  const isAppHome = $derived(
-    // "/do" doesn't exist as a route yet: pathname is typed as the union of
-    // real routes, so the cast is what keeps the future branch compilable
-    // (the webapp's home path, ready for the /do move).
-    $page.url.pathname === "/" || $page.url.pathname === ("/do" as string),
-  );
+  const isAppHome = $derived($page.url.pathname === "/");
 
   $effect(() => {
     // Kick the status read as soon as the shell mounts (any route).

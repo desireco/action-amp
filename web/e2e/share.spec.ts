@@ -83,7 +83,7 @@ test.describe("share target (S12)", () => {
       };
     };
     expect(manifest.name).toBe("ActionAmp");
-    expect(manifest.start_url).toBe("/do");
+    expect(manifest.start_url).toBe("/");
     expect(manifest.display).toBe("standalone");
     expect(manifest.share_target.action).toBe("/share");
     expect(manifest.share_target.method).toBe("POST");
@@ -268,7 +268,7 @@ test.describe("share target (S12)", () => {
 
     // Confirm → the normal authenticated capture op → the inbox, highlighted.
     await page.locator(".aa-share__button").click();
-    await expect(page).toHaveURL(/\/do\/inbox\?item=/, { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/inbox\?item=/, { timeout: 15_000 });
     const itemId = decodeURIComponent(
       new URL(page.url()).searchParams.get("item") ?? "",
     );
@@ -312,7 +312,7 @@ test.describe("share target (S12)", () => {
     await page.goto(`/share?pending=${encodeURIComponent(pendingId)}`);
     await expect(page.getByText("Keep this for later.")).toBeVisible();
     await page.getByRole("button", { name: "Not now" }).click();
-    await expect(page).toHaveURL(/\/do$/);
+    await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?$/);
     // The stash row is gone.
     const count = await page.evaluate(
       () =>

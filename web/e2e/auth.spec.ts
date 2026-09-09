@@ -50,7 +50,7 @@ test.describe("auth — passwordless login (S10)", () => {
     await expect(page.getByRole("button", { name: "Email me a code" })).toBeVisible();
   });
 
-  test("localhost fixed-code flow: request → 111111 → /do with a stamped cookie", async ({
+  test("localhost fixed-code flow: request → 111111 → home with a stamped cookie", async ({
     page,
   }) => {
     const email = uniqueEmail();
@@ -67,10 +67,10 @@ test.describe("auth — passwordless login (S10)", () => {
     await codeInput.fill("111111");
     await page.getByRole("button", { name: "Continue" }).click();
 
-    // The verify hard-navigates to returnTo (/do). A brand-new account has
+    // The verify hard-navigates to returnTo ("/"). A brand-new account has
     // hasSeenOnboarding=false, so the shell's onboarding gate (the webapp App
     // gate's behavioral twin) intercepts to /welcome — same as webapp today.
-    await page.waitForURL(/\/(do|welcome)/, { timeout: 15_000 });
+    await page.waitForURL(/^https?:\/\/[^/]+\/(welcome\/?)?$/, { timeout: 15_000 });
 
     // The Wasp-compat cookie: stamped httpOnly, Path=/, SameSite=Lax.
     const cookie = (await page.context().cookies()).find((c) => c.name === "wasp_session");
@@ -96,7 +96,7 @@ test.describe("auth — passwordless login (S10)", () => {
     await expect(page.locator(".aa-auth-error")).toContainText(/not valid/i, {
       timeout: 10_000,
     });
-    expect(page.url()).not.toMatch(/\/do/);
+    expect(page.url()).toMatch(/\/login/);
   });
 
   test("five wrong codes exhaust the challenge — even 111111 stops working", async ({
@@ -124,7 +124,7 @@ test.describe("auth — passwordless login (S10)", () => {
     await expect(page.locator(".aa-auth-error")).toContainText(/not valid/i, {
       timeout: 10_000,
     });
-    expect(page.url()).not.toMatch(/\/do/);
+    expect(page.url()).toMatch(/\/login/);
   });
 
   test("a bogus magic link shows the link error and the param is stripped", async ({
@@ -144,7 +144,7 @@ test.describe("auth — passwordless login (S10)", () => {
     const email = uniqueEmail();
     const first = await authPost(page, "/api/auth/request-magic-login", {
       email,
-      returnTo: "/do",
+      returnTo: "/",
     });
     expect(first.status).toBe(200);
     expect(first.body).toEqual({ sent: true });
@@ -152,7 +152,7 @@ test.describe("auth — passwordless login (S10)", () => {
     // Within the 60-s window: byte-identical response, no error either way.
     const second = await authPost(page, "/api/auth/request-magic-login", {
       email,
-      returnTo: "/do",
+      returnTo: "/",
     });
     expect(second.status).toBe(200);
     expect(second.body).toEqual(first.body);
@@ -179,12 +179,12 @@ test.describe("auth — passwordless login (S10)", () => {
     await expect(page.locator(".aa-auth-footer").getByText("Log in")).toBeVisible();
   });
 
-  test("devEmail= autologin reaches /do (the known-credentials path)", async ({
+  test("devEmail= autologin reaches home (the known-credentials path)", async ({
     page,
   }) => {
     const email = uniqueEmail();
     await page.goto(`/login?devEmail=${encodeURIComponent(email)}`);
-    await page.waitForURL(/\/do/, { timeout: 15_000 });
+    await page.waitForURL(/^https?:\/\/[^/]+\/?$/, { timeout: 15_000 });
     // The autologin route stamps the same session cookie; the app side sees
     // a normal signed-in browser.
     const cookie = (await page.context().cookies()).find((c) => c.name === "wasp_session");
@@ -212,7 +212,7 @@ test.describe("auth — logout (the real UI)", () => {
   }) => {
     // Login through the app as the seeded fixture user.
     await page.goto(`/login?devEmail=${encodeURIComponent(DEV_EMAIL)}`);
-    await page.waitForURL(/\/do/, { timeout: 15_000 });
+    await page.waitForURL(/^https?:\/\/[^/]+\/?$/, { timeout: 15_000 });
 
     // Control content: capture + triage a TODAY task so "no data visible"
     // below is a real assertion, not an empty account.
@@ -225,7 +225,7 @@ test.describe("auth — logout (the real UI)", () => {
       decision: "task-today",
       lensId: await activeLensId(page),
     });
-    await page.goto("/do/today");
+    await page.goto("/today");
     await expect(page.getByText(title).first()).toBeVisible({ timeout: 15_000 });
 
     // The REAL UI path: the shell footer's Log out → the confirm dialog.
@@ -246,7 +246,7 @@ test.describe("auth — logout (the real UI)", () => {
 
     // Navigating back into the app keeps you logged out: the screens render
     // (no redirect) but the data calls 401 → the task is gone from Today.
-    await page.goto("/do/today");
+    await page.goto("/today");
     await expect(page.getByText(title)).toHaveCount(0);
 
     // The wire agrees: the deleted session no longer answers RPC.

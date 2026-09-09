@@ -10,7 +10,7 @@ import { DEV_EMAIL, loginAs } from "./helpers";
  *
  * The overlay is global (⌘K works everywhere once the integrator mounts it in
  * +layout.svelte); until that line lands, the S2/S3 route pages mount it — so
- * the spec runs from /do/inbox.
+ * the spec runs from /inbox.
  */
 
 /** Open the capture popover: ⌘K first (the spec under test), FAB fallback. */
@@ -36,7 +36,7 @@ async function openCapture(page: Page) {
 
 test("⌘K opens the capture popover", async ({ page }) => {
   await loginAs(page, DEV_EMAIL);
-  await page.goto("/do/inbox");
+  await page.goto("/inbox");
   // Focus the document so the global key handler receives the event.
   await page.locator("body").click();
 
@@ -51,7 +51,7 @@ test("⌘Enter keeps the popover open (rapid-fire); Enter commits and closes", a
   page,
 }) => {
   await loginAs(page, DEV_EMAIL);
-  await page.goto("/do/inbox");
+  await page.goto("/inbox");
 
   // ⌘Enter = add another: stays open, input clears, focus retained.
   const textarea = await openCapture(page);

@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * ProjectDetailView — the /do/projects/:permalink work surface (webapp
+   * ProjectDetailView — the /projects/:permalink work surface (webapp
    * ProjectDetailPage parity): identity rail + Why (goal) + honest progress
    * band + Next-step hero + horizon-grouped tasks + lifecycle actions behind
    * ⋯ + the explicit delete dispositions.
@@ -156,9 +156,9 @@
   }
 
   async function handleStart(task: ProjectDetailTask) {
-    // Same loop as the home screen: startTask → /do/focus.
+    // Same loop as the home screen: startTask → /focus.
     await projects.startTask(task.id);
-    void goto("/do/focus");
+    void goto("/focus");
   }
 
   function startEdit() {
@@ -193,7 +193,7 @@
     confirmComplete = false;
     // After completing, leave the detail page — the project leaves the active
     // list. Reopen is reachable from the Logbook.
-    if (!project.isDone) void goto("/do/projects");
+    if (!project.isDone) void goto("/projects");
     else await refresh();
   }
 
@@ -201,7 +201,7 @@
     if (!project) return;
     await projects.archive(project.id);
     confirmArchive = false;
-    void goto("/do/projects");
+    void goto("/projects");
   }
 
   async function openMoveSheet() {
@@ -238,7 +238,7 @@
       disposition === "reassign" ? deleteTargetProjectId : undefined,
     );
     confirmDelete = false;
-    void goto("/do/projects");
+    void goto("/projects");
   }
 </script>
 
@@ -252,10 +252,10 @@
   {:else}
     <!-- Breadcrumb: Projects › [Goal] › Project. Crumb id IS the route. -->
     <nav class="aa-crumbs" aria-label="Breadcrumb">
-      <a href="/do/projects">Projects</a>
+      <a href="/projects">Projects</a>
       {#if project.goal}
         <span class="aa-crumbs__sep" aria-hidden="true">›</span>
-        <a href="/do/goals/{project.goal.permalink}">{project.goal.name}</a>
+        <a href="/goals/{project.goal.permalink}">{project.goal.name}</a>
       {/if}
       <span class="aa-crumbs__sep" aria-hidden="true">›</span>
       <span class="aa-crumbs__current">{project.name}</span>
@@ -331,7 +331,7 @@
               </div>
             {:else if project.goal}
               <div class="aa-project__why-value">
-                <a href="/do/goals/{project.goal.permalink}" class="aa-project__why-link">
+                <a href="/goals/{project.goal.permalink}" class="aa-project__why-link">
                   {project.goal.name}
                 </a>
                 <button type="button" class="aa-project__why-edit" onclick={openGoalPicker}>
@@ -532,12 +532,12 @@
                         tabindex="0"
                         onclick={() =>
                           task.isDone
-                            ? goto(`/do/tasks/${task.permalink}`)
+                            ? goto(`/tasks/${task.permalink}`)
                             : (activeTaskId = activeTaskId === task.id ? null : task.id)}
                         onkeydown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
-                            if (task.isDone) goto(`/do/tasks/${task.permalink}`);
+                            if (task.isDone) goto(`/tasks/${task.permalink}`);
                             else activeTaskId = activeTaskId === task.id ? null : task.id;
                           }
                         }}
@@ -573,7 +573,7 @@
                           <button
                             type="button"
                             class="aa-btn aa-btn--secondary aa-btn--sm"
-                            onclick={() => goto(`/do/tasks/${task.permalink}`)}
+                            onclick={() => goto(`/tasks/${task.permalink}`)}
                           >
                             Edit on task page
                           </button>

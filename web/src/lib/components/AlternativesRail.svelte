@@ -6,7 +6,7 @@
   export interface NextAlternative {
     /** Task id — used as the key and to exclude the on-stage task */
     id: string;
-    /** Permalink — choosing a row routes to /do/today/:permalink */
+    /** Permalink — choosing a row routes to /today/:permalink */
     permalink: string;
     title: string;
     project?: string;

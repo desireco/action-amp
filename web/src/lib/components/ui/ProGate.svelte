@@ -31,7 +31,7 @@
 
 {#if asTrigger}
   <a
-    href="/do/settings/billing"
+    href="/settings/billing"
     class="aa-progate-trigger"
     title="{feature} is a Pro feature"
   >
@@ -46,7 +46,7 @@
     </p>
     <p class="aa-progate__reason">{reason}</p>
     <div class="aa-progate__actions">
-      <a href="/do/settings/billing" class="aa-progate__primary">See plans</a>
+      <a href="/settings/billing" class="aa-progate__primary">See plans</a>
       <a href="/founding-100" class="aa-progate__secondary">
         Founding 100 · $99 lifetime
       </a>

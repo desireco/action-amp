@@ -26,7 +26,7 @@ class WhatNowStore {
   appData = $state<AppData | null>(null);
   /** The ranked #1 candidate for the active lens (null = nothing on the table). */
   topTask = $state<WhatNowTask | null>(null);
-  /** The picked task taking the stage (/do/today/:permalink), if any.
+  /** The picked task taking the stage (/today/:permalink), if any.
    *  SAFETY: the detail shape overlaps the What Now card's inputs for every
    *  field it renders; history relations are absent, exactly like the
    *  webapp's getTask path (continuity degrades to "no history"). */
@@ -113,7 +113,7 @@ class WhatNowStore {
     }
     this.loading = false;
     if (this.focused) {
-      // Refresh in place: a stale empty cache must not bounce to /do.
+      // Refresh in place: a stale empty cache must not bounce home ("/").
       const fresh = await client.tasks.focusedTask().catch(() => null);
       if (fresh !== null) this.focused = fresh;
     }

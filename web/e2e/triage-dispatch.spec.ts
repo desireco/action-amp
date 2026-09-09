@@ -9,7 +9,7 @@ import { DEV_EMAIL, apiPost, loginAs, activeLensId } from "./helpers";
  * Keyboard-first on purpose: the number keys (1 Task · 2 List item) are the
  * documented Classify keymap — this pins the keys to the visual order.
  *
- * Mid-switch note (P0 "stale e2e"): the checklist UI (/do/projects/<slug>)
+ * Mid-switch note (P0 "stale e2e"): the checklist UI (/projects/<slug>)
  * is S5's surface; until it composes, the list-item landing is pinned by the
  * dispatch response kind + "Inbox zero." The Upcoming landing asserts
  * on-screen (S4 is live) — pinning default-Upcoming, never Today.
@@ -79,7 +79,7 @@ test("triage: a captured thought files into a Simple list and actually lands the
   await drainInbox(page);
   // The seeded "Groceries" SIMPLE_LIST project (seed-inbox.ts) stands in for
   // createListProject until the S5 projects composer exists.
-  await page.goto("/do/inbox");
+  await page.goto("/inbox");
 
   // Capture a plain thought (no hints) — it waits in the universal Inbox.
   // Unique per run (the shared dev user's list accumulates across runs).
@@ -89,7 +89,7 @@ test("triage: a captured thought files into a Simple list and actually lands the
   await textarea.press("Enter");
   await expect(page.getByRole("dialog", { name: /quick capture/i })).toBeHidden();
 
-  await page.goto("/do/inbox/review");
+  await page.goto("/inbox/review");
   await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 });
 
   // Classify: "2" selects List item (the keymap mirrors the chooser order).
@@ -110,7 +110,7 @@ test("triage: a captured thought files into a Simple list and actually lands the
   // The queue drained — inbox zero, not just the exit animation.
   await expect(page.getByText("Inbox zero.")).toBeVisible({ timeout: 10_000 });
 
-  // Landed: the checklist row exists (wire view; the /do/projects/<slug>
+  // Landed: the checklist row exists (wire view; the /projects/<slug>
   // checklist renders it once S5 composes).
   const items = await apiPost<{ id: string; text: string }[]>(
     page,
@@ -124,7 +124,7 @@ test("triage: a captured thought becomes a Task on the Upcoming bench", async ({
 }) => {
   await loginAs(page, DEV_EMAIL);
   await drainInbox(page);
-  await page.goto("/do/inbox");
+  await page.goto("/inbox");
 
   // Unique per run — the shared dev user accumulates Upcoming rows across
   // runs, which would trip strict-mode text matching on the bench.
@@ -134,7 +134,7 @@ test("triage: a captured thought becomes a Task on the Upcoming bench", async ({
   await textarea.press("Enter");
   await expect(page.getByRole("dialog", { name: /quick capture/i })).toBeHidden();
 
-  await page.goto("/do/inbox/review");
+  await page.goto("/inbox/review");
   await expect(page.getByText("Email Sarah about the invoice")).toBeVisible({
     timeout: 10_000,
   });
@@ -157,7 +157,7 @@ test("triage: a captured thought becomes a Task on the Upcoming bench", async ({
 
   // It landed on the Upcoming bench — on screen (S4) and on the wire with
   // status UPCOMING, pinning "never auto-Today".
-  await page.goto("/do/upcoming");
+  await page.goto("/upcoming");
   await expect(page.getByText(text).first()).toBeVisible({ timeout: 10_000 });
   // Lens-scoped read: /rpc/tasks/list is the legacy primary-lens stopgap,
   // which is not the lens the shell opened (AppShell parity).

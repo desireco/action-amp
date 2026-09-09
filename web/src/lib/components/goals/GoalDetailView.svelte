@@ -1,6 +1,6 @@
 <script lang="ts">
   /**
-   * GoalDetailView — the /do/goals/:permalink surface (webapp GoalDetailPage
+   * GoalDetailView — the /goals/:permalink surface (webapp GoalDetailPage
    * parity): header meta (done/total + %), the "Focus: <project>" line,
    * linked-projects list with ↑/↓ sequence editing, inline edit, Complete /
    * Reopen (no confirm), and the lossless delete confirm with the
@@ -60,7 +60,7 @@
     await goals.setDone(goal.id, !goal.isDone);
     // After completing, leave the detail page — the goal leaves the active
     // list. Reopen stays reachable from the Logbook.
-    if (!goal.isDone) void goto("/do/goals");
+    if (!goal.isDone) void goto("/goals");
     else await goals.loadDetail(permalink);
   }
 
@@ -89,7 +89,7 @@
     if (!goal) return;
     await goals.remove(goal.id);
     confirmDelete = false;
-    void goto("/do/goals");
+    void goto("/goals");
   }
 
   // Reorder: swap a project with its neighbor and write the FULL new order
@@ -123,7 +123,7 @@
   {:else}
     <!-- Breadcrumb: Goals list › this goal. Crumb id IS the destination route. -->
     <nav class="aa-crumbs" aria-label="Breadcrumb">
-      <a href="/do/goals">Goals</a>
+      <a href="/goals">Goals</a>
       <span class="aa-crumbs__sep" aria-hidden="true">›</span>
       <span class="aa-crumbs__current">{goal.name}</span>
     </nav>
@@ -166,7 +166,7 @@
           {#if nextProject}
             <p class="aa-goal__next">
               Focus:
-              <a href="/do/projects/{nextProject.permalink}">{nextProject.name}</a>
+              <a href="/projects/{nextProject.permalink}">{nextProject.name}</a>
             </p>
           {/if}
         </div>
@@ -222,7 +222,7 @@
                   ↓
                 </button>
               </div>
-              <a href="/do/projects/{p.permalink}" class="aa-goal__project-link">
+              <a href="/projects/{p.permalink}" class="aa-goal__project-link">
                 <span class="aa-goal__project-name">{p.name}</span>
                 {#if p.isDone}
                   <Chip variant="muted" small>Done</Chip>

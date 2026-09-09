@@ -133,14 +133,14 @@ describe("createCheckoutSessionCore", () => {
     // Subscription mode for yearly, exact success URL + session metadata.
     expect(params.mode).toBe("subscription");
     expect(params.success_url).toBe(
-      "https://app.actionamp.test/do/settings/billing?checkout=success",
+      "https://app.actionamp.test/settings/billing?checkout=success",
     );
     expect(params.metadata).toEqual({ userId: "user-1", priceKey: "proYearly" });
     expect(recordCheckoutStarted).toHaveBeenCalledWith(
       {
         name: "CHECKOUT_STARTED",
         visitorId: "user_user-1",
-        route: "/do/settings/billing",
+        route: "/settings/billing",
         metadata: { plan: "proYearly" },
       },
       "user-1",
@@ -201,7 +201,7 @@ describe("createCustomerPortalSessionCore", () => {
     const result = await createCustomerPortalSessionCore(deps(entities), { id: "user-1" });
     expect(stripeOps.createPortalSession).toHaveBeenCalledWith({
       customer: "cus_1",
-      return_url: "https://app.actionamp.test/do/settings/billing",
+      return_url: "https://app.actionamp.test/settings/billing",
     });
     expect(result.url).toContain("billing.stripe.test");
   });

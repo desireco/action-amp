@@ -145,7 +145,7 @@ export async function createCheckoutSessionCore(
     {
       name: "CHECKOUT_STARTED",
       visitorId: `user_${dbUser.id}`,
-      route: priceKey === "founder" ? "/founding-100" : "/do/settings/billing",
+      route: priceKey === "founder" ? "/founding-100" : "/settings/billing",
       metadata: { plan: priceKey },
     },
     dbUser.id,

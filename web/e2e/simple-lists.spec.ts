@@ -8,10 +8,10 @@ import { loginAs } from "./helpers";
  * Data: seeded by `api/src/seed-s4.ts` (run it before the suite):
  *   cd api && DATABASE_URL=postgresql://jake@localhost:5432/actionamp_dev bun src/seed-s4.ts
  * `s4-lists@test.local` carries the SIMPLE_LIST projects "Packing"
- * (/do/projects/packing) and "Groceries".
+ * (/projects/packing) and "Groceries".
  *
  * Spec drift (P0 notes): the original test 1 created the project through the
- * /do/projects composer (S5's surface) and test 2 triaged a captured thought
+ * /projects composer (S5's surface) and test 2 triaged a captured thought
  * into a list (S2/S3's surface). Those two steps port with their own slices;
  * this spec covers the checklist surface itself — add, check/reopen,
  * clear-checked, and the n/j/k/space/e/Delete/Esc keyset — on a seeded list.
@@ -21,7 +21,7 @@ const EMAIL = "s4-lists@test.local";
 test.describe("Simple lists", () => {
   test("a Simple-list project opens and items check off in place", async ({ page }) => {
     await loginAs(page, EMAIL);
-    await page.goto("/do/projects/packing");
+    await page.goto("/projects/packing");
 
     // The project page marks the SIMPLE_LIST context (a "List" badge or a
     // breadcrumb with the project name, per the page host).
@@ -50,7 +50,7 @@ test.describe("Simple lists", () => {
 
   test("the n/j/k/space/e/Delete/Esc keyset drives the checklist", async ({ page }) => {
     await loginAs(page, EMAIL);
-    await page.goto("/do/projects/packing");
+    await page.goto("/projects/packing");
     // The checklist loads before keys flow (the keyset is suppressed while
     // the store is saving).
     await page.getByLabel("Add an item").waitFor();

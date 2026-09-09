@@ -17,23 +17,23 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const WithCount: Story = {
-  args: { label: "Upcoming", count: 7, to: "/do/upcoming" },
+  args: { label: "Upcoming", count: 7, to: "/upcoming" },
 };
 
 export const Singular: Story = {
-  args: { label: "Today", count: 1, to: "/do/today" },
+  args: { label: "Today", count: 1, to: "/today" },
 };
 
 export const Zero: Story = {
-  args: { label: "Someday", count: 0, to: "/do/someday" },
+  args: { label: "Someday", count: 0, to: "/someday" },
 };
 
 export const Loading: Story = {
-  args: { label: "Logbook", to: "/do/logbook" },
+  args: { label: "Logbook", to: "/logbook" },
 };
 
 export const DarkMode: Story = {
   name: "Dark mode",
   decorators: [darkTheme],
-  args: { label: "Upcoming", count: 7, to: "/do/upcoming" },
+  args: { label: "Upcoming", count: 7, to: "/upcoming" },
 };

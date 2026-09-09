@@ -60,7 +60,7 @@ test.describe("Lenses — Settings tab", () => {
     page,
   }) => {
     await loginAs(page, FREE_EMAIL);
-    await page.goto("/do/settings/lenses");
+    await page.goto("/settings/lenses");
 
     await expect(page.getByRole("alert")).toContainText("Custom lenses is a Pro feature.");
     // No list, no edits.
@@ -84,7 +84,7 @@ test.describe("Lenses — Settings tab", () => {
     page,
   }) => {
     await loginAs(page, PRO_EMAIL);
-    await page.goto("/do/settings/lenses");
+    await page.goto("/settings/lenses");
 
     // Settings chrome: back link "Next", h1, the five tabs.
     await expect(page.getByRole("link", { name: "Next" })).toBeVisible();
@@ -120,7 +120,7 @@ test.describe("Lenses — Settings tab", () => {
     page,
   }) => {
     await loginAs(page, PRO_EMAIL);
-    await page.goto("/do/settings/lenses");
+    await page.goto("/settings/lenses");
 
     const rows = page.locator(".aa-lenses-row");
     await expect(rows).toHaveCount(3);
@@ -143,7 +143,7 @@ test.describe("Lenses — Settings tab", () => {
 
   test("Pro: create, rename with 409 on duplicate, recolor (checklist 12)", async ({ page }) => {
     await loginAs(page, PRO_EMAIL);
-    await page.goto("/do/settings/lenses");
+    await page.goto("/settings/lenses");
 
     // Create — the form defaults to coral, name required.
     await page.getByRole("button", { name: "+ New lens" }).click();
@@ -196,7 +196,7 @@ test.describe("Lenses — Settings tab", () => {
     });
     expect(project.status()).toBe(200);
 
-    await page.goto("/do/settings/lenses");
+    await page.goto("/settings/lenses");
     const rows = page.locator(".aa-lenses-row");
     await expect(rows).toHaveCount(4);
 
@@ -301,7 +301,7 @@ test.describe("Lenses — Settings tab", () => {
     page,
   }) => {
     await loginAs(page, PRO_EMAIL);
-    await page.goto("/do/settings/lenses");
+    await page.goto("/settings/lenses");
 
     // Top up to the cap of 8 (seed carries 3), remembering what we created.
     let lenses = await listLenses(page);
@@ -343,7 +343,7 @@ test.describe("Preferences — settings checks", () => {
     page,
   }) => {
     await loginAs(page, PRO_EMAIL);
-    await page.goto("/do/settings/preferences");
+    await page.goto("/settings/preferences");
 
     const toggle = page.getByRole("switch", { name: "Dark mode" });
     await toggle.click();
@@ -365,7 +365,7 @@ test.describe("Preferences — settings checks", () => {
     const loaded = page.waitForResponse((r) =>
       r.url().includes("/rpc/prefs/getPreferences"),
     );
-    await page.goto("/do/settings/preferences");
+    await page.goto("/settings/preferences");
     const res0 = await loaded;
     const initial = ((await res0.json()) as { json: { todayCap: number } }).json.todayCap;
     await expect(value).toHaveValue(String(initial), { timeout: 10_000 });
@@ -405,7 +405,7 @@ test.describe("Preferences — settings checks", () => {
 
   test("focus session radio commits immediately (checklist 7)", async ({ page }) => {
     await loginAs(page, PRO_EMAIL);
-    await page.goto("/do/settings/preferences");
+    await page.goto("/settings/preferences");
 
     const read = async () => {
       const r = await rpc(page, "/prefs/getPreferences");

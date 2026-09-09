@@ -20,7 +20,7 @@
  *
  * WIRING NOTE (S12's email seam): completeOnboarding's `sendWelcomeEmail` dep
  * is a stub — the welcome email fires here when S12's email-send seam lands
- * (subject "Your first task is waiting", CTA Open ActionAmp → appUrl/do,
+ * (subject "Your first task is waiting", CTA Open ActionAmp → appUrl/,
  * best-effort/never-blocking; see s13-onboarding/README.md §3.6). The
  * analytics dep is wired to the public event recorder with the webapp's exact
  * ONBOARDING_COMPLETED payload (visitorId `user_<id>`, route "/welcome").
