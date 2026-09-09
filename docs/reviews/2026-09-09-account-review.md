@@ -127,3 +127,7 @@ Cheap habit, better review evidence.
 - Question-shaped captures ("How can I…", "What options…") age badly as tasks;
   a lightweight "make it an action" nudge at triage would help.
 - Share-target screenshots land with meaningless titles.
+- No bulk "push old things to Someday" existed — **shipped 2026-09-09** as
+  `actionamp task sweep` (domain core + `POST /api/cli/task/sweep` + CLI;
+  dry-run by default, `--apply` writes, `--older-than <days>` tunes the
+  staleness threshold).
