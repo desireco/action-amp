@@ -61,15 +61,16 @@ async function login(ctx: OutputCtx, dev: boolean): Promise<void> {
       };
 
       if (!tokenParam || !stateParam) {
+        // Stray probe or stale tab — answer it, but keep waiting for the
+        // real callback. A malformed hit used to abort the whole login.
         sendHtml(400, "Missing token or state. Run <code>actionamp login</code> again.");
-        server.close();
-        reject(new Error("Callback missing token/state."));
         return;
       }
       if (stateParam !== state) {
-        sendHtml(400, "State mismatch — possible CSRF. Aborting.");
-        server.close();
-        reject(new Error("State mismatch (possible CSRF)."));
+        // A tab from an earlier login attempt (its callback port is gone),
+        // or a cross-site probe. The state check remains the gate for
+        // accepting a token — it just no longer kills this login.
+        sendHtml(400, "This link belongs to an earlier login attempt. Re-run <code>actionamp login</code> in your terminal for a fresh one.");
         return;
       }
 
@@ -80,7 +81,11 @@ async function login(ctx: OutputCtx, dev: boolean): Promise<void> {
 
     server.on("error", (err) => reject(err));
 
-    server.listen(0, "127.0.0.1", () => {
+    // Dual-stack bind, deliberately not host-pinned: `localhost` resolves to
+    // ::1 first on many systems, and the callback URL must say `localhost`
+    // (the web page rejects any other hostname). The state nonce is what
+    // gates who may actually deliver a token.
+    server.listen(0, () => {
       const addr = server.address();
       if (!addr || typeof addr === "string") {
         reject(new Error("Could not bind callback server."));
@@ -93,15 +98,19 @@ async function login(ctx: OutputCtx, dev: boolean): Promise<void> {
       loginUrl.searchParams.set("state", state);
 
       process.stdout.write(`Opening browser to ${loginUrl.toString()}\n`);
-      process.stdout.write("Waiting for authorization… (Ctrl+C to cancel)\n");
+      process.stdout.write("Waiting for authorization… (Ctrl+C to cancel; expires in 10 min)\n");
 
       openBrowser(loginUrl.toString());
     });
 
     setTimeout(() => {
       server.close();
-      reject(new Error("Login timed out after 5 minutes."));
-    }, 5 * 60 * 1000);
+      reject(
+        new Error(
+          "Login timed out after 10 minutes. Re-run `actionamp login` — browser tabs from an earlier attempt point at a port that is now closed.",
+        ),
+      );
+    }, 10 * 60 * 1000);
   });
 
   // Validate the token by hitting /api/cli/whoami.

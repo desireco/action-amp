@@ -1,6 +1,6 @@
 {
   "name": "actionamp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ActionAmp terminal client",
   "license": "UNLICENSED",
   "repository": { "type": "git", "url": "github:desireco/action-amp", "directory": "cli" },
