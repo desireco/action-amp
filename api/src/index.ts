@@ -165,6 +165,9 @@ app.use("/rpc/*", async (c, next) => {
 import { createPublicRest } from "./procedures/public.js";
 app.route("/", createPublicRest({ db, entities, serveSpaRedirect: servingSpa }));
 
+// Legacy-path redirects (old /app + /do URLs) — see legacy-redirects.ts.
+import { createLegacyRedirectRoutes } from "./legacy-redirects.js";
+
 // S17 slice wiring — the /api/cli/feedback/* + /api/cli/admin/* PAT routes
 // (REST mounts, the admin-cli's exact paths; see docs/plans/slices/s17-wiring.md §3).
 import { createCliRest } from "./cli-routes.js";
@@ -518,6 +521,11 @@ app.post("/api/share", createShareRoute({ db, entities }));
 // suite runs the API without WEB_DIST_DIR, so only the deployed image (or a
 // local run with WEB_DIST_DIR set) exercises this ordering.
 if (servingSpa) {
+  // Legacy /app + /do URLs redirect home / strip the prefix (see
+  // legacy-redirects.ts for why this lives server-side). Above the catch-all,
+  // which would otherwise answer them with the SPA shell and leave the
+  // client router to 404.
+  app.route("/", createLegacyRedirectRoutes());
   // Assets first (immutable), then the SPA fallback for client-side routes.
   app.use("/_app/*", serveStatic({ root: webDist }));
   app.use("/static/*", serveStatic({ root: webDist }));
