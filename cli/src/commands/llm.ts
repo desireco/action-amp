@@ -48,6 +48,7 @@ actionamp skills list          # bundled agent skills
 \`\`\`
 actionamp skills install       # copy skills into detected AI harnesses (pi, Claude Code, Codex, ~/.agents)
                                # options: --skill <name...> | --dir <path> | --yes | --force | --dry-run
+                               # also copies _shared/ (guardrails the skills link to); --force refreshes it
 \`\`\`
 
 ### Act

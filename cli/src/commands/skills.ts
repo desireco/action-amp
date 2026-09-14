@@ -4,7 +4,8 @@
  * `skills list` shows what's bundled. `skills install` copies skill folders
  * into every detected harness (pi, Claude Code, Codex, ~/.agents), asking
  * per harness when interactive. Copies only — end users have no repo
- * checkout to symlink back to.
+ * checkout to symlink back to. `_shared/` (guardrails every SKILL.md links
+ * to) is copied alongside the skills, though it is never listed as one.
  */
 import { Command } from "commander";
 import {
@@ -249,13 +250,22 @@ export function makeSkillsCommand(deps: SkillsDeps = {}): Command {
         }
       }
 
+      // Every SKILL.md links its guardrails at ../_shared/rules.md, so
+      // _shared/ travels with every install (it can't be selected via
+      // --skill — listBundledSkills skips underscore-prefixed dirs).
+      const hasShared = existsSync(join(source, "_shared"));
+
       const installed: Array<{ harness: string; dir: string; skills: string[] }> = [];
       const skipped: Array<{ harness: string; dir: string; skills: string[] }> = [];
       const planned: Array<{ harness: string; dir: string; skills: string[] }> = [];
 
       for (const h of targets) {
         if (opts.dryRun) {
-          planned.push({ harness: h.label, dir: h.skillsDir, skills: selected.map((s) => s.name) });
+          planned.push({
+            harness: h.label,
+            dir: h.skillsDir,
+            skills: selected.map((s) => s.name).concat(hasShared ? ["_shared"] : []),
+          });
           continue;
         }
         mkdirSync(h.skillsDir, { recursive: true });
@@ -270,6 +280,17 @@ export function makeSkillsCommand(deps: SkillsDeps = {}): Command {
           if (opts.force && existsSync(dest)) rmSync(dest, { recursive: true, force: true });
           cpSync(s.dir, dest, { recursive: true });
           doneNames.push(s.name);
+        }
+        if (hasShared) {
+          const sharedSrc = join(source, "_shared");
+          const sharedDest = join(h.skillsDir, "_shared");
+          if (existsSync(sharedDest) && !opts.force) {
+            skipNames.push("_shared");
+          } else {
+            if (opts.force && existsSync(sharedDest)) rmSync(sharedDest, { recursive: true, force: true });
+            cpSync(sharedSrc, sharedDest, { recursive: true });
+            doneNames.push("_shared");
+          }
         }
         if (doneNames.length > 0) installed.push({ harness: h.label, dir: h.skillsDir, skills: doneNames });
         if (skipNames.length > 0) skipped.push({ harness: h.label, dir: h.skillsDir, skills: skipNames });
@@ -286,7 +307,8 @@ export function makeSkillsCommand(deps: SkillsDeps = {}): Command {
             return;
           }
           for (const i of installed) {
-            process.stdout.write(`Installed ${i.skills.length} skill(s) into ${i.harness}: ${i.skills.join(", ")}\n`);
+            const n = i.skills.filter((name) => name !== "_shared").length;
+            process.stdout.write(`Installed ${n} skill(s) into ${i.harness}: ${i.skills.join(", ")}\n`);
           }
           for (const s of skipped) {
             process.stdout.write(`Skipped (already present, use --force) in ${s.harness}: ${s.skills.join(", ")}\n`);

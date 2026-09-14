@@ -20,7 +20,9 @@ skills have no reason to claim these names.
 
 `_shared/` holds the guardrails every skill references — trust boundaries, the
 product voice, and how to read the live CLI reference. It has no `SKILL.md`, so
-harnesses never load it as a skill itself.
+harnesses never load it as a skill itself. `skills install` copies it into the
+target skills dir alongside the skills (each SKILL.md links
+`../_shared/rules.md`); `--force` refreshes it together with the skills.
 
 ## Install
 

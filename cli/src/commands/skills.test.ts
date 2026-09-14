@@ -144,6 +144,9 @@ describe("skills install", () => {
     });
     expect(existsSync(join(TMP_HOME, ".pi", "agent", "skills", "alpha-skill", "SKILL.md"))).toBe(true);
     expect(existsSync(join(TMP_HOME, ".claude", "skills", "beta-skill", "SKILL.md"))).toBe(true);
+    // _shared guardrails travel with every install (SKILL.md links ../_shared/rules.md).
+    expect(existsSync(join(TMP_HOME, ".pi", "agent", "skills", "_shared", "rules.md"))).toBe(true);
+    expect(existsSync(join(TMP_HOME, ".claude", "skills", "_shared", "rules.md"))).toBe(true);
     const parsed = JSON.parse(stdoutBuf);
     expect(parsed.installed).toHaveLength(2);
     expect(parsed.dryRun).toBe(false);
@@ -163,12 +166,16 @@ describe("skills install", () => {
     expect(readFileSync(join(dest, "SKILL.md"), "utf8")).toBe("old content");
     let parsed = JSON.parse(stdoutBuf);
     expect(parsed.skipped[0].skills).toEqual(["alpha-skill"]);
+    // _shared was not there yet, so it installed even though the skill was skipped.
+    expect(parsed.installed[0].skills).toContain("_shared");
 
     stdoutBuf = "";
     await run(["skills", "install", "--force", "--json"], deps);
     expect(readFileSync(join(dest, "SKILL.md"), "utf8")).toContain("name: alpha-skill");
+    expect(readFileSync(join(dest, "..", "_shared", "rules.md"), "utf8")).toBe("rules\n");
     parsed = JSON.parse(stdoutBuf);
     expect(parsed.installed[0].skills).toContain("alpha-skill");
+    expect(parsed.installed[0].skills).toContain("_shared");
   });
 
   it("installs a subset with --skill", async () => {
@@ -178,6 +185,8 @@ describe("skills install", () => {
     });
     expect(existsSync(join(TMP_HOME, ".pi", "agent", "skills", "beta-skill"))).toBe(true);
     expect(existsSync(join(TMP_HOME, ".pi", "agent", "skills", "alpha-skill"))).toBe(false);
+    // But the guardrails still come along.
+    expect(existsSync(join(TMP_HOME, ".pi", "agent", "skills", "_shared", "rules.md"))).toBe(true);
   });
 
   it("installs into an explicit --dir", async () => {
@@ -229,6 +238,26 @@ describe("skills install", () => {
     expect(existsSync(join(TMP_HOME, ".pi", "agent", "skills"))).toBe(false);
     const parsed = JSON.parse(stdoutBuf);
     expect(parsed.dryRun).toBe(true);
-    expect(parsed.planned[0].skills).toHaveLength(2);
+    expect(parsed.planned[0].skills).toEqual(["alpha-skill", "beta-skill", "_shared"]);
+  });
+
+  it("skips an up-to-date _shared without --force and refreshes it with --force", async () => {
+    const deps: SkillsDeps = {
+      resolveSkillsDir: () => join(TMP, "src"),
+      isInteractive: () => false,
+    };
+    const sharedRules = join(TMP_HOME, ".claude", "skills", "_shared", "rules.md");
+    await run(["skills", "install", "--skill", "alpha-skill", "--json"], deps);
+    expect(readFileSync(sharedRules, "utf8")).toBe("rules\n");
+
+    writeFileSync(sharedRules, "stale rules\n");
+    stdoutBuf = "";
+    await run(["skills", "install", "--skill", "alpha-skill", "--json"], deps);
+    expect(readFileSync(sharedRules, "utf8")).toBe("stale rules\n");
+    const parsed = JSON.parse(stdoutBuf);
+    expect(parsed.skipped.at(-1).skills).toContain("_shared");
+
+    await run(["skills", "install", "--skill", "alpha-skill", "--force", "--json"], deps);
+    expect(readFileSync(sharedRules, "utf8")).toBe("rules\n");
   });
 });
