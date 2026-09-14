@@ -5,7 +5,7 @@
   "license": "UNLICENSED",
   "repository": { "type": "git", "url": "github:desireco/action-amp", "directory": "cli" },
   "engines": { "node": ">=18" },
-  "files": ["dist"],
+  "files": ["dist", "skills"],
   "type": "module",
   "bin": {
     "actionamp": "./dist/index.js"

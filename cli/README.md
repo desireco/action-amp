@@ -170,3 +170,17 @@ Override origins with env vars: `ACTIONAMP_API_URL`, `ACTIONAMP_WEB_URL`.
 cd cli && npm test          # unit tests (mocks request, no real HTTP)
 cd webapp && npm test       # backend tests (op cores + route handlers)
 ```
+
+## Agent skills
+
+The CLI bundles agent skills that teach AI harnesses (pi, Claude Code, Codex,
+`~/.agents`) how to manage ActionAmp todos:
+
+```sh
+actionamp skills list            # show bundled skills
+actionamp skills install         # copy into detected harnesses (interactive)
+```
+
+Installs are copies — never symlinks — so they work for anyone with the npm
+package. Re-run with `--force` after upgrading the CLI. Source of truth lives
+in the repo-root `skills/` directory.

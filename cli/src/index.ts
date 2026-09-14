@@ -35,6 +35,7 @@ import { makeLensCommand } from "./commands/lens.js";
 import { makeLogbookCommand } from "./commands/logbook.js";
 import { makeReviewCommand } from "./commands/review.js";
 import { makeLlmCommand } from "./commands/llm.js";
+import { makeSkillsCommand } from "./commands/skills.js";
 import { makeLogoutCommand } from "./commands/logout.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -77,6 +78,7 @@ program.addCommand(makeLensCommand());
 program.addCommand(makeLogbookCommand());
 program.addCommand(makeReviewCommand());
 program.addCommand(makeLlmCommand());
+program.addCommand(makeSkillsCommand());
 program.addCommand(makeLogoutCommand());
 
 // Bare `actionamp` — the status view: who you are (or that you're not

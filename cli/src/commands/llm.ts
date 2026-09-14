@@ -40,6 +40,14 @@ actionamp review week                   # read-only weekly accomplishment report
 actionamp review month --previous       # read-only previous-month overview
 actionamp review month --lens-id <id>   # explicitly scoped report
 actionamp whoami               # the logged-in account
+actionamp skills list          # bundled agent skills
+\`\`\`
+
+### Install agent skills
+
+\`\`\`
+actionamp skills install       # copy skills into detected AI harnesses (pi, Claude Code, Codex, ~/.agents)
+                               # options: --skill <name...> | --dir <path> | --yes | --force | --dry-run
 \`\`\`
 
 ### Act
@@ -89,6 +97,8 @@ logbook      → { tasks: [...], projects: [...], goals: [...], archived: [...] 
 review week/month → { report: { state, period, totals, actionsByLens, highlights, tasks, projects, goals, weeklySlices, checkIn, reflection, emphasisGoal } }
 whoami       → { user: { id, email, fullName, plan } }
 capture      → { ok: true, kind: "inbox-item" | "list-item", id, text, createdAt }
+skills list    → { source, skills: [{ name, description }] }
+skills install → { source, installed: [{ harness, dir, skills }], skipped: [...], dryRun, planned }
 \`\`\`
 
 Errors: \`{ error: "<message>" }\` to stdout, exit code 1.

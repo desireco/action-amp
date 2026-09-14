@@ -41,6 +41,8 @@ publish_app() {
 publish_cli() {
   gray "→ Building CLI (tsc → dist/)..."
   cd cli
+  # Bundle the repo-root skills/ into the package (end users have no repo checkout).
+  rm -rf ./skills && cp -r ../skills ./skills
   npm run build
   chmod +x dist/index.js
   cd "$SCRIPT_DIR"

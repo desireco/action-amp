@@ -28,3 +28,4 @@ skills-lock.json
 
 # scratch / ephemeral prototyping (canonical mockups live in docs/mockups/)
 _temp/
+cli/skills/
