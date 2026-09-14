@@ -1,5 +1,5 @@
 ---
-name: actionamp-triage
+name: aa-triage
 description: >
   Process unprocessed ActionAmp inbox items into tasks, projects, resources,
   list rows, or the archive. Use when the user says "go through my inbox",

@@ -1,5 +1,5 @@
 ---
-name: actionamp-hygiene
+name: aa-hygiene
 description: >
   Audit and tidy an ActionAmp account — stale someday projects, dismissed
   tasks, misfiled resources, aging inbox, Today overload. Use when the user

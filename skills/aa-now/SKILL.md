@@ -1,5 +1,5 @@
 ---
-name: actionamp-now
+name: aa-now
 description: >
   Answer "what should I work on right now" using ActionAmp's decision loop.
   Use when the user says "what should I do", "what's next", "plan my day",

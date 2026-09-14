@@ -1,5 +1,5 @@
 ---
-name: actionamp-setup
+name: aa-setup
 description: >
   Set up and verify the ActionAmp CLI for an agent session: check login,
   discover lenses and projects, and handle empty or brand-new accounts. Use

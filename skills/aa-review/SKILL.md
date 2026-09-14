@@ -1,5 +1,5 @@
 ---
-name: actionamp-review
+name: aa-review
 description: >
   Report what the user accomplished in ActionAmp over a week or month, from
   read-only evidence. Use when the user says "how was my week", "what did I

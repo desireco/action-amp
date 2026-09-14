@@ -1,5 +1,5 @@
 ---
-name: actionamp-complete
+name: aa-complete
 description: >
   Mark ActionAmp tasks done safely, with a completion note, and surface what
   comes next. Use when the user says "done with X", "finished it", "X is

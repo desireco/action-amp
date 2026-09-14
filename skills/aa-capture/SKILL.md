@@ -1,5 +1,5 @@
 ---
-name: actionamp-capture
+name: aa-capture
 description: >
   Capture thoughts, links, reminders, and screenshots into ActionAmp from a
   conversation. Use when the user says "add ... to my todo/list", "remind me
