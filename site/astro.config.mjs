@@ -18,4 +18,10 @@ export default defineConfig({
   // Dev-only toolbar renders as a floating pill in local screenshots/QA runs;
   // disabled so automated visual checks see the real page.
   devToolbar: { enabled: false },
+  vite: {
+    server: {
+      // Allow access over Tailscale (http://sidian:4321).
+      allowedHosts: ["sidian"],
+    },
+  },
 });
