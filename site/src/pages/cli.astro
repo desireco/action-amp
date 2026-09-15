@@ -25,9 +25,22 @@ const termNow = [
 const termJson = [
   `<span class="tt-p">$</span> <span class="tt-c">actionamp now --json | jq -r .task.description</span>`,
   `<span class="tt-out">Draft the September launch email</span>`,
+].join("\n");
+
+// Skills demo — mirrors `actionamp skills list/install` human output
+// (cli/src/commands/skills.ts); the skill list is curated to three rows
+// with an honest ellipsis for the rest.
+const termSkills = [
+  `<span class="tt-p">$</span> <span class="tt-c">actionamp skills list</span>`,
+  `<span class="tt-out">Bundled skills (…/node_modules/actionamp/skills):</span>`,
+  `<span class="tt-out">  aa-capture              Capture thoughts, links, reminders, and screenshots</span>`,
+  `<span class="tt-out">  aa-now                  Answer "what should I work on right now"</span>`,
+  `<span class="tt-out">  aa-triage               Process inbox items into tasks, projects, or the archive</span>`,
+  `<span class="tt-out">  …                       plus aa-complete, aa-review, aa-setup, aa-hygiene</span>`,
   `<span class="tt-gap"></span>`,
   `<span class="tt-p">$</span> <span class="tt-c">actionamp skills install</span>`,
-  `<span class="tt-out">Copied agent skills into pi, Claude Code, and Codex.</span>`,
+  `<span class="tt-out">Install 7 ActionAmp skills into Claude Code (~/.claude/skills)? [Y/n] y</span>`,
+  `<span class="tt-out">Installed 7 skill(s) into Claude Code: aa-capture, aa-complete, aa-hygiene, aa-now, aa-review, aa-setup, aa-triage, _shared</span>`,
 ].join("\n");
 
 const groups = [
@@ -179,15 +192,46 @@ const groups = [
             <code>&#123; "error": "…" &#125;</code>. A script can trust what it reads.
           </p>
           <p>
-            The CLI also ships with agent skills. Running
-            <code>actionamp skills install</code> copies ready-made
-            instructions into harnesses like pi, Claude Code, and Codex, so
-            your agent already knows the moves: check what's next, capture a
-            thought, close a task — with you.
+            The flag is the same everywhere — <code>now</code>,
+            <code>today</code>, <code>inbox list</code>,
+            <code>review month</code> — so one parsing habit covers the whole
+            loop.
           </p>
         </div>
-        <figure class="aa-cli-terminal" role="img" aria-label="Terminal session: actionamp now --json piped to jq prints the task description; actionamp skills install copies agent skills into AI harnesses.">
+        <figure class="aa-cli-terminal" role="img" aria-label="Terminal session: actionamp now --json piped to jq prints the task description.">
           <pre aria-hidden="true"><code set:html={termJson} /></pre>
+        </figure>
+      </div>
+    </section>
+
+    {/* ── Agent skills ── */}
+    <section class="aa-cli-section" aria-labelledby="cli-skills-title">
+      <div class="aa-cli-section-head">
+        <h2 id="cli-skills-title">Bring your agent along</h2>
+      </div>
+      <p class="aa-cli-section-lede">
+        The CLI ships with seven agent skills — short, tested instructions
+        that teach an AI harness how to run the loop with you: capture a
+        thought, triage the inbox, ask what's next, close work cleanly, tidy
+        up, and review the week.
+      </p>
+      <div class="aa-cli-agents">
+        <div>
+          <p>
+            <code>actionamp skills list</code> shows what's bundled.
+            <code>actionamp skills install</code> finds every harness on the
+            machine — pi, Claude Code, Codex, anything keeping skills under
+            <code>~/.agents</code> — asks before each one, and copies the
+            skills in, shared guardrails included.
+          </p>
+          <p>
+            Installs are copies, never symlinks, so they keep working
+            anywhere. After upgrading the CLI, run the install again with
+            <code>--force</code> to pick up new versions.
+          </p>
+        </div>
+        <figure class="aa-cli-terminal aa-cli-terminal--wrap" role="img" aria-label="Terminal session: actionamp skills list shows the bundled skills; actionamp skills install copies them into Claude Code after a confirmation prompt.">
+          <pre aria-hidden="true"><code set:html={termSkills} /></pre>
         </figure>
       </div>
     </section>

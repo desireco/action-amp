@@ -283,6 +283,12 @@
   padding: 22px 26px;
 }
 
+/* Narrow-column demos wrap long lines like a real terminal would,
+   instead of scrolling them out of view. */
+.aa-cli-terminal--wrap pre {
+  white-space: pre-wrap;
+}
+
 .aa-cli-agents .aa-cli-terminal pre {
   font-size: 12.5px;
 }
