@@ -1,0 +1,418 @@
+/* CLI page — the terminal client, explained in one calm surface.
+ * Sits inside PublicLayout (fullWidth) beside pricing and roadmap.
+ * Tokens only, so the site's dark theme keeps working. Teal carries the
+ * system accents (prompt, section labels); amber appears once, on the
+ * membership note — the rare human emphasis.
+ * No JavaScript: the terminal demo is static text, not a simulation. */
+
+.aa-cli {
+  width: min(1180px, calc(100% - 112px));
+  margin: 0 auto;
+  padding: 104px 0 120px;
+}
+
+/* ---- HERO ---- */
+.aa-cli-hero {
+  max-width: 720px;
+}
+
+.aa-cli-eyebrow {
+  margin: 0 0 14px;
+  color: var(--aa-teal-cta);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.aa-cli-hero h1 {
+  margin: 0;
+  color: var(--aa-text);
+  font-size: clamp(38px, 5vw, 64px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+}
+
+.aa-cli-hero .aa-cli-lede {
+  max-width: 57ch;
+  margin: 24px 0 0;
+  color: var(--aa-text-3);
+  font-size: 19px;
+  line-height: 1.6;
+}
+
+.aa-cli-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 32px;
+  align-items: center;
+}
+
+.aa-cli-cta-note {
+  margin: 0;
+  color: var(--aa-text-4);
+  font-size: 13px;
+}
+
+/* ---- TERMINAL DEMO ---- */
+.aa-cli-terminal {
+  margin: 64px 0 0;
+  padding: 28px 32px;
+  background: var(--aa-bg-deep);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-lg);
+  overflow-x: auto;
+}
+
+.aa-cli-terminal pre {
+  margin: 0;
+  font-family: var(--aa-font-mono);
+  font-size: 13.5px;
+  line-height: 1.8;
+}
+
+.aa-cli-terminal .tt-p {
+  color: var(--aa-teal-cta);
+  font-weight: 700;
+}
+
+.aa-cli-terminal .tt-c {
+  color: var(--aa-text);
+}
+
+.aa-cli-terminal .tt-main {
+  color: var(--aa-text);
+  font-weight: 600;
+}
+
+.aa-cli-terminal .tt-label {
+  color: var(--aa-text-4);
+}
+
+.aa-cli-terminal .tt-out {
+  color: var(--aa-text-3);
+}
+
+.aa-cli-terminal .tt-gap {
+  display: block;
+  height: 1em;
+}
+
+/* ---- SECTION SCAFFOLD (shared by every section below the hero) ---- */
+.aa-cli-section {
+  margin-top: 104px;
+}
+
+.aa-cli-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+}
+
+.aa-cli-section-head h2 {
+  margin: 0;
+  color: var(--aa-text);
+  font-size: clamp(26px, 3.2vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.aa-cli-section-head::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--aa-border);
+  align-self: center;
+}
+
+.aa-cli-section-lede {
+  max-width: 62ch;
+  margin: 18px 0 0;
+  color: var(--aa-text-3);
+  font-size: 16.5px;
+  line-height: 1.65;
+}
+
+/* ---- START — three commands ---- */
+.aa-cli-steps {
+  margin-top: 44px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 48px;
+}
+
+.aa-cli-step-num {
+  margin: 0;
+  color: var(--aa-teal-cta);
+  font-family: var(--aa-font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.aa-cli-step h3 {
+  margin: 10px 0 6px;
+  color: var(--aa-text);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.aa-cli-step p {
+  margin: 0;
+  color: var(--aa-text-3);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.aa-cli-step-cmd {
+  display: block;
+  margin-top: 16px;
+  padding: 10px 14px;
+  background: var(--aa-bg-deep);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  font-family: var(--aa-font-mono);
+  font-size: 13px;
+  color: var(--aa-text);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.aa-cli-step-cmd .tt-p {
+  color: var(--aa-teal-cta);
+  font-weight: 700;
+}
+
+/* ---- COMMAND REFERENCE ---- */
+.aa-cli-groups {
+  margin-top: 44px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 52px 72px;
+}
+
+.aa-cli-group h3 {
+  margin: 0 0 6px;
+  color: var(--aa-teal-cta);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.aa-cli-group table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.aa-cli-group td {
+  padding: 11px 0;
+  border-top: 1px solid var(--aa-border);
+  vertical-align: top;
+}
+
+.aa-cli-group tr:first-child td {
+  border-top: none;
+}
+
+.aa-cli-group td:first-child {
+  width: 45%;
+  padding-right: 18px;
+}
+
+.aa-cli-group code {
+  font-family: var(--aa-font-mono);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--aa-text);
+  background: var(--aa-surface-muted);
+  padding: 2px 7px;
+  border-radius: var(--aa-radius-sm);
+  white-space: nowrap;
+}
+
+.aa-cli-group td:last-child {
+  color: var(--aa-text-3);
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+
+.aa-cli-group-note {
+  margin: 14px 0 0;
+  color: var(--aa-text-4);
+  font-size: 13px;
+}
+
+/* ---- SCRIPTS AND AGENTS ---- */
+.aa-cli-agents {
+  margin-top: 44px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: start;
+}
+
+.aa-cli-agents p {
+  margin: 0 0 16px;
+  color: var(--aa-text-2);
+  font-size: 16px;
+  line-height: 1.65;
+  max-width: 58ch;
+}
+
+.aa-cli-agents p:last-child {
+  margin-bottom: 0;
+}
+
+.aa-cli-agents code {
+  font-family: var(--aa-font-mono);
+  font-size: 13px;
+  color: var(--aa-text);
+  background: var(--aa-surface-muted);
+  padding: 2px 7px;
+  border-radius: var(--aa-radius-sm);
+}
+
+.aa-cli-agents .aa-cli-terminal {
+  margin: 0;
+  padding: 22px 26px;
+}
+
+.aa-cli-agents .aa-cli-terminal pre {
+  font-size: 12.5px;
+}
+
+/* ---- ACCESS (the one amber moment) ---- */
+.aa-cli-access {
+  margin-top: 104px;
+  padding: 44px 48px;
+  background: var(--aa-amber-soft);
+  border: 1px solid var(--aa-amber-soft-strong);
+  border-radius: var(--aa-radius-lg);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px 48px;
+  align-items: center;
+}
+
+.aa-cli-access h2 {
+  margin: 0;
+  color: var(--aa-text);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.aa-cli-access p {
+  margin: 10px 0 0;
+  max-width: 62ch;
+  color: var(--aa-text-2);
+  font-size: 15.5px;
+  line-height: 1.65;
+}
+
+.aa-cli-access-actions {
+  display: grid;
+  gap: 10px;
+  justify-items: stretch;
+}
+
+/* ---- DETAILS, PLAINLY ---- */
+.aa-cli-details {
+  margin-top: 104px;
+}
+
+.aa-cli-details h2 {
+  margin: 0;
+  color: var(--aa-text);
+  font-size: clamp(26px, 3.2vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.aa-cli-details dl {
+  margin: 36px 0 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px 72px;
+}
+
+.aa-cli-details dt {
+  color: var(--aa-text);
+  font-size: 15.5px;
+  font-weight: 700;
+}
+
+.aa-cli-details dd {
+  margin: 6px 0 0;
+  color: var(--aa-text-3);
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.aa-cli-details dd code {
+  font-family: var(--aa-font-mono);
+  font-size: 12.5px;
+  color: var(--aa-text);
+  background: var(--aa-surface-muted);
+  padding: 2px 6px;
+  border-radius: var(--aa-radius-sm);
+}
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 960px) {
+  .aa-cli-steps {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+
+  .aa-cli-groups {
+    grid-template-columns: 1fr;
+    gap: 44px;
+  }
+
+  .aa-cli-agents {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .aa-cli-access {
+    grid-template-columns: 1fr;
+    padding: 32px 28px;
+  }
+
+  .aa-cli-access-actions {
+    justify-items: start;
+  }
+
+  .aa-cli-details dl {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .aa-cli {
+    width: min(1180px, calc(100% - 44px));
+    padding: 64px 0 80px;
+  }
+
+  .aa-cli-terminal {
+    margin-top: 44px;
+    padding: 20px;
+  }
+
+  .aa-cli-terminal pre {
+    font-size: 12px;
+  }
+
+  .aa-cli-group code {
+    white-space: normal;
+  }
+}

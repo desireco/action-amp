@@ -12,6 +12,7 @@ list. ADHD is the design muse, not the marketing target.
 - [ActionAmp — landing page](https://actionamp.com/): the whole pitch in one scroll. What it is, how it works, why it exists.
 - [About](https://actionamp.com/about): the thesis — why focus apps optimize capture and nobody optimizes the decision.
 - [Roadmap](https://actionamp.com/roadmap): what's shipped, what's next, in priority order.
+- [CLI](https://actionamp.com/cli): the terminal client — install, login, every command, and --json output for scripts and agents. Included with Pro.
 
 ## Blog
 

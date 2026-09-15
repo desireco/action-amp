@@ -1,0 +1,249 @@
+---
+// /cli — the terminal client, explained.
+// Static markup inside PublicLayout, styled by styles/cli.css. Content is
+// hand-written against cli/README.md (the CLI's own contract); when a command
+// changes, update this page in the same pass. No JavaScript — the terminal
+// demo is faithful static text, not a simulation.
+import PublicLayout from "../layouts/PublicLayout.astro";
+import "../styles/cli.css";
+
+const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:5174";
+
+// Terminal demo — mirrors the CLI's real human output (see cli/src/commands).
+const termNow = [
+  `<span class="tt-p">$</span> <span class="tt-c">actionamp now</span>`,
+  `<span class="tt-main">Draft the September launch email</span>`,
+  `<span class="tt-label">Project:</span> <span class="tt-out">Website relaunch</span>`,
+  `<span class="tt-label">Goal:</span> <span class="tt-out">Ship the beta</span>`,
+  `<span class="tt-label">Why now:</span> <span class="tt-out">Due tomorrow, and nothing is blocking it</span>`,
+  `<span class="tt-label">Why it matters:</span> <span class="tt-out">Toward Ship the beta.</span>`,
+  `<span class="tt-gap"></span>`,
+  `<span class="tt-p">$</span> <span class="tt-c">actionamp done t_7q2m --outcome "Sent for review"</span>`,
+  `<span class="tt-out">Marked done.</span>`,
+].join("\n");
+
+const termJson = [
+  `<span class="tt-p">$</span> <span class="tt-c">actionamp now --json | jq -r .task.description</span>`,
+  `<span class="tt-out">Draft the September launch email</span>`,
+  `<span class="tt-gap"></span>`,
+  `<span class="tt-p">$</span> <span class="tt-c">actionamp skills install</span>`,
+  `<span class="tt-out">Copied agent skills into pi, Claude Code, and Codex.</span>`,
+].join("\n");
+
+const groups = [
+  {
+    title: "Decide and do",
+    rows: [
+      { cmd: "actionamp", what: "Login status and the full command reference." },
+      { cmd: "actionamp now", what: "The top task, with its project, goal, and why context." },
+      { cmd: "actionamp today", what: "What you committed to today. --done lists finished work." },
+      { cmd: "task start <id>", what: "Make it the focused task." },
+      { cmd: "task pause <id>", what: "Step away. The session is kept." },
+      { cmd: "task done <id>", what: "Finish it, with an optional --outcome note." },
+      { cmd: "task snooze <id>", what: "Not now: 1h, 3h, tomorrow, weekend, someday." },
+      { cmd: "task move <id> --to <list>", what: "today, upcoming, or someday." },
+      { cmd: "task sweep", what: "Push stale Upcoming tasks to Someday. Dry run by default." },
+    ],
+  },
+  {
+    title: "Capture and inbox",
+    rows: [
+      { cmd: 'capture "text"', what: "Straight to the inbox. #project @date !priority are parsed." },
+      { cmd: "inbox list", what: "What is waiting to be triaged." },
+      { cmd: "inbox triage <id>", what: "Decide what a captured thing is, then dispatch it." },
+      { cmd: "attachment download <id>", what: "Save a captured image to disk." },
+    ],
+  },
+  {
+    title: "Organize",
+    rows: [
+      { cmd: "lens list|switch|current", what: "Scope Work, Me, or any lens you have made." },
+      { cmd: "project list|show|create|add-task", what: "Projects and their tasks, inside a lens." },
+      { cmd: "resource add|list|update|delete", what: "Links and notes filed under a project." },
+      { cmd: "goal list|show|create", what: "Goals in a lens." },
+      { cmd: "logbook", what: "Completed tasks, finished projects and goals, archived." },
+    ],
+  },
+  {
+    title: "Reflect and account",
+    rows: [
+      { cmd: "review week|month", what: "A read-only check-in, or the finished report from a past period." },
+      { cmd: "whoami", what: "The logged-in account." },
+      { cmd: "login / logout", what: "Browser login (use --dev for a local server), or clear the token." },
+    ],
+  },
+];
+---
+
+<PublicLayout
+  title="CLI — ActionAmp"
+  description="ActionAmp from the terminal: one command for your next task, quick capture to the inbox, and --json output for scripts and agents. Included with Pro."
+  fullWidth
+>
+  <div class="aa-cli">
+    {/* ── Hero ── */}
+    <header class="aa-cli-hero">
+      <p class="aa-cli-eyebrow">The terminal client</p>
+      <h1>ActionAmp from the terminal</h1>
+      <p class="aa-cli-lede">
+        The CLI mirrors the app's decision loop — capture, choose, do, done —
+        as plain commands. The same Next card the web shows, the same inbox,
+        the same logbook. Built for people who live at a prompt, and for the
+        agents working alongside them.
+      </p>
+      <div class="aa-cli-cta-row">
+        <a class="aa-btn aa-btn--primary" href={`${appUrl}/signup`}>Start free</a>
+        <a class="aa-btn aa-btn--secondary" href="/pricing">See pricing</a>
+        <span class="aa-cli-cta-note">Included with Pro and Founding membership</span>
+      </div>
+    </header>
+
+    {/* ── Terminal demo (static, faithful output) ── */}
+    <figure class="aa-cli-terminal" role="img" aria-label="Terminal session: actionamp now prints the top task with its project, goal, and why context; actionamp done marks it finished.">
+      <pre aria-hidden="true"><code set:html={termNow} /></pre>
+    </figure>
+
+    {/* ── Start: three commands ── */}
+    <section class="aa-cli-section" aria-labelledby="cli-start-title">
+      <div class="aa-cli-section-head">
+        <h2 id="cli-start-title">Start with three commands</h2>
+      </div>
+      <div class="aa-cli-steps">
+        <div class="aa-cli-step">
+          <p class="aa-cli-step-num">01</p>
+          <h3>Install</h3>
+          <p>A single global package. Node 18 or newer.</p>
+          <code class="aa-cli-step-cmd"><span class="tt-p">$</span> npm install -g actionamp</code>
+        </div>
+        <div class="aa-cli-step">
+          <p class="aa-cli-step-num">02</p>
+          <h3>Log in</h3>
+          <p>
+            Your browser confirms; the CLI receives a token behind the scenes —
+            the same flow as <code>gh auth login</code>. Nothing to type or paste.
+          </p>
+          <code class="aa-cli-step-cmd"><span class="tt-p">$</span> actionamp login</code>
+        </div>
+        <div class="aa-cli-step">
+          <p class="aa-cli-step-num">03</p>
+          <h3>Ask what's next</h3>
+          <p>The one task that matters, with the reason it is on top.</p>
+          <code class="aa-cli-step-cmd"><span class="tt-p">$</span> actionamp now</code>
+        </div>
+      </div>
+    </section>
+
+    {/* ── Command reference ── */}
+    <section class="aa-cli-section" aria-labelledby="cli-commands-title">
+      <div class="aa-cli-section-head">
+        <h2 id="cli-commands-title">The whole loop, at a prompt</h2>
+      </div>
+      <p class="aa-cli-section-lede">
+        Every command stands on its own, and every command takes
+        <code>--json</code>. The verbs follow the app: decide, capture,
+        organize, reflect.
+      </p>
+      <div class="aa-cli-groups">
+        {groups.map((group) => (
+          <div class="aa-cli-group">
+            <h3>{group.title}</h3>
+            <table>
+              <tbody>
+                {group.rows.map((row) => (
+                  <tr>
+                    <td><code>{row.cmd}</code></td>
+                    <td>{row.what}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ))}
+      </div>
+      <p class="aa-cli-group-note">
+        Capture also accepts a title, body text, a source URL, and up to four
+        images — the same fields a phone shares to the inbox.
+      </p>
+    </section>
+
+    {/* ── Scripts and agents ── */}
+    <section class="aa-cli-section" aria-labelledby="cli-agents-title">
+      <div class="aa-cli-section-head">
+        <h2 id="cli-agents-title">For scripts and agents</h2>
+      </div>
+      <div class="aa-cli-agents">
+        <div>
+          <p>
+            Pass <code>--json</code> to any command and you get a stable
+            shape: parseable stdout, a non-zero exit, and errors reported as
+            <code>&#123; "error": "…" &#125;</code>. A script can trust what it reads.
+          </p>
+          <p>
+            The CLI also ships with agent skills. Running
+            <code>actionamp skills install</code> copies ready-made
+            instructions into harnesses like pi, Claude Code, and Codex, so
+            your agent already knows the moves: check what's next, capture a
+            thought, close a task — with you.
+          </p>
+        </div>
+        <figure class="aa-cli-terminal" role="img" aria-label="Terminal session: actionamp now --json piped to jq prints the task description; actionamp skills install copies agent skills into AI harnesses.">
+          <pre aria-hidden="true"><code set:html={termJson} /></pre>
+        </figure>
+      </div>
+    </section>
+
+    {/* ── Access (the one amber moment) ── */}
+    <section class="aa-cli-access" aria-labelledby="cli-access-title">
+      <div>
+        <h2 id="cli-access-title">Part of Pro</h2>
+        <p>
+          CLI and personal API tokens are included with Pro and Founding
+          membership. Free accounts can't authorize the CLI or use existing
+          tokens — upgrade under Settings → Billing, then run
+          <code>actionamp login</code> again.
+        </p>
+      </div>
+      <div class="aa-cli-access-actions">
+        <a class="aa-btn aa-btn--primary" href={`${appUrl}/signup`}>Start free</a>
+        <a class="aa-btn aa-btn--secondary" href="/pricing">Compare plans</a>
+      </div>
+    </section>
+
+    {/* ── Details, plainly ── */}
+    <section class="aa-cli-details" aria-labelledby="cli-details-title">
+      <h2 id="cli-details-title">The details, plainly.</h2>
+      <dl>
+        <div>
+          <dt>Where your token lives</dt>
+          <dd>
+            <code>~/.config/actionamp/config.json</code>. Run
+            <code>actionamp logout</code> — or delete the file — and the CLI
+            forgets everything.
+          </dd>
+        </div>
+        <div>
+          <dt>Local development</dt>
+          <dd>
+            <code>actionamp login --dev</code> targets a locally running
+            server. The choice is remembered; later commands need no flag.
+          </dd>
+        </div>
+        <div>
+          <dt>Origin overrides</dt>
+          <dd>
+            <code>ACTIONAMP_API_URL</code> and <code>ACTIONAMP_WEB_URL</code>
+            point the CLI anywhere else — useful for self-hosted setups.
+          </dd>
+        </div>
+        <div>
+          <dt>One lens at a time</dt>
+          <dd>
+            <code>lens switch work</code> scopes later commands;
+            <code>--lens-id</code> overrides a single call.
+            <code>today</code> and reviews stay cross-lens.
+          </dd>
+        </div>
+      </dl>
+    </section>
+  </div>
+</PublicLayout>

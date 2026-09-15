@@ -1,6 +1,6 @@
 import { getCollection } from "astro:content";
 
-const fixedPaths = ["/", "/about/", "/blog/", "/guides/", "/pricing/", "/privacy/", "/roadmap/", "/terms/"];
+const fixedPaths = ["/", "/about/", "/blog/", "/cli/", "/guides/", "/pricing/", "/privacy/", "/roadmap/", "/terms/"];
 
 function escapeXml(value: string) {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

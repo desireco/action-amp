@@ -210,6 +210,20 @@
   padding-left: 22px;
 }
 
+/* Feature bullets can carry a link (e.g. the Pro CLI bullet → /cli).
+   Inherit the row's muted color; teal on hover, like inline content links. */
+.aa-plan li a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  transition: color var(--aa-dur-fast);
+}
+
+.aa-plan li a:hover {
+  color: var(--aa-teal-cta);
+}
+
 .aa-plan li::before {
   position: absolute;
   left: 0;
