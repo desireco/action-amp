@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">ActionAmp logo</title>
+  <desc id="desc">A rounded-square token-teal mark with a white checkmark — the completion payoff.</desc>
+  <rect x="32" y="32" width="448" height="448" rx="112" fill="#008AC0"/>
+  <path d="M156 268l64 64 168-184" fill="none" stroke="#F9FCFE" stroke-width="56" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

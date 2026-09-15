@@ -610,6 +610,14 @@ if (servingSpa) {
   app.get("/manifest.json", serveStatic({ root: webDist }));
   app.get("/service-worker.js", serveStatic({ root: webDist }));
   app.get("/version.json", serveStatic({ root: webDist }));
+  // Brand icons (web/static/) — without these the catch-all answers with the
+  // SPA shell and the tab shows a generic globe.
+  app.get("/favicon.svg", serveStatic({ root: webDist }));
+  app.get("/favicon.ico", serveStatic({ root: webDist }));
+  app.get("/apple-touch-icon.png", serveStatic({ root: webDist }));
+  app.get("/icon-192.png", serveStatic({ root: webDist }));
+  app.get("/icon-512.png", serveStatic({ root: webDist }));
+  app.get("/icon-512-maskable.png", serveStatic({ root: webDist }));
   // Better Stack's frontend tag (web/static/betterstack.js → build root).
   app.get("/betterstack.js", serveStatic({ root: webDist }));
   app.get("*", serveStatic({
