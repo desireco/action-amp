@@ -129,9 +129,10 @@ Triage drains the universal Inbox across every Lens.
     carries a quiet "Rituals" section beneath the committed list: the day's
     due Rituals, grouped by their daily interval — morning → midday →
     evening — then order, each row with its lens pill. Checking opens a
-    small reflection — "How did it go?" — answered with one of three moods
-    (happy / neutral / negative) plus an optional note; confirming
-    completes the check. Unchecking is one direct tap. It sits **outside
+    small reflection — "How did it go?" — with three moods (happy /
+    neutral / negative) and a note, all optional; **Complete** confirms
+    the check, X/Esc exits without saving. Unchecking is one direct tap.
+    It sits **outside
     `todayCap`** — rhythms never compete with the day's commitments — and
     renders nothing when no Ritual is due.
 - **One Upcoming surface.** `UPCOMING` is the Task status for the bench —
@@ -247,7 +248,7 @@ Planning exists in every Lens (all Lenses are life areas).
   weekly, or every-N-days), each assigned to a daily interval — morning,
   midday, or evening — with an optional Goal link. Creation defaults the
   lens to Me. Checking — in Today's Rituals section — records a local
-  calendar day (the user's `timeZone`) with a mood and an optional note;
+  calendar day (the user's `timeZone`) with an optional mood and note;
   due-ness is derived, never
   materialized, and no overdue state exists. Pausing hides a Ritual
   without deleting its history. Rituals are not a capture or triage
@@ -620,9 +621,10 @@ Lens` while skipping the standalone lens picker by default. See
       occurrence Tasks. (History: a dual check/work mode with lazily
       minted occurrence Tasks was specced later that day and reversed
       again on reflection — check-off is the whole job.)
-    - **Completion reflects.** Checking requires a mood — happy, neutral,
-      or negative — plus an optional note, collected in the confirm modal
-      and stored on the day's entry. Moods are recorded facts, never
+    - **Completion reflects, optionally.** Checking opens a confirm modal —
+      "How did it go?" — with three moods and a note, all optional;
+      Complete confirms, X exits without saving. Whatever was entered is
+      stored on the day's entry. Moods are recorded facts, never
       aggregated, scored, or judged anywhere.
     - **No occurrence machinery.** No "next occurrence" column, no
       materialization job, no series semantics — a missed day is simply an

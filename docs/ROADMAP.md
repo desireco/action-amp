@@ -347,9 +347,9 @@ normal release verification and publish path.
    (creation defaults to Me), each assigned to a daily interval — morning,
    midday, or evening. Due rituals surface as a quiet cap-exempt section on
    Today grouped by interval; checking opens a small reflection — "How did
-   it go?" — one of three moods (happy / neutral / negative) plus an
-   optional note. A
-   check records the day in the user's timeZone with that mood and note;
+   it go?" — three moods (happy / neutral / negative) and a note, all
+   optional: Complete confirms, X exits without saving. A
+   check records the day in the user's timeZone with whatever was entered;
    due-ness is derived,
    never stored, and no streak/score/overdue state exists. Pro-only; the
    daily push reminder gains one calm line when rituals are due. Discovery

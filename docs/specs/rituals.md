@@ -34,10 +34,11 @@ kind: spec
 - **Rituals start in a context, defaulting to Me.** Lens-scoped like every
   structured entity; creation defaults the lens to Me (the seeded personal
   lens), changeable in the form.
-- **Completion asks how it went (same day).** Checking a Ritual confirms
-  through a small modal — "How did it go?" — answered with one of three
-  moods (happy / neutral / negative) plus an optional note. The mood is
-  the confirm; the note rides along. Unchecking stays one quiet tap.
+- **Completion asks how it went (revised same day: nothing required).**
+  Checking a Ritual opens a small modal — "How did it go?" — with three
+  mood choices (happy / neutral / negative) and a note, **all optional**.
+  A large Complete button confirms the check with whatever was entered;
+  X (or Esc) exits without saving. Unchecking stays one quiet tap.
 - **No task-level recurrence.** Rituals is the product's one recurrence
   concept; a "Repeats" property on Task is a recorded non-goal with a revisit
   trigger (see Non-goals).
@@ -85,10 +86,11 @@ that isolation to recurrence.
   `(ritualId, localDate)`; index `(userId, localDate)` for review queries.
   `localDate` is the user's calendar day in their persisted IANA
   `timeZone` at check time (the locked date-model primitive). `mood` is
-  `RitualMood` (`HAPPY | NEUTRAL | NEGATIVE`, required — the reflection
-  modal collects it); `note` is optional trimmed text. Unchecking deletes
-  the row, reflection included (ListItem's uncheck-restores semantics);
-  re-checking asks again.
+  nullable `RitualMood` (`HAPPY | NEUTRAL | NEGATIVE` — optional, picked
+  in the reflection modal); `note` is optional trimmed text. Both may be
+  null — completing with nothing entered is a valid check. Unchecking
+  deletes the row, reflection included (ListItem's uncheck-restores
+  semantics); re-checking asks again.
 
 **Due-ness is derived, never stored.** `isDueOn(ritual, date)` is a pure
 function of cadence + fields; "today's rituals" = the lens-accessible,
@@ -108,7 +110,8 @@ absent.
    checks it. Unchecking a checked row is one direct tap, no modal — the
    entry and its reflection are deleted, re-checking asks again. Tapping a
    checked row reopens the reflection for view/edit. Checked rows stay
-   visible (quietly, with a small neutral mood glyph) until the local day
+   visible (quietly, with a small neutral mood glyph when one was
+   recorded) until the local day
    ends, then reset by derivation. **Outside `todayCap` by construction** —
    rhythms never consume commitment slots. The section renders nothing
    when no ritual is due.
@@ -124,7 +127,7 @@ absent.
 4. **Review evidence** (separate work part, gated on the reviews-hub port).
    Week/Month reviews gain a calm backward-looking block: which rituals
    happened on which days, each occurrence with its mood glyph and trimmed
-   note as recorded — plain day lists or quiet dot rows. Never averages,
+   note when recorded — plain day lists or quiet dot rows. Never averages,
    percentages, scores, streak counts, or any forward-looking pressure.
 5. **Push.** `buildReminderBody` gains a rituals line when `ritualsDue > 0`,
   e.g. `Today: draft spec, call dentist (+1 more) · 2 rituals due`. Exact
@@ -138,21 +141,24 @@ the review check-ins, applied at ritual scale.
 
 - **The modal** (the existing confirm-dialog overlay pattern,
   INTERACTION.md §9.4): ritual name, "How did it go?", three mood choices
-  — happy / neutral / negative — and an optional note field. Keyboard:
-  `1/2/3` pick the mood, the note field takes free text, `Enter` commits,
-  `Esc` cancels (nothing checked, nothing recorded). A mood is required to
-  commit — picking it is the confirm. Button copy at build time under the
-  tone rules ("Good / Okay / Rough" is the current lean; the enum stays
-  `HAPPY | NEUTRAL | NEGATIVE`).
+  — happy / neutral / negative — a note field, and one large primary
+  **Complete** button with an **X** to close. Nothing is required: mood
+  and note are both optional, Complete is always enabled, and completing
+  with nothing entered is a valid check. Keyboard: `1/2/3` optionally
+  highlight a mood, `Enter` triggers Complete, `Esc`/X exits without
+  saving (nothing checked, nothing recorded). Button copy at build time
+  under the tone rules ("Good / Okay / Rough" is the current lean; the
+  enum stays `HAPPY | NEUTRAL | NEGATIVE`).
 - **Edit after the fact.** Tapping a checked row reopens the same modal
-  over the saved entry — mood and note editable, saved on commit.
+  over the saved entry — mood and note editable; Complete saves, X/Esc
+  discards the changes.
 - **Calm guarantees.** Moods are plain facts, never judgment: no averages,
   percentages, trend arrows, or "you've been negative" copy anywhere —
-  review evidence shows each occurrence's mood glyph (and trimmed note) as
-  recorded, and nothing else. Mood glyphs render neutral and uncolored —
+  review evidence shows each occurrence's mood glyph (and trimmed note)
+  as recorded, and nothing else. Mood glyphs render neutral and uncolored —
   never teal/amber/red, which carry reserved meaning.
 - **Accepted cost:** a morning routine of six rituals is six reflections.
-  The modal is keyboard-fast (two beats: `2`, `Enter`) and `Esc` is cheap;
+  The modal is keyboard-fast (one beat: `Enter`) and `Esc`/X is cheap;
   the reflection is the point, not overhead to optimize away.
 
 ### Entitlements
@@ -196,7 +202,7 @@ for goal). Migration: new numbered SQL file in `packages/domain/drizzle/`
 `getRitualsData` (lens-scoped list + entry state for today),
 `createRitualCore` (name validation per the cleanName set; lens defaults to
 Me), `updateRitualCore`, `completeRitualCore` (idempotent upsert keyed on
-the unique constraint; requires a mood, accepts an optional note),
+the unique constraint; accepts optional mood and note — both nullable),
 `uncheckRitualCore` (deletes the entry and its reflection),
 `updateReflectionCore` (edit the saved mood/note), `setRitualPausedCore`,
 `archiveRitualCore`. `isDueOn` + localDate derivation live in the core
@@ -253,7 +259,8 @@ blocking v1; do not port reviews early just for this.
 
 Domain unit (above) + api fragment tests + web store tests. E2E: create
 (defaults to Me) → due in its interval group on Today (outside cap) →
-check opens the reflection → mood + note commit the entry → tap the
+check opens the reflection → Complete with mood + note commits the entry;
+Complete with neither also commits; X exits without checking → tap the
 checked row reopens and edits the reflection → uncheck removes it → pause
 hides → FREE account hits ProGate/402 → downgrade path preserves rows.
 
