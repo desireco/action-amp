@@ -1,7 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
-<!-- Active product work, 2026-08-16: a large release bundle is complete on main and most items are shipped: guided first-run practice, Goal rationale in Next/Focus/CLI, command palette + search, weekly/monthly review rhythms (check-in/review separation), focus session recording, this Week planning, project lifecycle controls (completed/archived/move between Lenses), admin user management, welcome experience, route rename /app→/do, capture image intake (paste/drop, inbox media covers, triage gallery, lightbox, CLI download), share target polish, and Pro CLI gating. Simple lists shipped as a Project type (2026-08-18, supersedes the Lens-type design). This is not production deployment evidence. -->
+<!-- Active product work, 2026-08-16: a large release bundle is complete on main and most items are shipped: guided first-run practice, Goal rationale in Next/Focus/CLI, command palette + search, weekly/monthly review rhythms (check-in/review separation), focus session recording, this Week planning, project lifecycle controls (completed/archived/move between Lenses), admin user management, welcome experience, route rename /app→/do, capture image intake (paste/drop, inbox media covers, triage gallery, lightbox, CLI download), share target polish, and Pro CLI gating. Simple lists shipped as a Project type (2026-08-18, supersedes the Lens-type design). This is not production deployment evidence. 2026-09-15: the marketing site gained a public /cli page explaining the terminal client (three-command start, command reference, --json/agent skills, Pro note), linked from the footer, pricing, llms.txt, and the sitemap. -->
 <!-- Last reviewed: 2026-08-03 (CLI/API access is now Pro-only: Free accounts cannot issue or use personal API tokens; existing tokens stop working when an account returns to Free. CLI package publishing is in progress. Resources shipped — project-owned links/notes CRUD on the Project detail page + `actionamp resource list/add/update/delete` CLI + `/api/cli/resource/*` PAT routes, all backed by a pure `resources/operationsCore.ts`. NO `TaskResource` join — references are markdown links in Task Context, per the task-fields reversal; NO delete-with-impact flow, just simple delete. Passwordless magic-link email sign-in shipped (six-digit code OR sign-in link, 10-min TTL, rate-limited, atomic consume; replaces passwords; localhost uses fixed `111111` for QA). Share target extended: structured capture props (`title`/`content`/`sourceUrl` on `InboxItem`) + up to four image attachments (≤5MB each) + CLI `capture` with `--title/--content/--source-url/--file`. Task Outcome (`Task.outcome`) shipped — task-fields now complete. WONT_DO task state shipped — non-destructive decline for post-triage tasks, surfaces in the Logbook with Restore. Earlier 07-26: CLI lens management shipped. Earlier 07-23: Admin dashboard + feedback-triage system. Earlier 07-22: ActionAmp CLI terminal client shipped.) -->
 
 ---
@@ -378,6 +378,15 @@ normal release verification and publish path.
 
 <!-- Moved here when a spec's status flips to done. Populate as Build ships + Discover signs off. -->
 
+- **cli-marketing-page** (`shipped` 2026-09-15) — a public `/cli` page on the
+  marketing site explaining the terminal client: the three-command start
+  (install, browser login, `actionamp now`), a faithful static terminal demo,
+  the command reference grouped by the decision loop, `--json`/agent-skills
+  notes, the Pro + Founding membership requirement, and config details
+  (`--dev`, env overrides, active lens). Linked from the footer Product
+  column, the pricing Pro feature bullet, `llms.txt`, and the sitemap.
+  Content mirrors `cli/README.md` — update both together when a command
+  changes.
 - **capture-media-pipeline** (`shipped` 2026-08-16) — the full image
   experience around capture and inbox. `⌘K` capture accepts images via
   paste (`⌘V`) or drop (on the open popover or the Capture FAB). Inbox rows
