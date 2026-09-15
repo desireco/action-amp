@@ -343,17 +343,17 @@ normal release verification and publish path.
     `docs/specs/work-area-merged.md`.
 8. **rituals** (`draft` — spec ready; was `habits-recurring-activities`,
    `idea`) — the habits layer: recurring personal rhythms (daily, weekdays,
-   weekly, every-N-days) as a first-class lens-scoped Ritual entity, **not**
-   recurring Tasks. Dual mode: checkable rituals surface as a quiet
-   cap-exempt strip on Today; workable rituals enter the work flow as one
-   lazily minted Task occurrence — at most one open per user at a time —
-   riding Next/Today/focus like any task. A check records the day in the
-   user's timeZone; due-ness is derived, never stored, and no
-   streak/score/overdue state exists. Pro-only; the daily push reminder
-   gains one calm line when rituals are due. Discovery done + decisions
-   locked 2026-09-15 (WORKFLOW.md §5.14, dual-mode revision same day);
-   spec at `docs/specs/rituals.md`. Still product-depth work after
-   validation signal, not part of the current acquisition gauntlet.
+   weekly, every-N-days) as a first-class lens-scoped Ritual entity
+   (creation defaults to Me), each assigned to a daily interval — morning,
+   midday, or evening. Due rituals surface as a quiet cap-exempt section on
+   Today grouped by interval; checking off is the only interaction. A
+   check records the day in the user's timeZone; due-ness is derived,
+   never stored, and no streak/score/overdue state exists. Pro-only; the
+   daily push reminder gains one calm line when rituals are due. Discovery
+   done + decisions locked 2026-09-15 (WORKFLOW.md §5.14; a same-day dual
+   check/work mode was reversed back to check-off only). Spec at
+   `docs/specs/rituals.md`. Still product-depth work after validation
+   signal, not part of the current acquisition gauntlet.
 
 ## Queue notes
 

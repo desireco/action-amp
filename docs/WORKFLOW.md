@@ -125,14 +125,13 @@ Triage drains the universal Inbox across every Lens.
   cap is a feature, not a limit — it forces the "what actually matters today"
   decision. Each row carries a trailing lens pill so the lens it came from is
   visible without partitioning the list. (Reversed 2026-07-21, §5.11.)
-  - **The Rituals strip (Pro, added 2026-09-15 — §5.14).** Today also carries
-    a quiet "Rituals" section beneath the committed list: the day's due
-    **checkable** Rituals (morning → anytime → evening, then order), one-tap
-    check/uncheck, each row with its lens pill. It sits **outside
+  - **The Rituals section (Pro, added 2026-09-15 — §5.14).** Today also
+    carries a quiet "Rituals" section beneath the committed list: the day's
+    due Rituals, grouped by their daily interval — morning → midday →
+    evening — then order, one-tap check/uncheck, each row with its lens
+    pill. Checking off is the entire interaction. It sits **outside
     `todayCap`** — rhythms never compete with the day's commitments — and
-    renders nothing when no Ritual is due. Workable Rituals do not appear on
-    the strip; they enter the work flow as a single minted occurrence Task,
-    at most one open at a time (§5.14).
+    renders nothing when no Ritual is due.
 - **One Upcoming surface.** `UPCOMING` is the Task status for the bench —
   what's not yet committed to Today but still on the radar. It lives on a
   single page, `/do/upcoming` under Planning (locked 2026-07-05; re-reversed
@@ -243,16 +242,14 @@ Planning exists in every Lens (all Lenses are life areas).
   re-link; completed Goals surface in the Logbook with a Reopen affordance.
 - **Rituals (Pro, added 2026-09-15 — §5.14).** The habits layer lives here as
   its own lens-scoped page: recurring personal rhythms (daily, weekdays,
-  weekly, or every-N-days) with an optional time-of-day bucket and an
-  optional Goal link. Each Ritual is **checkable** (default) or
-  **workable** — a due workable Ritual enters the work flow as one lazily
-  minted occurrence Task, at most one open per user at a time, riding
-  Next/Today/focus like any task (§5.14). A workable Ritual can also be
-  checked off directly from this page. Checking records a local calendar
-  day (the user's `timeZone`); due-ness is derived, never materialized,
-  and no overdue state exists. Pausing hides a Ritual without deleting its
-  history. Rituals are not a capture or triage destination — they are
-  structure chosen deliberately. Spec: `docs/specs/rituals.md`.
+  weekly, or every-N-days), each assigned to a daily interval — morning,
+  midday, or evening — with an optional Goal link. Creation defaults the
+  lens to Me. Checking — in Today's Rituals section — records a local
+  calendar day (the user's `timeZone`); due-ness is derived, never
+  materialized, and no overdue state exists. Pausing hides a Ritual
+  without deleting its history. Rituals are not a capture or triage
+  destination — they are structure chosen deliberately. Spec:
+  `docs/specs/rituals.md`.
 - **Someday** lives here (pending confirmation — §5): items with no date and no
   commitment, kept for "when I'm ready." A planning concept, not a working one.
 - Creating Projects and Goals happens here (not in triage — triage _files into_
@@ -610,32 +607,26 @@ Lens` while skipping the standalone lens picker by default. See
     silently). Spec: `docs/specs/simple-list-projects.md`.
 
 14. **Rituals are a first-class entity, not recurring Tasks (locked
-    2026-09-15; dual-mode revision later that day at spec review — the
-    first draft kept all Rituals out of the work flow).** The habits layer
-    is its own lens-scoped `Ritual` + `RitualEntry` pair — completion
-    records a local calendar day; due-ness is derived from cadence, never
-    stored. Five structural calls:
-    - **Dual mode.** Every Ritual is checkable (default) or workable.
-      Checkable Rituals never touch the focus engine — their only
-      doing-surface is a quiet strip on Today, outside `todayCap`, hidden
-      when nothing is due. Workable Rituals are real work: a due one lazily
-      mints one ordinary occurrence Task (`UPCOMING`), which the existing
-      engine treats like any task — Next candidacy automatic, Today by
-      explicit promotion, focus and completion unchanged. **No matcher
-      changes, no focus-mode changes.**
-    - **One at a time, no pile.** At most one open occurrence Task per
-      user; other due workable Rituals queue behind it. A missed day's
-      unfinished occurrence evaporates at the next day's pass — no
-      "next occurrence" column, no series semantics, no overdue state, no
-      make-ups, no streaks or scores, ever.
-    - **Pro-only.** FREE sees the ProGate; a downgrade preserves data
-      losslessly and gates ops. The daily push reminder may mention due
+    2026-09-15).** The habits layer is its own lens-scoped `Ritual` +
+    `RitualEntry` pair — completion records a local calendar day; due-ness
+    is derived from cadence, never stored. Four structural calls:
+    - **Check-off only.** A Ritual's entire doing-surface is a quiet
+      section on Today, outside `todayCap`, grouped by daily interval
+      (morning / midday / evening), hidden when nothing is due. Never Next
+      candidates, never focus-mode entities, no matcher changes, no minted
+      occurrence Tasks. (History: a dual check/work mode with lazily
+      minted occurrence Tasks was specced later that day and reversed
+      again on reflection — check-off is the whole job.)
+    - **No occurrence machinery.** No "next occurrence" column, no
+      materialization job, no series semantics — a missed day is simply an
+      absent row. No streaks, scores, make-ups, or overdue state, ever.
+    - **Pro-only, starting in a context.** FREE sees the ProGate; a
+      downgrade preserves data losslessly and gates ops. Ritual creation
+      defaults the lens to Me. The daily push reminder may mention due
       Rituals — one calm line, only when at least one is due.
     - **No task-level recurrence.** Rituals are the product's one recurrence
       concept; a "Repeats" property on Task is a non-goal with a defined
-      revisit trigger (see `docs/specs/rituals.md` Non-goals). Only the
-      Ritual layer mints occurrence Tasks — users cannot set recurrence on
-      their own Tasks.
+      revisit trigger (see `docs/specs/rituals.md` Non-goals).
     Spec: `docs/specs/rituals.md`.
 
 ## 6. Document cascade
