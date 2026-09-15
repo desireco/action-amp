@@ -121,10 +121,17 @@ Triage drains the universal Inbox across every Lens.
       "Suggested") and stays available. Hidden when a task is Now or the
       pool holds nothing else.
   - **Today** — the global committed-for-today list (across all lenses), capped
-    at the user's `todayCap` (default 5, range 3–12, set in Preferences). The
-    cap is a feature, not a limit — it forces the "what actually matters today"
-    decision. Each row carries a trailing lens pill so the lens it came from is
-    visible without partitioning the list. (Reversed 2026-07-21, §5.11.)
+  at the user's `todayCap` (default 5, range 3–12, set in Preferences). The
+  cap is a feature, not a limit — it forces the "what actually matters today"
+  decision. Each row carries a trailing lens pill so the lens it came from is
+  visible without partitioning the list. (Reversed 2026-07-21, §5.11.)
+  - **The Rituals strip (Pro, added 2026-09-15 — §5.14).** Today also carries
+    a quiet "Rituals" section beneath the committed list: the day's due
+    Rituals (morning → anytime → evening, then order), one-tap
+    check/uncheck, each row with its lens pill. It sits **outside
+    `todayCap`** — rhythms never compete with the day's commitments — and
+    renders nothing when no Ritual is due. Rituals are never Next candidates
+    and never enter focus mode (§5.14).
 - **One Upcoming surface.** `UPCOMING` is the Task status for the bench —
   what's not yet committed to Today but still on the radar. It lives on a
   single page, `/do/upcoming` under Planning (locked 2026-07-05; re-reversed
@@ -233,6 +240,14 @@ Planning exists in every Lens (all Lenses are life areas).
 - Goals: the organizing layer (active outcomes, e.g. "Run a 10k"), always in a
   context. **Same lifecycle as Projects** — complete / reopen / edit / delete /
   re-link; completed Goals surface in the Logbook with a Reopen affordance.
+- **Rituals (Pro, added 2026-09-15 — §5.14).** The habits layer lives here as
+  its own lens-scoped page: recurring personal rhythms (daily, weekdays,
+  weekly, or every-N-days) with an optional time-of-day bucket and an
+  optional Goal link. Checking records a local calendar day (the user's
+  `timeZone`); due-ness is derived, never materialized, and no overdue state
+  exists. Pausing hides a Ritual without deleting its history. Rituals are
+  not a capture or triage destination — they are structure chosen
+  deliberately. Spec: `docs/specs/rituals.md`.
 - **Someday** lives here (pending confirmation — §5): items with no date and no
   commitment, kept for "when I'm ready." A planning concept, not a working one.
 - Creating Projects and Goals happens here (not in triage — triage _files into_
@@ -254,6 +269,9 @@ reviews or the Logbook.
   Check-in and review answers are stored separately so hindsight never
   overwrites what the user observed while work was happening. Month offers a
   next-month Goal emphasis only after the month ends. Every response autosaves.
+- Ritual evidence joins cadence reviews when the reviews surface ports to
+  the new stack: which Rituals happened on which days, plain day lists —
+  never percentages, scores, or streaks (§5.14).
 - Cadence reviews are universal across Lenses, like Today. Rows keep Lens
   provenance and Week/Month offer an in-page Lens filter. This is the deliberate
   exception to the active-Lens rule; a person should not need separate rituals
@@ -586,6 +604,25 @@ Lens` while skipping the standalone lens picker by default. See
     types; a populated one never does (blocked with an explanation, never
     silently). Spec: `docs/specs/simple-list-projects.md`.
 
+14. **Rituals are a first-class entity, not recurring Tasks (locked
+    2026-09-15).** The habits layer is its own lens-scoped `Ritual` +
+    `RitualEntry` pair — completion records a local calendar day; due-ness is
+    derived from cadence, never materialized. Four structural calls:
+    - **Rituals never touch the focus engine.** Not Next candidates, not
+      focus-mode entities, no matcher changes — the What Now decision stays
+      for outcomes. Their only doing-surface is a quiet strip on Today,
+      outside `todayCap`, hidden when nothing is due.
+    - **No occurrence machinery.** No "next occurrence" column, no
+      materialization job, no series semantics — a missed day is simply an
+      absent row. No streaks, scores, make-ups, or overdue state, ever.
+    - **Pro-only.** FREE sees the ProGate; a downgrade preserves data
+      losslessly and gates ops. The daily push reminder may mention due
+      Rituals — one calm line, only when at least one is due.
+    - **No task-level recurrence.** Rituals are the product's one recurrence
+      concept; a "Repeats" property on Task is a non-goal with a defined
+      revisit trigger (see `docs/specs/rituals.md` Non-goals).
+    Spec: `docs/specs/rituals.md`.
+
 ## 6. Document cascade
 
 The following were updated to match this doc (commit alongside):
@@ -636,6 +673,9 @@ The following were updated to match this doc (commit alongside):
   2026-08-18) — Simple lists move from Lens type to Project type
   (`LensType` removed), matching §5.13. `DATA-MODEL.md`, `TRIAGE.md`,
   `PAGES.md`, and the feature catalog follow in its cascade.
+- `docs/specs/rituals.md` + the §2.3/§2.4/§2.5/§5.14 additions (added
+  2026-09-15) — the Rituals layer per §5.14. `DATA-MODEL.md`, `PAGES.md`,
+  `docs/features/`, and `docs/PRICING.md` follow at build time.
 
 ## 7. Code work implied by these decisions
 

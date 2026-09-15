@@ -341,13 +341,16 @@ normal release verification and publish path.
     so it sits in this tier (post-gauntlet), not the validation gauntlet.
     Interactive prototype at `docs/mockups/today-merged.html`. Spec at
     `docs/specs/work-area-merged.md`.
-8. **habits-recurring-activities** (`idea` — needs discovery + spec) — support
-    habits and recurring activities, including daily, weekly, and custom
-    cadences, without turning them into a permanent pile of duplicated tasks.
-    A due occurrence should enter Today when relevant; completing it should
-    record that occurrence and schedule the next one. Keep the experience calm:
-    no streaks, scores, guilt, or punitive overdue state. This is product-depth
-    work after validation signal, not part of the current acquisition gauntlet.
+8. **rituals** (`draft` — spec ready; was `habits-recurring-activities`,
+   `idea`) — the habits layer: recurring personal rhythms (daily, weekdays,
+   weekly, every-N-days) as a first-class lens-scoped Ritual entity, **not**
+   recurring Tasks. Due rituals surface as a quiet cap-exempt strip on
+   Today; a check records the day in the user's timeZone; due-ness is
+   derived, never materialized, and no streak/score/overdue state exists.
+   Pro-only; the daily push reminder gains one calm line when rituals are
+   due. Discovery done + decisions locked 2026-09-15 (WORKFLOW.md §5.14);
+   spec at `docs/specs/rituals.md`. Still product-depth work after
+   validation signal, not part of the current acquisition gauntlet.
 
 ## Queue notes
 
