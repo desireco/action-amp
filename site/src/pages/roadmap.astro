@@ -12,6 +12,7 @@ import "../styles/roadmap.css";
 const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:5174";
 
 const shipped = [
+  { date: "Sep 15", trunk: "CLI agent skills + npm publish", summary: "The CLI now ships with seven agent skills (capture, complete, hygiene, now, review, setup, triage) plus shared guardrails. actionamp skills list shows them; actionamp skills install copies them into detected AI harnesses. Published to npm as actionamp 0.2.0 — npm install -g actionamp is the real install path." },
   { date: "Sep 15", trunk: "CLI page on the marketing site", summary: "A public /cli page explains the terminal client: the three-command start (install, browser login, now), the command reference grouped by the decision loop, --json output and agent skills for scripts, and the Pro membership note. Linked from the footer, the pricing Pro bullet, llms.txt, and the sitemap." },
   { date: "Aug 16", trunk: "Capture image intake", summary: "Paste or drop images into the capture popover (⌘V or drag-and-drop). Inbox rows show a media cover for captured images. The triage card displays images large with a swipe carousel, and clicking opens a lightbox. The CLI can download inbox images to disk." },
   { date: "Aug 15", trunk: "This Week + project lifecycle", summary: "A Monday–Sunday Week view with weekday scheduling and Someday auto-promote. Projects gained completed and archived collapsible sections, a move-between-Lenses action, and an overflow menu for lifecycle controls. Shared captures can route directly to projects and lists." },
@@ -70,7 +71,7 @@ const shipped = [
       </p>
       <div class="aa-roadmap-stats">
         <span class="aa-roadmap-stat"><strong>38</strong> features shipped</span>
-        <span class="aa-roadmap-stat"><strong>1,096</strong> commits</span>
+        <span class="aa-roadmap-stat"><strong>1,101</strong> commits</span>
         <span class="aa-roadmap-stat">Jun 16 → today</span>
       </div>
     </header>

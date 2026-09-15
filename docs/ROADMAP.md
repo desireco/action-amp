@@ -1,7 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
-<!-- Active product work, 2026-08-16: a large release bundle is complete on main and most items are shipped: guided first-run practice, Goal rationale in Next/Focus/CLI, command palette + search, weekly/monthly review rhythms (check-in/review separation), focus session recording, this Week planning, project lifecycle controls (completed/archived/move between Lenses), admin user management, welcome experience, route rename /app→/do, capture image intake (paste/drop, inbox media covers, triage gallery, lightbox, CLI download), share target polish, and Pro CLI gating. Simple lists shipped as a Project type (2026-08-18, supersedes the Lens-type design). This is not production deployment evidence. 2026-09-15: the marketing site gained a public /cli page explaining the terminal client (three-command start, command reference, --json/agent skills, Pro note), linked from the footer, pricing, llms.txt, and the sitemap. -->
+<!-- Active product work, 2026-08-16: a large release bundle is complete on main and most items are shipped: guided first-run practice, Goal rationale in Next/Focus/CLI, command palette + search, weekly/monthly review rhythms (check-in/review separation), focus session recording, this Week planning, project lifecycle controls (completed/archived/move between Lenses), admin user management, welcome experience, route rename /app→/do, capture image intake (paste/drop, inbox media covers, triage gallery, lightbox, CLI download), share target polish, and Pro CLI gating. Simple lists shipped as a Project type (2026-08-18, supersedes the Lens-type design). This is not production deployment evidence. 2026-09-15: the marketing site gained a public /cli page explaining the terminal client (three-command start, command reference, --json/agent skills, Pro note), linked from the footer, pricing, llms.txt, and the sitemap. CLI 0.2.0 published to npm with bundled agent skills (seven aa-* skills + _shared guardrails; `actionamp skills list/install`); `npm install -g actionamp` is now the real install path. -->
 <!-- Last reviewed: 2026-08-03 (CLI/API access is now Pro-only: Free accounts cannot issue or use personal API tokens; existing tokens stop working when an account returns to Free. CLI package publishing is in progress. Resources shipped — project-owned links/notes CRUD on the Project detail page + `actionamp resource list/add/update/delete` CLI + `/api/cli/resource/*` PAT routes, all backed by a pure `resources/operationsCore.ts`. NO `TaskResource` join — references are markdown links in Task Context, per the task-fields reversal; NO delete-with-impact flow, just simple delete. Passwordless magic-link email sign-in shipped (six-digit code OR sign-in link, 10-min TTL, rate-limited, atomic consume; replaces passwords; localhost uses fixed `111111` for QA). Share target extended: structured capture props (`title`/`content`/`sourceUrl` on `InboxItem`) + up to four image attachments (≤5MB each) + CLI `capture` with `--title/--content/--source-url/--file`. Task Outcome (`Task.outcome`) shipped — task-fields now complete. WONT_DO task state shipped — non-destructive decline for post-triage tasks, surfaces in the Logbook with Restore. Earlier 07-26: CLI lens management shipped. Earlier 07-23: Admin dashboard + feedback-triage system. Earlier 07-22: ActionAmp CLI terminal client shipped.) -->
 
 ---
@@ -378,6 +378,17 @@ normal release verification and publish path.
 
 <!-- Moved here when a spec's status flips to done. Populate as Build ships + Discover signs off. -->
 
+- **cli-agent-skills-npm-publish** (`shipped` 2026-09-15) — the CLI now
+  bundles agent skills: seven `aa-*` skills (capture, complete, hygiene,
+  now, review, setup, triage) built from the repo-root `skills/` directory
+  (source of truth), copied into the npm package by `prepublishOnly` and
+  surfaced through `actionamp skills list` / `actionamp skills install`,
+  which copies them (never symlinks) into detected AI harnesses — pi,
+  Claude Code, Codex, `~/.agents`. The `_shared` guardrails ride along
+  with every install. The CLI is published to npm as `actionamp@0.2.0`,
+  making `npm install -g actionamp` the real install path (previously
+  local-dev only via `tsx`). Supersedes the 2026-08-03 "CLI package
+  publishing is in progress" note.
 - **cli-marketing-page** (`shipped` 2026-09-15) — a public `/cli` page on the
   marketing site explaining the terminal client: the three-command start
   (install, browser login, `actionamp now`), a faithful static terminal demo,
