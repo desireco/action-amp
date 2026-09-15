@@ -346,8 +346,11 @@ normal release verification and publish path.
    weekly, every-N-days) as a first-class lens-scoped Ritual entity
    (creation defaults to Me), each assigned to a daily interval — morning,
    midday, or evening. Due rituals surface as a quiet cap-exempt section on
-   Today grouped by interval; checking off is the only interaction. A
-   check records the day in the user's timeZone; due-ness is derived,
+   Today grouped by interval; checking opens a small reflection — "How did
+   it go?" — one of three moods (happy / neutral / negative) plus an
+   optional note. A
+   check records the day in the user's timeZone with that mood and note;
+   due-ness is derived,
    never stored, and no streak/score/overdue state exists. Pro-only; the
    daily push reminder gains one calm line when rituals are due. Discovery
    done + decisions locked 2026-09-15 (WORKFLOW.md §5.14; a same-day dual

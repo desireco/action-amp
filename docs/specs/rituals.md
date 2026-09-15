@@ -34,6 +34,10 @@ kind: spec
 - **Rituals start in a context, defaulting to Me.** Lens-scoped like every
   structured entity; creation defaults the lens to Me (the seeded personal
   lens), changeable in the form.
+- **Completion asks how it went (same day).** Checking a Ritual confirms
+  through a small modal — "How did it go?" — answered with one of three
+  moods (happy / neutral / negative) plus an optional note. The mood is
+  the confirm; the note rides along. Unchecking stays one quiet tap.
 - **No task-level recurrence.** Rituals is the product's one recurrence
   concept; a "Repeats" property on Task is a recorded non-goal with a revisit
   trigger (see Non-goals).
@@ -77,11 +81,14 @@ that isolation to recurrence.
   - Lens delete follows the task pattern: hard delete cascades, reassign
     moves. No RRULE, ever — four cadence shapes cover the honest cases.
 - **`RitualEntry`** — one row per checked day:
-  `id, ritualId, userId, localDate (DATE), createdAt`. Unique
+  `id, ritualId, userId, localDate (DATE), mood, note, createdAt`. Unique
   `(ritualId, localDate)`; index `(userId, localDate)` for review queries.
   `localDate` is the user's calendar day in their persisted IANA
-  `timeZone` at check time (the locked date-model primitive). Unchecking
-  deletes the row (ListItem's uncheck-restores semantics).
+  `timeZone` at check time (the locked date-model primitive). `mood` is
+  `RitualMood` (`HAPPY | NEUTRAL | NEGATIVE`, required — the reflection
+  modal collects it); `note` is optional trimmed text. Unchecking deletes
+  the row, reflection included (ListItem's uncheck-restores semantics);
+  re-checking asks again.
 
 **Due-ness is derived, never stored.** `isDueOn(ritual, date)` is a pure
 function of cadence + fields; "today's rituals" = the lens-accessible,
@@ -96,11 +103,15 @@ absent.
 1. **Today section (the only doing-surface).** A quiet "Rituals" section on
    the Today page — universal like Today, each row with its lens pill.
    Rows group by interval — morning → midday → evening — then `order`; a
-   group with nothing due renders nothing. One tap on the CompletionCircle
-   checks/unchecks; that is the entire interaction. Checked rows stay
-   visible (quietly) until the local day ends, then reset by derivation.
-   **Outside `todayCap` by construction** — rhythms never consume
-   commitment slots. The section renders nothing when no ritual is due.
+   group with nothing due renders nothing. Tapping the CompletionCircle on
+   an unchecked row opens the completion reflection (below); confirming
+   checks it. Unchecking a checked row is one direct tap, no modal — the
+   entry and its reflection are deleted, re-checking asks again. Tapping a
+   checked row reopens the reflection for view/edit. Checked rows stay
+   visible (quietly, with a small neutral mood glyph) until the local day
+   ends, then reset by derivation. **Outside `todayCap` by construction** —
+   rhythms never consume commitment slots. The section renders nothing
+   when no ritual is due.
 2. **Planning page** (`/rituals`). Lens-scoped management like Projects:
    inline create (name, interval, cadence), edit, pause, archive. Creation
    defaults the lens to **Me** — rituals are mostly personal — changeable
@@ -112,11 +123,37 @@ absent.
    focus mode, no `TaskSession`. The work flow is untouched.
 4. **Review evidence** (separate work part, gated on the reviews-hub port).
    Week/Month reviews gain a calm backward-looking block: which rituals
-   happened on which days, plain day lists or quiet dot rows. Never
+   happened on which days, each occurrence with its mood glyph and trimmed
+   note as recorded — plain day lists or quiet dot rows. Never averages,
    percentages, scores, streak counts, or any forward-looking pressure.
 5. **Push.** `buildReminderBody` gains a rituals line when `ritualsDue > 0`,
   e.g. `Today: draft spec, call dentist (+1 more) · 2 rituals due`. Exact
   copy at build time under the tone rules (no exclamation marks, no guilt).
+
+### The completion reflection
+
+Checking a Ritual is a two-beat moment: confirm + a small honest "how did
+it go?" — the same reflective instinct as focus mode's optional Outcome and
+the review check-ins, applied at ritual scale.
+
+- **The modal** (the existing confirm-dialog overlay pattern,
+  INTERACTION.md §9.4): ritual name, "How did it go?", three mood choices
+  — happy / neutral / negative — and an optional note field. Keyboard:
+  `1/2/3` pick the mood, the note field takes free text, `Enter` commits,
+  `Esc` cancels (nothing checked, nothing recorded). A mood is required to
+  commit — picking it is the confirm. Button copy at build time under the
+  tone rules ("Good / Okay / Rough" is the current lean; the enum stays
+  `HAPPY | NEUTRAL | NEGATIVE`).
+- **Edit after the fact.** Tapping a checked row reopens the same modal
+  over the saved entry — mood and note editable, saved on commit.
+- **Calm guarantees.** Moods are plain facts, never judgment: no averages,
+  percentages, trend arrows, or "you've been negative" copy anywhere —
+  review evidence shows each occurrence's mood glyph (and trimmed note) as
+  recorded, and nothing else. Mood glyphs render neutral and uncolored —
+  never teal/amber/red, which carry reserved meaning.
+- **Accepted cost:** a morning routine of six rituals is six reflections.
+  The modal is keyboard-fast (two beats: `2`, `Enter`) and `Esc` is cheap;
+  the reflection is the point, not overhead to optimize away.
 
 ### Entitlements
 
@@ -147,29 +184,32 @@ not inflow to process.
 ### 2. Schema + migration
 
 `packages/domain/src/db/schema/index.ts`: `RitualCadence` +
-`RitualInterval` pgEnums; `Ritual` + `RitualEntry` pgTables in house style
-(text ids, `timestamp({ precision: 3 })`, btree indexes, FKs
-`onUpdate/onDelete cascade` for user/lens/ritual, `set null` for goal).
-Migration: new numbered SQL file in `packages/domain/drizzle/` (create
-enums, tables, indexes). Verify against the dev DB.
+`RitualInterval` + `RitualMood` pgEnums; `Ritual` + `RitualEntry`
+pgTables in house style (text ids, `timestamp({ precision: 3 })`, btree
+indexes, FKs `onUpdate/onDelete cascade` for user/lens/ritual, `set null`
+for goal). Migration: new numbered SQL file in `packages/domain/drizzle/`
+(create enums, tables, indexes). Verify against the dev DB.
 
 ### 3. Domain core — `packages/domain/src/rituals/`
 
 `operationsCore.ts` (pure, `(entities, args)` house pattern):
 `getRitualsData` (lens-scoped list + entry state for today),
 `createRitualCore` (name validation per the cleanName set; lens defaults to
-Me), `updateRitualCore`, `toggleRitualCore` (idempotent insert/delete keyed
-on the unique constraint), `setRitualPausedCore`, `archiveRitualCore`.
-`isDueOn` + localDate derivation live in the core (or `shared/time`),
-reused by api + push. Entities via a feature `entities.ts` (the
-`simpleLists` precedent). `index.ts` barrel. Vitest: due-ness derivation
-across all four cadences + timezone edges, toggle idempotency, entitlement
-guard, lens-accessibility on the read.
+Me), `updateRitualCore`, `completeRitualCore` (idempotent upsert keyed on
+the unique constraint; requires a mood, accepts an optional note),
+`uncheckRitualCore` (deletes the entry and its reflection),
+`updateReflectionCore` (edit the saved mood/note), `setRitualPausedCore`,
+`archiveRitualCore`. `isDueOn` + localDate derivation live in the core
+(or `shared/time`), reused by api + push. Entities via a feature
+`entities.ts` (the `simpleLists` precedent). `index.ts` barrel. Vitest:
+due-ness derivation across all four cadences + timezone edges,
+complete/uncheck idempotency, reflection edit, entitlement guard,
+lens-accessibility on the read.
 
 ### 4. Contract — `packages/contract/src/rituals.ts`
 
-`ritualsContract = { list, create, update, toggle, setPaused,
-archive }`
+`ritualsContract = { list, create, update, complete, uncheck,
+updateReflection, setPaused, archive }`
 with `ProGateErrorMap`; schemas mirror the domain DTOs 1:1 (dates as ISO
 strings). Composition lines in `packages/contract/src/router.ts` + `index.ts`.
 
@@ -184,14 +224,18 @@ strings). Composition lines in `packages/contract/src/router.ts` + `index.ts`.
 `stores/rituals.svelte.ts` (DTO interfaces mirroring the contract, loads on
 lens change); `components/rituals/RitualsView.svelte` (Planning page);
 `components/rituals/RitualStrip.svelte` (consumed by the Today view,
-grouped morning → midday → evening); `routes/rituals/+page.svelte` (thin
-host); `styles/rituals.css`. Shell Plan group gains the Rituals link;
-palette registry gains the route command. The create/edit form carries the
+grouped morning → midday → evening); `components/rituals/
+RitualReflectionDialog.svelte` (the completion modal — mood trio + note,
+per the confirm-dialog overlay pattern; doubles as the edit view for
+checked rows); `routes/rituals/+page.svelte` (thin host);
+`styles/rituals.css`. Shell Plan group gains the Rituals link; palette
+registry gains the route command. The create/edit form carries the
 interval and cadence pickers; the lens picker defaults to Me. Primitives
 only (`GroupedList`, `ListEmpty`, `Chip`, `CompletionCircle`, `ProGate`,
 `Button`, `PickerSheet` for interval/cadence/goal pickers). Row
-interaction mirrors task rows: focusable, Enter/Space toggles. New visual
-values → `tokens.css` first (there should be none).
+interaction mirrors task rows: focusable, Enter/Space on an unchecked row
+opens the reflection dialog. New visual values → `tokens.css` first
+(there should be none).
 
 ### 7. Push
 
@@ -209,8 +253,9 @@ blocking v1; do not port reviews early just for this.
 
 Domain unit (above) + api fragment tests + web store tests. E2E: create
 (defaults to Me) → due in its interval group on Today (outside cap) →
-check → uncheck → pause hides → FREE account hits ProGate/402 → downgrade
-path preserves rows.
+check opens the reflection → mood + note commit the entry → tap the
+checked row reopens and edits the reflection → uncheck removes it → pause
+hides → FREE account hits ProGate/402 → downgrade path preserves rows.
 
 ### 10. Doc cascade finish
 
@@ -226,6 +271,9 @@ line), roadmap §Then entry → done with sign-off link.
   the only interaction. (A dual check/work mode was specced and reversed
   same-day; if that demand returns, the mint-lifecycle design is preserved
   in this spec's git history.)
+- **Moods are never aggregated or judged.** No averages, percentages,
+  trend lines, or comparative copy anywhere — a mood is a fact recorded
+  for the user's own review, shown exactly as recorded, glyph uncolored.
 - **No task-level recurrence.** A "Repeats" property on Task is
   deliberately not built. Rituals cover the rhythm — check-off only; when
   the underlying work needs task machinery, it is captured as a task when
