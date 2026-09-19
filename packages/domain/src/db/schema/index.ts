@@ -21,6 +21,9 @@ export const plan = pgEnum("Plan", ['FREE', 'PRO', 'FOUNDER'])
 export const priority = pgEnum("Priority", ['LOW', 'NORMAL', 'IMPORTANT'])
 export const projectType = pgEnum("ProjectType", ['STANDARD', 'SIMPLE_LIST'])
 export const reviewCadence = pgEnum("ReviewCadence", ['DAILY', 'WEEKLY', 'MONTHLY'])
+export const ritualInterval = pgEnum("RitualInterval", ['MORNING', 'MIDDAY', 'EVENING'])
+export const ritualCadence = pgEnum("RitualCadence", ['DAILY', 'WEEKDAYS', 'WEEKLY', 'INTERVAL'])
+export const ritualMood = pgEnum("RitualMood", ['HAPPY', 'NEUTRAL', 'NEGATIVE'])
 export const size = pgEnum("Size", ['S', 'M', 'L', 'XL'])
 export const taskStatus = pgEnum("TaskStatus", ['SOMEDAY', 'UPCOMING', 'TODAY', 'WONT_DO'])
 export const taskUpdateKind = pgEnum("TaskUpdateKind", ['NOTE', 'COMPLETED'])
@@ -667,4 +670,70 @@ export const authIdentity = pgTable("AuthIdentity", {
 			name: "AuthIdentity_authId_fkey"
 		}).onUpdate("cascade").onDelete("cascade"),
 	primaryKey({ columns: [table.providerUserId, table.providerName], name: "AuthIdentity_pkey"}),
+]);
+
+// Rituals (the habits layer) — docs/specs/rituals.md §Entity model. Lens-scoped
+// like every structured entity; due-ness is DERIVED from cadence, never stored.
+export const ritual = pgTable("Ritual", {
+	id: text().primaryKey().notNull(),
+	userId: text().notNull(),
+	lensId: text().notNull(),
+	name: text().notNull(),
+	/** The daily slot (morning/midday/evening) — an assignment + grouping, not an alarm. */
+	interval: ritualInterval().default('MORNING').notNull(),
+	cadence: ritualCadence().default('DAILY').notNull(),
+	/** 0–6 ISO order (Mon=0) — read when cadence = WEEKLY. */
+	weekday: integer(),
+	/** 2–365 — read when cadence = INTERVAL; phase anchor is the creation local date. */
+	intervalDays: integer(),
+	goalId: text(),
+	order: integer().default(0).notNull(),
+	/** Pause hides from due-ness without touching history. */
+	pausedAt: timestamp({ precision: 3, mode: 'date' }),
+	/** Archive retires it; history stays for review evidence. */
+	archivedAt: timestamp({ precision: 3, mode: 'date' }),
+	createdAt: timestamp({ precision: 3, mode: 'date' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+	updatedAt: timestamp({ precision: 3, mode: 'date' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+}, (table) => [
+	index("Ritual_userId_lensId_archivedAt_idx").using("btree", table.userId.asc().nullsLast(), table.lensId.asc().nullsLast(), table.archivedAt.asc().nullsLast()),
+	foreignKey({
+			columns: [table.goalId],
+			foreignColumns: [goal.id],
+			name: "Ritual_goalId_fkey"
+		}).onUpdate("cascade").onDelete("set null"),
+	foreignKey({
+			columns: [table.lensId],
+			foreignColumns: [lens.id],
+			name: "Ritual_lensId_fkey"
+		}).onUpdate("cascade").onDelete("cascade"),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [user.id],
+			name: "Ritual_userId_fkey"
+		}).onUpdate("cascade").onDelete("cascade"),
+]);
+
+/** One row per checked day — `localDate` is the user's calendar day in their
+ *  persisted IANA timeZone at check time (the locked date-model primitive). */
+export const ritualEntry = pgTable("RitualEntry", {
+	id: text().primaryKey().notNull(),
+	ritualId: text().notNull(),
+	userId: text().notNull(),
+	localDate: date({ mode: 'date' }).notNull(),
+	mood: ritualMood(),
+	note: text(),
+	createdAt: timestamp({ precision: 3, mode: 'date' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+}, (table) => [
+	uniqueIndex("RitualEntry_ritualId_localDate_key").using("btree", table.ritualId.asc().nullsLast(), table.localDate.asc().nullsLast()),
+	index("RitualEntry_userId_localDate_idx").using("btree", table.userId.asc().nullsLast(), table.localDate.asc().nullsLast()),
+	foreignKey({
+			columns: [table.ritualId],
+			foreignColumns: [ritual.id],
+			name: "RitualEntry_ritualId_fkey"
+		}).onUpdate("cascade").onDelete("cascade"),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [user.id],
+			name: "RitualEntry_userId_fkey"
+		}).onUpdate("cascade").onDelete("cascade"),
 ]);
