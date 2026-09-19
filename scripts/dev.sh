@@ -28,4 +28,10 @@ for _ in $(seq 1 120); do
   sleep 0.5
 done
 
+if ! curl -sf http://localhost:8080/ready >/dev/null 2>&1; then
+  echo "[dev] warning: the API never reported ready after 60s — usually the" >&2
+  echo "[dev] database behind DATABASE_URL (api/.env) is missing or down." >&2
+  echo "[dev] starting the web anyway; its data calls will fail." >&2
+fi
+
 bun run --filter '@actionamp/web' dev
