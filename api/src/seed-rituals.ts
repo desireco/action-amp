@@ -10,6 +10,8 @@
  *                           day, so the spec never depends on the run date)
  *                           and one WEEKLY on Mondays (Planning-list only —
  *                           its due-ness is weekday-dependent).
+ *   rituals-empty@test.local BILLED PRO with a Me lens and ZERO rituals —
+ *                           the empty state + starting points assertions.
  *   s4-today@test.local     reused as the FREE account (no rituals rows —
  *                           the whole-feature gate needs no setup).
  *
@@ -20,6 +22,7 @@
 import { and, eq } from "drizzle-orm";
 import {
   createDb,
+  goal as goalTable,
   lens as lensTable,
   ritual as ritualTable,
   ritualEntry as ritualEntryTable,
@@ -30,6 +33,7 @@ import { databaseUrl, isLocalDatabaseUrl } from "./db.js";
 import { ensureEmailUser } from "./auth/seed-session.js";
 
 const PRO_EMAIL = "rituals-pro@test.local";
+const EMPTY_EMAIL = "rituals-empty@test.local";
 
 interface SeedRitual {
   name: string;
@@ -103,7 +107,35 @@ try {
       order: r.order,
     });
   }
+  // A "Wellbeing" goal in the same lens — the goal-link assertion.
+  const existingGoal = await db
+    .select({ id: goalTable.id })
+    .from(goalTable)
+    .where(and(eq(goalTable.userId, userId), eq(goalTable.name, "Wellbeing")))
+    .limit(1);
+  if (!existingGoal[0]) {
+    await db.insert(goalTable).values({
+      id: crypto.randomUUID(),
+      name: "Wellbeing",
+      permalink: "wellbeing",
+      userId,
+      lensId,
+      isDone: false,
+    });
+  }
+
   console.log(`seeded ${RITUALS.length} rituals for ${PRO_EMAIL} (lens ${lensId})`);
+
+  // The empty-state user: PRO, Me lens, and deliberately zero rituals.
+  const empty = await ensureEmailUser(db, EMPTY_EMAIL);
+  await db
+    .update(userTable)
+    .set({ plan: "PRO", planRenewsAt: new Date(Date.now() + 365 * 24 * 3600 * 1000) })
+    .where(eq(userTable.id, empty.userId));
+  const emptyLens = await ensureLens(db, empty.userId);
+  await db.delete(ritualEntryTable).where(eq(ritualEntryTable.userId, empty.userId));
+  await db.delete(ritualTable).where(eq(ritualTable.userId, empty.userId));
+  console.log(`seeded empty rituals user ${EMPTY_EMAIL} (lens ${emptyLens})`);
 } finally {
   await db.$client.end();
 }

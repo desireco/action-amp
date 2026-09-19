@@ -55,15 +55,18 @@ test.describe("Rituals", () => {
     }
     await expect(page.locator(".aa-rituals__row", { hasText: "Read 10 pages" })).toHaveCount(0);
 
-    // Create without touching the lens picker — the default IS Me.
+    // Create without touching the lens picker — the default IS Me — and
+    // link it to the seeded Wellbeing goal (the why at all).
     await page.getByRole("button", { name: "New ritual" }).click();
     await page.getByPlaceholder("Morning walk").fill("Read 10 pages");
+    await page.getByRole("radio", { name: "Wellbeing" }).click();
     await page.getByRole("button", { name: "Create ritual" }).click();
 
     const row = page.locator(".aa-rituals__row", { hasText: "Read 10 pages" });
     await expect(row).toBeVisible();
     await expect(row.getByText("Morning")).toBeVisible();
     await expect(row.getByText("Every day")).toBeVisible();
+    await expect(row.locator(".aa-rituals__row-goal")).toHaveText(/Wellbeing/);
   });
 
   test("due rituals group by interval on Today, outside the cap", async ({ page }) => {
@@ -148,7 +151,16 @@ test.describe("Rituals", () => {
     await expect(dialog).not.toBeVisible();
     await expect(row.locator(".aa-ritual-strip__mood")).toHaveText("▼");
 
+    // The quiet history on the Planning page: today's day + glyph + note.
+    await page.goto("/rituals");
+    const planRow = page.locator(".aa-rituals__row", { hasText: "Take vitamins" });
+    await planRow.getByRole("button", { name: "History" }).click();
+    const historyEntry = planRow.locator(".aa-rituals__history-list li").first();
+    await expect(historyEntry.locator(".aa-rituals__history-mood")).toHaveText("▼");
+    await expect(historyEntry).toContainText("Rushed");
+
     // Uncheck — one direct tap, no modal; the entry and its reflection go.
+    await page.goto("/today");
     await row.locator(".aa-cc").click();
     await expect(row.locator(".aa-cc--filled")).toHaveCount(0);
     await expect(row.locator(".aa-ritual-strip__mood")).toHaveCount(0);
@@ -172,6 +184,45 @@ test.describe("Rituals", () => {
     await page.locator(".aa-rituals__row", { hasText: "Take vitamins" }).getByRole("button", { name: "Resume" }).click();
     await page.goto("/today");
     await expect(page.locator(".aa-ritual-strip__row", { hasText: "Take vitamins" })).toBeVisible();
+  });
+
+  test("the empty state offers one-tap starting points that prefill the composer", async ({ page }) => {
+    await loginAs(page, "rituals-empty@test.local");
+    await page.goto("/rituals");
+    await expect(page.getByText("No rituals yet.")).toBeVisible();
+
+    await page.getByRole("button", { name: "Journaling", exact: true }).click();
+
+    // Prefilled: name, evening interval, guidance/benefit with markdown.
+    await expect(page.getByPlaceholder("Morning walk")).toHaveValue("Journaling");
+    await expect(
+      page.locator("input[placeholder='Ten minutes, three bullets, no editing']"),
+    ).toHaveValue(/no editing/);
+    await expect(
+      page.locator("input[placeholder='Clears the noise before the day starts']"),
+    ).toHaveValue(/Clears the noise/);
+    await page.getByRole("button", { name: "Create ritual" }).click();
+
+    const row = page.locator(".aa-rituals__row", { hasText: "Journaling" });
+    await expect(row).toBeVisible();
+    await expect(row.locator(".aa-md strong", { hasText: "no editing" })).toBeVisible();
+  });
+
+  test("drag a row onto another to reorder (order = index write)", async ({ page }) => {
+    await loginAs(page, PRO_EMAIL);
+    await page.goto("/rituals");
+
+    // "Week plan review" is seeded last; drag it onto the first row.
+    const dataTransfer = await page.evaluateHandle(() => new DataTransfer());
+    const src = page.locator(".aa-rituals__row", { hasText: "Week plan review" });
+    const target = page.locator(".aa-rituals__row", { hasText: "Take vitamins" });
+    await src.dispatchEvent("dragstart", { dataTransfer });
+    await target.dispatchEvent("dragover", { dataTransfer });
+    await target.dispatchEvent("drop", { dataTransfer });
+    await src.dispatchEvent("dragend", { dataTransfer });
+    await page.waitForTimeout(900);
+
+    await expect(page.locator(".aa-rituals__row").first()).toContainText("Week plan review");
   });
 
   test("FREE sees the ProGate on /rituals, a 402 on the wire, and no strip on Today", async ({ page }) => {
