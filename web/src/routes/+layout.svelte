@@ -89,7 +89,7 @@
      frames it on the app routes; flow pages render it bare. -->
 {#if inApp}
   <Shell>
-    <div class="screen-container">
+    <div class="screen-container aa-screen-shell">
       {@render children()}
     </div>
   </Shell>
@@ -111,5 +111,13 @@
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
+  }
+  /* Inside the shell, the container flex-fills the main area instead of
+     forcing a full viewport height inside the main column's padding — a
+     100dvh box inside padded chrome is a permanent phantom scrollbar on
+     every page. Flow pages (no shell) keep the full-viewport min-height. */
+  .aa-screen-shell {
+    min-height: 0;
+    flex: 1;
   }
 </style>

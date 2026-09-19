@@ -116,3 +116,17 @@
     </div>
   </div>
 </div>
+
+<style>
+  /* The ⌘↵ chip in the footer — moved here from ui/Overlays.css when its
+     dead focus-mode block was removed (this dialog is the only consumer). */
+  .aa-kbd {
+    font-family: var(--aa-font-mono);
+    font-size: var(--aa-text-xs);
+    background: var(--aa-surface);
+    border: 1px solid var(--aa-border);
+    padding: 1px 5px;
+    border-radius: var(--aa-radius-sm);
+    color: var(--aa-text-3);
+  }
+</style>

@@ -828,11 +828,9 @@
     }
   }
 
-  /* Short viewports: the sanctuary must fit without a scrollbar. A global
-     sheet (ui/Overlays.css) also styles this screen with vh-clamped sizes;
-     these scoped rules win that fight (0,2,0 vs 0,1,0) and compact the
-     timer box, its breathing room, and the rhythm together so a full
-     session fits even a half-screen window. */
+  /* Short viewports: the sanctuary must fit without a scrollbar. The
+     timer box, its breathing room, and the rhythm compact together so a
+     full session fits even a half-screen window. */
   @media (max-height: 960px) {
     .aa-focus {
       padding: 2rem 1rem 1.5rem;
@@ -842,16 +840,6 @@
     }
     .aa-focus-timer {
       width: min(13rem, 70vw, 30vh);
-      margin-bottom: 0.35rem;
-    }
-    .aa-focus-timer__ring {
-      width: 100%;
-      height: 100%;
-    }
-    .aa-focus__clarification,
-    .aa-focus__primary-actions,
-    .aa-thread {
-      margin-top: 0.35rem;
     }
   }
 </style>
