@@ -224,6 +224,12 @@
 @media (max-width: 480px) {
   .aa-settings-tabs {
     gap: 0;
+    /* Phone: show every tab. The base strip swipe-scrolls behind a hidden
+       scrollbar — nothing advertises the cut-off tab, so wrap to two rows
+       instead of clipping. */
+    flex-wrap: wrap;
+    row-gap: var(--aa-space-xs);
+    overflow-x: visible;
   }
 
   .aa-settings-tab {
