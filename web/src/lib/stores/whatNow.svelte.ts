@@ -21,6 +21,17 @@ import type {
 /** Today-cap fallback while appData is loading (matches the server default). */
 export const TODAY_CAP_DEFAULT = 5;
 
+/** The user's running task, in the shape the sidebar's Now tile renders:
+ *  name + the open session's countdown anchor. */
+export interface NowSummary {
+  id: string;
+  description: string;
+  /** Open session start (ISO). Legacy pointer-without-session rows fall back
+   *  to the task's startedAt; null on both = no countdown to show. */
+  sessionStartedAt: string | null;
+  plannedMinutes: number;
+}
+
 class WhatNowStore {
   /** App-shell bootstrap (lenses + counts + todayCap). */
   appData = $state<AppData | null>(null);
@@ -34,10 +45,13 @@ class WhatNowStore {
   alternatives = $state<RankedTask[]>([]);
   otherCounts = $state<{ lensId: string; lensName: string; count: number }[]>([]);
   focused = $state<FocusedTask | null>(null);
-  /** Whether the user's single Now is live — lens-independent, resolved per
-   *  load() off the focused read. The Do → focus handoff signal; the full
-   *  payload stays /focus's business (`focused` above). */
-  nowActive = $state(false);
+  /** The user's running task — lens-independent, synced per load() off the
+   *  focused read. Powers the sidebar Now tile; the handoff effect and the
+   *  full payload stay separate (`focused` is /focus's business). */
+  nowTask = $state<NowSummary | null>(null);
+  /** True while the stage shows a picked task that is NOT the one running —
+   *  an explicit inspection, which suppresses the Do → focus handoff. */
+  inspectingOther = $state(false);
   loading = $state(false);
   error = $state<string | null>(null);
 
@@ -85,21 +99,16 @@ class WhatNowStore {
         this.topTask = await client.tasks.topTask({ lensId });
       }
       if (lensId !== this.lensId) return; // a switch superseded this load
+      // Sync the running-task summary on every stage load — Do is focus
+      // while a task is Now, and the single-Now invariant is lens-independent
+      // (`getFocusedTaskData` filters on startedAt only), so the handoff keys
+      // on the focused READ, not on the lens-scoped stage: a session keeps
+      // running across lens switches and status moves. Inspecting another
+      // task (a picked row that isn't the one running) suppresses the
+      // handoff but still refreshes the tile.
+      this.inspectingOther = !!this.picked && !this.picked.startedAt;
+      await this.syncNow();
       const task = this.picked ?? this.topTask;
-      // Do is focus while a task is Now — and the single-Now invariant is
-      // lens-independent (`getFocusedTaskData` filters on startedAt only),
-      // so the handoff keys on the focused READ, not on the lens-scoped
-      // stage: a session keeps running across lens switches and status
-      // moves, and Do must re-enter it. The payload is discarded here —
-      // /focus owns `focused` and re-resolves with its own stale-cache
-      // guard. Inspecting another task (a picked row that isn't the one
-      // running) stays on its card: an explicit choice to look elsewhere.
-      if (this.picked && !this.picked.startedAt) {
-        this.nowActive = false;
-      } else {
-        this.nowActive =
-          (await client.tasks.focusedTask().catch(() => null)) !== null;
-      }
       // Alternatives render only while deciding — a started task keeps the
       // stage to itself.
       this.alternatives =
@@ -135,12 +144,49 @@ class WhatNowStore {
       const fresh = await client.tasks.focusedTask().catch(() => null);
       if (fresh !== null) this.focused = fresh;
     }
+    this.#applyNow(this.focused);
+  }
+
+  /** Refresh the running-task summary (the sidebar Now tile's data). Safe to
+   *  call anywhere — a failed read just leaves the previous summary up. */
+  async syncNow(): Promise<void> {
+    const row = await client.tasks.focusedTask().catch(() => null);
+    this.#applyNow(row);
+  }
+
+  /** Structural row shape — both the oRPC client result and the mirrored
+   *  `FocusedTask` dto satisfy it without cross-casts. */
+  #applyNow(
+    row: {
+      id: string;
+      description: string;
+      isDone: boolean;
+      startedAt: string | null;
+      sessions?: Array<{
+        startedAt: string;
+        endedAt: string | null;
+        plannedMinutes: number | null;
+      }>;
+    } | null,
+  ) {
+    if (!row || row.isDone || !row.startedAt) {
+      this.nowTask = null;
+      return;
+    }
+    const open = row.sessions?.find((s) => s.endedAt === null) ?? null;
+    this.nowTask = {
+      id: row.id,
+      description: row.description,
+      sessionStartedAt: open?.startedAt ?? row.startedAt,
+      plannedMinutes: open?.plannedMinutes ?? this.appData?.focusSessionMinutes ?? 25,
+    };
   }
 
   async start(id: string): Promise<boolean> {
     try {
       await client.tasks.start({ id });
       this.focused = null;
+      void this.syncNow(); // the tile lights up immediately; /focus refetches anyway
       return true;
     } catch {
       return false;
@@ -149,6 +195,7 @@ class WhatNowStore {
 
   async pause(id: string) {
     await client.tasks.pause({ id });
+    this.nowTask = null;
   }
 
   async snooze(id: string, preset: SnoozePreset) {
@@ -158,6 +205,7 @@ class WhatNowStore {
   async complete(id: string, outcome?: string) {
     await client.tasks.complete(outcome ? { taskId: id, outcome } : { taskId: id });
     this.focused = null;
+    this.nowTask = null;
   }
 
   async completeSession(id: string) {
@@ -168,6 +216,7 @@ class WhatNowStore {
       // will re-fire at zero; nothing to surface yet.
     }
     if (this.focused?.id === id) this.focused = await client.tasks.focusedTask();
+    this.#applyNow(this.focused); // countdown clamps at 00:00; task stays Now
   }
 
   async startSession(id: string) {

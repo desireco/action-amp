@@ -28,6 +28,10 @@ planned end + 5-minute break (domain `expireAbandonedFocusSession`, wired
 into the focused/topTask/appData reads) — closed `completed=false` at the
 planned end, Now state ended. Returning in time is the confirmed path:
 the client records the pomodoro with `completed=true`.
+The running state stays visible everywhere: the desktop sidebar carries a
+compact Now tile (countdown + truncated task name, links back to `/focus`)
+above the user footer; hidden on mobile with the sidebar. The Do nav item
+reads as active while focus is open (Do *is* focus).
 See `WORKFLOW.md` §2.3 and `INTERACTION.md` WORKING mode.
 
 **Revised 2026-08-07 (centered focus session).** The focus screen:

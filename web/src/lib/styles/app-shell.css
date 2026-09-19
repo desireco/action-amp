@@ -112,9 +112,16 @@
   margin-bottom: var(--aa-space-lg);
 }
 
-/* ---- User footer ---- */
-.aa-app-user {
+/* ---- Bottom block — the Now tile + user footer pinned to the sidebar's
+   foot; the tile sits above the footer's separator line. ---- */
+.aa-app-side-bottom {
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-sm);
+}
+
+.aa-app-user {
   padding-top: var(--aa-space-md);
   border-top: 1px solid var(--aa-border);
   display: flex;
@@ -421,7 +428,7 @@
   }
   .aa-app-side > .aa-app-nav,
   .aa-app-side > .aa-focus-nav,
-  .aa-app-side > .aa-app-user {
+  .aa-app-side > .aa-app-side-bottom {
     display: none;
   }
   .aa-app-lens {

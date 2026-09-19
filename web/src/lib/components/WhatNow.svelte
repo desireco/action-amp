@@ -51,19 +51,23 @@
   const isNow = $derived(!!task?.startedAt);
   // The veil covers the first load AND the handoff frame — a running task
   // never renders as a card (unless the focused read failed, the fallback
-  // the now-state card exists for).
+  // the now-state card exists for). Inspecting a picked task never veils.
   const loading = $derived(
-    (whatNow.loading && !entered) || (entered && whatNow.nowActive),
+    (whatNow.loading && !entered) ||
+      (entered && !!whatNow.nowTask && !whatNow.inspectingOther),
   );
 
-  // "Do is focus while running": the store resolves the user's single Now
-  // (lens-independent) on every load; when it's live, this hands off to the
-  // focus route — clicking Do (or coming back to it) lands in the ticking
-  // session, not on a card. replaceState keeps Back on the page the user
-  // came from. After any pause/complete the next load flips nowActive off,
-  // so this can't loop with /focus's own empty-bounce.
+  // "Do is focus while running": the store syncs the user's single Now
+  // (lens-independent) on every load; when it's live — and the user isn't
+  // explicitly inspecting another task — this hands off to the focus route,
+  // so clicking Do (or coming back to it) lands in the ticking session, not
+  // on a card. replaceState keeps Back on the page the user came from. After
+  // any pause/complete the next load clears nowTask, so this can't loop with
+  // /focus's own empty-bounce.
   $effect(() => {
-    if (entered && whatNow.nowActive) void goto("/focus", { replaceState: true });
+    if (entered && whatNow.nowTask && !whatNow.inspectingOther) {
+      void goto("/focus", { replaceState: true });
+    }
   });
 
   function dueLabel(t: { status: string; scheduledDate: string | null }): string | null {
