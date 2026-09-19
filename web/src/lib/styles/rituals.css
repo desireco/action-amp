@@ -99,10 +99,12 @@
 }
 
 .aa-rituals__row {
+  /* Fixed structure, no wrapping: the copy block on top, the actions
+     ALWAYS on their own bottom row — the buttons never jump between
+     beside-the-copy and below-the-copy (Jake, 2026-09-19). */
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
   gap: var(--aa-space-sm);
   padding: var(--aa-space-md);
   background: var(--aa-surface);
@@ -116,11 +118,8 @@
 }
 
 .aa-rituals__row-main {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--aa-space-sm);
   min-width: 0;
+  width: 100%;
 }
 
 .aa-rituals__row-name {
@@ -129,8 +128,18 @@
   color: var(--aa-text);
 }
 
+/* Head line: the name with its meta sitting right beside it — always. */
+.aa-rituals__row-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--aa-space-sm);
+  min-width: 0;
+}
+
 .aa-rituals__row-meta {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--aa-space-xs);
   min-width: 0;
@@ -142,9 +151,12 @@
 }
 
 .aa-rituals__row-actions {
+  /* The action row: full-width under the copy, quiet, always in place. */
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--aa-space-xs);
+  padding-top: var(--aa-space-xs);
 }
 
 .aa-rituals__edit {

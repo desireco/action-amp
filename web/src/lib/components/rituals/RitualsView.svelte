@@ -539,7 +539,22 @@
             {:else}
               <div class="aa-rituals__row-main">
                 <div class="aa-rituals__row-copy">
-                  <span class="aa-rituals__row-name">{row.name}</span>
+                  <div class="aa-rituals__row-head">
+                    <span class="aa-rituals__row-name">{row.name}</span>
+                    <span class="aa-rituals__row-meta">
+                      <Chip variant="muted" small>{INTERVAL_LABELS[row.interval]}</Chip>
+                      <span class="aa-rituals__row-cadence">{cadenceLabel(row)}</span>
+                      {#if row.goalId}
+                        <span class="aa-rituals__row-goal" title="Linked goal">
+                          <Icon name="star" size={11} />
+                          {goalById.get(row.goalId) ?? "Goal"}
+                        </span>
+                      {/if}
+                      {#if row.paused}
+                        <Chip variant="muted" small>Paused</Chip>
+                      {/if}
+                    </span>
+                  </div>
                   {#if row.guidance}
                     <div class="aa-rituals__row-def aa-rituals__row-def--g">
                       <span class="aa-rituals__def-tag" aria-hidden="true">g</span>
@@ -553,19 +568,6 @@
                     </div>
                   {/if}
                 </div>
-                <span class="aa-rituals__row-meta">
-                  <Chip variant="muted" small>{INTERVAL_LABELS[row.interval]}</Chip>
-                  <span class="aa-rituals__row-cadence">{cadenceLabel(row)}</span>
-                  {#if row.goalId}
-                    <span class="aa-rituals__row-goal" title="Linked goal">
-                      <Icon name="star" size={11} />
-                      {goalById.get(row.goalId) ?? "Goal"}
-                    </span>
-                  {/if}
-                  {#if row.paused}
-                    <Chip variant="muted" small>Paused</Chip>
-                  {/if}
-                </span>
               </div>
               <div class="aa-rituals__row-actions">
                 <button
