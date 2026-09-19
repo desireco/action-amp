@@ -136,10 +136,54 @@
 .aa-goal__project-name {
   flex: 1;
   font-weight: var(--aa-weight-medium);
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .aa-goal__project-pct {
   font-size: var(--aa-text-sm);
   font-weight: var(--aa-weight-medium);
   color: var(--aa-text-3);
+}
+
+/* ---- Mobile (≤768px): the goals surfaces in the phone shell. CSS-only —
+   the markup (forms, buttons, confirm dialog) already works on touch. ---- */
+@media (max-width: 768px) {
+  /* One column — the 320px minmax grid track overflows a phone frame. */
+  .aa-goals__grid {
+    grid-template-columns: 1fr;
+    gap: var(--aa-space-md);
+  }
+
+  /* Let the create control drop below the title block when the header
+     gets tight (it stays inline while it fits). */
+  .aa-goals .aa-list-header {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  /* The app-main padding already carries the horizontal inset at this
+     width; the detail's own lg padding would double it. */
+  .aa-detail.aa-goal {
+    padding: var(--aa-space-lg) 0;
+  }
+
+  /* ↑/↓ stay buttons (no drag) but get touch-sized targets. */
+  .aa-reorder-btn {
+    min-width: 32px;
+    padding-block: 4px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 430px) {
+  /* Very narrow: the create control goes full-width under the header. */
+  .aa-goals .aa-list-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .aa-goals .aa-create-control {
+    justify-content: center;
+  }
 }
