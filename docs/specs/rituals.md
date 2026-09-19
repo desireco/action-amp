@@ -1,6 +1,6 @@
 ---
 feature: rituals
-status: draft
+status: done
 spec_owner: discover
 build_owner: build
 kind: spec
@@ -64,7 +64,13 @@ that isolation to recurrence.
 
 - **`Ritual`** — lens-scoped like every structured entity.
   `id, userId, lensId, name, interval, cadence, weekday, intervalDays,
-  goalId, order, pausedAt, archivedAt, createdAt, updatedAt`.
+  guidance, benefit, goalId, order, pausedAt, archivedAt, createdAt,
+  updatedAt`. **Guidance + benefit** (added 2026-09-19, built same day):
+  optional 500-char definition fields — guidance is what you do, benefit
+  is what you get. Markdown-authored; rendered through the app's safe
+  Markdown component (Planning rows show the full text with g/b tags;
+  Today rows carry small (g)/(b) markers whose hover popover renders
+  them).
   - `interval: RitualInterval` enum: `MORNING | MIDDAY | EVENING`
     (required, default `MORNING`). The daily slot the Ritual belongs to —
     Today's section groups by it, morning → midday → evening. It is an
@@ -225,7 +231,7 @@ strings). Composition lines in `packages/contract/src/router.ts` + `index.ts`.
 → `isPlanActive` (402) → `assertLensAllowed` → core call → DTO map →
 `toOrpcError`. One line in `api/src/router.ts`.
 
-### 6. Web
+### 6. Web (plus guidance/benefit in the composer + edit form)
 
 `stores/rituals.svelte.ts` (DTO interfaces mirroring the contract, loads on
 lens change); `components/rituals/RitualsView.svelte` (Planning page);
@@ -297,7 +303,10 @@ line), roadmap §Then entry → done with sign-off link.
 - **No per-interval reminders or time enforcement** — the interval is an
   assignment and a grouping, not an alarm system. The one reminder is the
   existing daily push.
-- **No CLI in v1** (`actionamp ritual list/toggle` is a natural follow-up;
-  the CLI is already Pro-only).
+- **No CLI in v1** → shipped 2026-09-19: `/api/cli/ritual/*` +
+  `actionamp ritual list/today/create/update/check/uncheck/pause/resume/
+  archive` (the CLI middleware's own Pro gate covers the whole-feature
+  gate; the local day derives server-side; moods arrive as
+  good/okay/rough).
 - Each work part commits separately with `typecheck` + the feature's vitest
   green before the next; WORKFLOW.md lands first per repo rules.
