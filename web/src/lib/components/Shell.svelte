@@ -485,7 +485,9 @@
         to: isWeekPlanning ? "/week" : "/today",
         count: counts.today,
       })}
-      {@render navItem({ icon: starIcon, label: "Do", active: isActive("/"), to: "/" })}
+      <!-- Do is focus while a task is Now (WORKFLOW §2.3): the focus route
+           reads as Do's active state, not as an unaffiliated page. -->
+      {@render navItem({ icon: starIcon, label: "Do", active: isActive("/") || inFocus, to: "/" })}
     </nav>
 
     <!-- ---- Group nav — always-open Plan + Review labeled groups ----
