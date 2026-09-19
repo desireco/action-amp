@@ -43,6 +43,9 @@
   // The ⌘L popover (bound into LensSwitcher) + the mobile lens menu.
   let lensOpen = $state(false);
   let mobileLensOpen = $state(false);
+  // The mobile Plan section menu (Upcoming/Projects/Goals/Someday) — the
+  // dock's Plan item opens it instead of linking straight to /projects.
+  let mobilePlanOpen = $state(false);
   let confirmLogout = $state(false);
 
   // Mount-once (webapp useEffect([]) parity): theme on app entry, the shell
@@ -167,6 +170,7 @@
     feedback.hide();
     confirmLogout = false;
     mobileLensOpen = false;
+    mobilePlanOpen = false;
   }
 
   function isTypingTarget(target: EventTarget | null): boolean {
@@ -202,6 +206,7 @@
       else if (feedback.open) feedback.hide();
       else if (lensOpen) lensOpen = false;
       else if (mobileLensOpen) mobileLensOpen = false;
+      else if (mobilePlanOpen) mobilePlanOpen = false;
       return;
     }
 
@@ -590,6 +595,58 @@
         {/each}
       </div>
     {/if}
+    {#if mobilePlanOpen}
+      <!-- Plan section menu — the whole Plan group in one dock slot (the lens
+          menu's pattern). Anchors navigate; the menu closes on pick. -->
+      <div class="aa-mobile-plan-menu" role="menu" aria-label="Plan">
+        <a
+          class="aa-mobile-plan-menu__item"
+          role="menuitem"
+          class:active={isActive("/upcoming")}
+          href="/upcoming"
+          onclick={() => (mobilePlanOpen = false)}
+        >
+          {@render calendarIcon()}
+          <span>Upcoming</span>
+          {#if counts.upcoming > 0}
+            <span class="aa-mobile-plan-menu__count">{counts.upcoming}</span>
+          {/if}
+        </a>
+        <a
+          class="aa-mobile-plan-menu__item"
+          role="menuitem"
+          class:active={isActive("/projects")}
+          href="/projects"
+          onclick={() => (mobilePlanOpen = false)}
+        >
+          {@render projectsIcon()}
+          <span>Projects</span>
+        </a>
+        <a
+          class="aa-mobile-plan-menu__item"
+          role="menuitem"
+          class:active={isActive("/goals")}
+          href="/goals"
+          onclick={() => (mobilePlanOpen = false)}
+        >
+          {@render goalsIcon()}
+          <span>Goals</span>
+        </a>
+        <a
+          class="aa-mobile-plan-menu__item"
+          role="menuitem"
+          class:active={isActive("/someday")}
+          href="/someday"
+          onclick={() => (mobilePlanOpen = false)}
+        >
+          {@render somedayIcon()}
+          <span>Someday</span>
+          {#if counts.someday > 0}
+            <span class="aa-mobile-plan-menu__count">{counts.someday}</span>
+          {/if}
+        </a>
+      </div>
+    {/if}
     <div class="aa-mobile-dock__row">
       <a class="aa-mobile-dock__item" class:active={isActive("/inbox")} href="/inbox" aria-label="Inbox">
         {@render inboxIcon()}
@@ -599,10 +656,20 @@
         {@render starIcon()}
         <span>Do</span>
       </a>
-      <a class="aa-mobile-dock__item" class:active={inPlan} href="/projects" aria-label="Plan">
+      <button
+        type="button"
+        class="aa-mobile-dock__item"
+        class:active={inPlan}
+        aria-label="Plan"
+        aria-expanded={mobilePlanOpen}
+        onclick={() => {
+          mobilePlanOpen = !mobilePlanOpen;
+          if (mobilePlanOpen) mobileLensOpen = false;
+        }}
+      >
         {@render projectsIcon()}
         <span>Plan</span>
-      </a>
+      </button>
       <a class="aa-mobile-dock__item" class:active={inReview} href="/logbook" aria-label="Review">
         {@render logbookIcon()}
         <span>Review</span>
@@ -613,7 +680,10 @@
         class:active={mobileLensOpen}
         aria-label="Lens: {activeLensName}"
         aria-expanded={mobileLensOpen}
-        onclick={() => (mobileLensOpen = !mobileLensOpen)}
+        onclick={() => {
+          mobileLensOpen = !mobileLensOpen;
+          if (mobileLensOpen) mobilePlanOpen = false;
+        }}
       >
         <span class="aa-mobile-dock__lens-dot" aria-hidden="true"></span>
         <span>{activeLensName}</span>

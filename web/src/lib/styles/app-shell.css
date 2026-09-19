@@ -502,7 +502,8 @@
   .aa-mobile-dock__row.is-simple-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  .aa-mobile-lens-menu {
+  .aa-mobile-lens-menu,
+  .aa-mobile-plan-menu {
     position: absolute;
     left: 8px;
     right: 8px;
@@ -516,7 +517,8 @@
     background: var(--aa-surface);
     box-shadow: var(--aa-shadow-md);
   }
-  .aa-mobile-lens-menu__item {
+  .aa-mobile-lens-menu__item,
+  .aa-mobile-plan-menu__item {
     min-width: 0;
     min-height: 40px;
     display: inline-flex;
@@ -532,7 +534,18 @@
     font-weight: var(--aa-weight-bold);
     cursor: pointer;
   }
-  .aa-mobile-lens-menu__item.active {
+  /* Plan items are anchors, not buttons — and carry the sidebar's 16px icons. */
+  .aa-mobile-plan-menu__item {
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .aa-mobile-plan-menu__item svg {
+    width: 15px;
+    height: 15px;
+    flex: none;
+  }
+  .aa-mobile-lens-menu__item.active,
+  .aa-mobile-plan-menu__item.active {
     background: var(--aa-active-lens-soft);
     color: var(--aa-active-lens-text);
   }
@@ -560,7 +573,8 @@
     .aa-mobile-lens-menu__dot {
     background: var(--aa-lens-emerald);
   }
-  .aa-mobile-lens-menu__count {
+  .aa-mobile-lens-menu__count,
+  .aa-mobile-plan-menu__count {
     min-width: 15px;
     height: 15px;
     display: inline-flex;
