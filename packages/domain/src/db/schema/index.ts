@@ -35,8 +35,8 @@ export const adminUserAction = pgTable("AdminUserAction", {
 	previousGrant: manualAccessGrant(),
 	nextGrant: manualAccessGrant(),
 }, (table) => [
-	index("AdminUserAction_actorUserId_createdAt_idx").using("btree", table.actorUserId.asc().nullsLast().op("text_ops"), table.createdAt.asc().nullsLast().op("timestamp_ops")),
-	index("AdminUserAction_targetUserId_createdAt_idx").using("btree", table.targetUserId.asc().nullsLast().op("text_ops"), table.createdAt.asc().nullsLast().op("text_ops")),
+	index("AdminUserAction_actorUserId_createdAt_idx").using("btree", table.actorUserId.asc().nullsLast(), table.createdAt.asc().nullsLast()),
+	index("AdminUserAction_targetUserId_createdAt_idx").using("btree", table.targetUserId.asc().nullsLast(), table.createdAt.asc().nullsLast()),
 ]);
 
 export const apiKey = pgTable("ApiKey", {
@@ -47,8 +47,8 @@ export const apiKey = pgTable("ApiKey", {
 	lastUsedAt: timestamp({ precision: 3, mode: 'date' }),
 	userId: text().notNull(),
 }, (table) => [
-	uniqueIndex("ApiKey_hashedToken_key").using("btree", table.hashedToken.asc().nullsLast().op("text_ops")),
-	index("ApiKey_userId_idx").using("btree", table.userId.asc().nullsLast().op("text_ops")),
+	uniqueIndex("ApiKey_hashedToken_key").using("btree", table.hashedToken.asc().nullsLast()),
+	index("ApiKey_userId_idx").using("btree", table.userId.asc().nullsLast()),
 	foreignKey({
 			columns: [table.userId],
 			foreignColumns: [user.id],
@@ -60,7 +60,7 @@ export const auth = pgTable("Auth", {
 	id: text().primaryKey().notNull(),
 	userId: text(),
 }, (table) => [
-	uniqueIndex("Auth_userId_key").using("btree", table.userId.asc().nullsLast().op("text_ops")),
+	uniqueIndex("Auth_userId_key").using("btree", table.userId.asc().nullsLast()),
 	foreignKey({
 			columns: [table.userId],
 			foreignColumns: [user.id],
@@ -88,7 +88,7 @@ export const feedback = pgTable("Feedback", {
 	timezone: text(),
 	viewport: text(),
 }, (table) => [
-	uniqueIndex("Feedback_shortId_key").using("btree", table.shortId.asc().nullsLast().op("text_ops")),
+	uniqueIndex("Feedback_shortId_key").using("btree", table.shortId.asc().nullsLast()),
 	foreignKey({
 			columns: [table.userId],
 			foreignColumns: [user.id],
@@ -107,9 +107,9 @@ export const goal = pgTable("Goal", {
 	lensId: text().notNull(),
 	permalink: text().notNull(),
 }, (table) => [
-	index("Goal_userId_createdAt_idx").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.createdAt.asc().nullsLast().op("text_ops")),
-	uniqueIndex("Goal_userId_name_key").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.name.asc().nullsLast().op("text_ops")),
-	uniqueIndex("Goal_userId_permalink_key").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.permalink.asc().nullsLast().op("text_ops")),
+	index("Goal_userId_createdAt_idx").using("btree", table.userId.asc().nullsLast(), table.createdAt.asc().nullsLast()),
+	uniqueIndex("Goal_userId_name_key").using("btree", table.userId.asc().nullsLast(), table.name.asc().nullsLast()),
+	uniqueIndex("Goal_userId_permalink_key").using("btree", table.userId.asc().nullsLast(), table.permalink.asc().nullsLast()),
 	foreignKey({
 			columns: [table.lensId],
 			foreignColumns: [lens.id],
@@ -154,9 +154,9 @@ export const analyticsSession = pgTable("AnalyticsSession", {
 	deviceClass: text(),
 	createdAt: timestamp({ precision: 3, mode: 'date' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
 }, (table) => [
-	index("AnalyticsSession_firstSeenAt_idx").using("btree", table.firstSeenAt.asc().nullsLast().op("timestamp_ops")),
-	index("AnalyticsSession_userId_idx").using("btree", table.userId.asc().nullsLast().op("text_ops")),
-	uniqueIndex("AnalyticsSession_visitorId_key").using("btree", table.visitorId.asc().nullsLast().op("text_ops")),
+	index("AnalyticsSession_firstSeenAt_idx").using("btree", table.firstSeenAt.asc().nullsLast()),
+	index("AnalyticsSession_userId_idx").using("btree", table.userId.asc().nullsLast()),
+	uniqueIndex("AnalyticsSession_visitorId_key").using("btree", table.visitorId.asc().nullsLast()),
 	foreignKey({
 			columns: [table.userId],
 			foreignColumns: [user.id],
@@ -197,7 +197,7 @@ export const loginEvent = pgTable("LoginEvent", {
 	provider: text().notNull(),
 	userId: text().notNull(),
 }, (table) => [
-	index("LoginEvent_userId_createdAt_idx").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.createdAt.asc().nullsLast().op("text_ops")),
+	index("LoginEvent_userId_createdAt_idx").using("btree", table.userId.asc().nullsLast(), table.createdAt.asc().nullsLast()),
 	foreignKey({
 			columns: [table.userId],
 			foreignColumns: [user.id],
@@ -215,7 +215,7 @@ export const lens = pgTable("Lens", {
 	isDefault: boolean().default(false).notNull(),
 	isIncluded: boolean().default(false).notNull(),
 }, (table) => [
-	uniqueIndex("Lens_userId_name_key").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.name.asc().nullsLast().op("text_ops")),
+	uniqueIndex("Lens_userId_name_key").using("btree", table.userId.asc().nullsLast(), table.name.asc().nullsLast()),
 	foreignKey({
 			columns: [table.userId],
 			foreignColumns: [user.id],
@@ -236,7 +236,7 @@ export const listItem = pgTable("ListItem", {
 	sourceUrl: text(),
 	projectId: text().notNull(),
 }, (table) => [
-	index("ListItem_projectId_isDone_order_idx").using("btree", table.projectId.asc().nullsLast().op("int4_ops"), table.isDone.asc().nullsLast().op("int4_ops"), table.order.asc().nullsLast().op("int4_ops")),
+	index("ListItem_projectId_isDone_order_idx").using("btree", table.projectId.asc().nullsLast(), table.isDone.asc().nullsLast(), table.order.asc().nullsLast()),
 	foreignKey({
 			columns: [table.projectId],
 			foreignColumns: [project.id],
@@ -259,9 +259,9 @@ export const magicLoginChallenge = pgTable("MagicLoginChallenge", {
 	attempts: integer().default(0).notNull(),
 	createdAt: timestamp({ precision: 3, mode: 'date' }).default(sql`CURRENT_TIMESTAMP`).notNull(),
 }, (table) => [
-	index("MagicLoginChallenge_email_createdAt_idx").using("btree", table.email.asc().nullsLast().op("timestamp_ops"), table.createdAt.asc().nullsLast().op("text_ops")),
-	index("MagicLoginChallenge_expiresAt_idx").using("btree", table.expiresAt.asc().nullsLast().op("timestamp_ops")),
-	uniqueIndex("MagicLoginChallenge_tokenHash_key").using("btree", table.tokenHash.asc().nullsLast().op("text_ops")),
+	index("MagicLoginChallenge_email_createdAt_idx").using("btree", table.email.asc().nullsLast(), table.createdAt.asc().nullsLast()),
+	index("MagicLoginChallenge_expiresAt_idx").using("btree", table.expiresAt.asc().nullsLast()),
+	uniqueIndex("MagicLoginChallenge_tokenHash_key").using("btree", table.tokenHash.asc().nullsLast()),
 ]);
 
 export const payment = pgTable("Payment", {
@@ -278,8 +278,8 @@ export const payment = pgTable("Payment", {
 	status: paymentStatus().default('PENDING').notNull(),
 	paidAt: timestamp({ precision: 3, mode: 'date' }),
 }, (table) => [
-	uniqueIndex("Payment_stripeInvoiceId_key").using("btree", table.stripeInvoiceId.asc().nullsLast().op("text_ops")),
-	uniqueIndex("Payment_stripePaymentIntentId_key").using("btree", table.stripePaymentIntentId.asc().nullsLast().op("text_ops")),
+	uniqueIndex("Payment_stripeInvoiceId_key").using("btree", table.stripeInvoiceId.asc().nullsLast()),
+	uniqueIndex("Payment_stripePaymentIntentId_key").using("btree", table.stripePaymentIntentId.asc().nullsLast()),
 	foreignKey({
 			columns: [table.userId],
 			foreignColumns: [user.id],
@@ -303,9 +303,9 @@ export const project = pgTable("Project", {
 	archivedAt: timestamp({ precision: 3, mode: 'date' }),
 	type: projectType().default('STANDARD').notNull(),
 }, (table) => [
-	index("Project_userId_archivedAt_idx").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.archivedAt.asc().nullsLast().op("text_ops")),
-	index("Project_userId_createdAt_idx").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.createdAt.asc().nullsLast().op("text_ops")),
-	uniqueIndex("Project_userId_permalink_key").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.permalink.asc().nullsLast().op("text_ops")),
+	index("Project_userId_archivedAt_idx").using("btree", table.userId.asc().nullsLast(), table.archivedAt.asc().nullsLast()),
+	index("Project_userId_createdAt_idx").using("btree", table.userId.asc().nullsLast(), table.createdAt.asc().nullsLast()),
+	uniqueIndex("Project_userId_permalink_key").using("btree", table.userId.asc().nullsLast(), table.permalink.asc().nullsLast()),
 	foreignKey({
 			columns: [table.goalId],
 			foreignColumns: [goal.id],
@@ -332,8 +332,8 @@ export const pushSubscription = pgTable("PushSubscription", {
 	updatedAt: timestamp({ precision: 3, mode: 'date' }).notNull(),
 	userId: text().notNull(),
 }, (table) => [
-	uniqueIndex("PushSubscription_endpoint_key").using("btree", table.endpoint.asc().nullsLast().op("text_ops")),
-	index("PushSubscription_userId_idx").using("btree", table.userId.asc().nullsLast().op("text_ops")),
+	uniqueIndex("PushSubscription_endpoint_key").using("btree", table.endpoint.asc().nullsLast()),
+	index("PushSubscription_userId_idx").using("btree", table.userId.asc().nullsLast()),
 	foreignKey({
 			columns: [table.userId],
 			foreignColumns: [user.id],
@@ -375,8 +375,8 @@ export const review = pgTable("Review", {
 	updatedAt: timestamp({ precision: 3, mode: 'date' }).notNull(),
 	userId: text().notNull(),
 }, (table) => [
-	index("Review_userId_cadence_periodStart_idx").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.cadence.asc().nullsLast().op("text_ops"), table.periodStart.asc().nullsLast().op("text_ops")),
-	uniqueIndex("Review_userId_cadence_periodStart_key").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.cadence.asc().nullsLast().op("text_ops"), table.periodStart.asc().nullsLast().op("text_ops")),
+	index("Review_userId_cadence_periodStart_idx").using("btree", table.userId.asc().nullsLast(), table.cadence.asc().nullsLast(), table.periodStart.asc().nullsLast()),
+	uniqueIndex("Review_userId_cadence_periodStart_key").using("btree", table.userId.asc().nullsLast(), table.cadence.asc().nullsLast(), table.periodStart.asc().nullsLast()),
 	foreignKey({
 			columns: [table.userId],
 			foreignColumns: [user.id],
@@ -389,8 +389,8 @@ export const session = pgTable("Session", {
 	expiresAt: timestamp({ precision: 3, mode: 'date' }).notNull(),
 	userId: text().notNull(),
 }, (table) => [
-	uniqueIndex("Session_id_key").using("btree", table.id.asc().nullsLast().op("text_ops")),
-	index("Session_userId_idx").using("btree", table.userId.asc().nullsLast().op("text_ops")),
+	uniqueIndex("Session_id_key").using("btree", table.id.asc().nullsLast()),
+	index("Session_userId_idx").using("btree", table.userId.asc().nullsLast()),
 	foreignKey({
 			columns: [table.userId],
 			foreignColumns: [auth.id],
@@ -404,7 +404,7 @@ export const tag = pgTable("Tag", {
 	color: text().notNull(),
 	userId: text().notNull(),
 }, (table) => [
-	uniqueIndex("Tag_userId_name_key").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.name.asc().nullsLast().op("text_ops")),
+	uniqueIndex("Tag_userId_name_key").using("btree", table.userId.asc().nullsLast(), table.name.asc().nullsLast()),
 	foreignKey({
 			columns: [table.userId],
 			foreignColumns: [user.id],
@@ -435,11 +435,11 @@ export const task = pgTable("Task", {
 	scheduledDate: date({ mode: 'date' }),
 	snoozedUntil: timestamp({ precision: 3, withTimezone: true, mode: 'date' }),
 }, (table) => [
-	index("Task_userId_completedAt_idx").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.completedAt.asc().nullsLast().op("text_ops")),
-	index("Task_userId_createdAt_idx").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.createdAt.asc().nullsLast().op("text_ops")),
-	uniqueIndex("Task_userId_permalink_key").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.permalink.asc().nullsLast().op("text_ops")),
-	index("Task_userId_scheduledDate_idx").using("btree", table.userId.asc().nullsLast().op("date_ops"), table.scheduledDate.asc().nullsLast().op("date_ops")),
-	index("Task_userId_snoozedUntil_idx").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.snoozedUntil.asc().nullsLast().op("text_ops")),
+	index("Task_userId_completedAt_idx").using("btree", table.userId.asc().nullsLast(), table.completedAt.asc().nullsLast()),
+	index("Task_userId_createdAt_idx").using("btree", table.userId.asc().nullsLast(), table.createdAt.asc().nullsLast()),
+	uniqueIndex("Task_userId_permalink_key").using("btree", table.userId.asc().nullsLast(), table.permalink.asc().nullsLast()),
+	index("Task_userId_scheduledDate_idx").using("btree", table.userId.asc().nullsLast(), table.scheduledDate.asc().nullsLast()),
+	index("Task_userId_snoozedUntil_idx").using("btree", table.userId.asc().nullsLast(), table.snoozedUntil.asc().nullsLast()),
 	foreignKey({
 			columns: [table.goalId],
 			foreignColumns: [goal.id],
@@ -487,7 +487,7 @@ export const taskSession = pgTable("TaskSession", {
 	completed: boolean().default(false).notNull(),
 	plannedMinutes: integer(),
 }, (table) => [
-	index("TaskSession_taskId_startedAt_idx").using("btree", table.taskId.asc().nullsLast().op("text_ops"), table.startedAt.asc().nullsLast().op("text_ops")),
+	index("TaskSession_taskId_startedAt_idx").using("btree", table.taskId.asc().nullsLast(), table.startedAt.asc().nullsLast()),
 	foreignKey({
 			columns: [table.taskId],
 			foreignColumns: [task.id],
@@ -537,9 +537,9 @@ export const analyticsEvent = pgTable("AnalyticsEvent", {
 	sessionId: text().notNull(),
 	userId: text(),
 }, (table) => [
-	index("AnalyticsEvent_name_occurredAt_idx").using("btree", table.name.asc().nullsLast().op("timestamp_ops"), table.occurredAt.asc().nullsLast().op("timestamp_ops")),
-	index("AnalyticsEvent_sessionId_occurredAt_idx").using("btree", table.sessionId.asc().nullsLast().op("timestamp_ops"), table.occurredAt.asc().nullsLast().op("text_ops")),
-	index("AnalyticsEvent_userId_occurredAt_idx").using("btree", table.userId.asc().nullsLast().op("text_ops"), table.occurredAt.asc().nullsLast().op("text_ops")),
+	index("AnalyticsEvent_name_occurredAt_idx").using("btree", table.name.asc().nullsLast(), table.occurredAt.asc().nullsLast()),
+	index("AnalyticsEvent_sessionId_occurredAt_idx").using("btree", table.sessionId.asc().nullsLast(), table.occurredAt.asc().nullsLast()),
+	index("AnalyticsEvent_userId_occurredAt_idx").using("btree", table.userId.asc().nullsLast(), table.occurredAt.asc().nullsLast()),
 	foreignKey({
 			columns: [table.sessionId],
 			foreignColumns: [analyticsSession.id],
@@ -580,9 +580,9 @@ export const user = pgTable("User", {
 	manualGrantAt: timestamp({ precision: 3, mode: 'date' }),
 	timeZone: text(),
 }, (table) => [
-	index("User_createdAt_idx").using("btree", table.createdAt.asc().nullsLast().op("timestamp_ops")),
-	index("User_lastActiveAt_idx").using("btree", table.lastActiveAt.asc().nullsLast().op("timestamp_ops")),
-	index("User_lastLoginAt_idx").using("btree", table.lastLoginAt.asc().nullsLast().op("timestamp_ops")),
+	index("User_createdAt_idx").using("btree", table.createdAt.asc().nullsLast()),
+	index("User_lastActiveAt_idx").using("btree", table.lastActiveAt.asc().nullsLast()),
+	index("User_lastLoginAt_idx").using("btree", table.lastLoginAt.asc().nullsLast()),
 ]);
 
 export const listItemAttachment = pgTable("ListItemAttachment", {
@@ -641,8 +641,8 @@ export const tagToTask = pgTable("_TagToTask", {
 	a: text("A").notNull(),
 	b: text("B").notNull(),
 }, (table) => [
-	uniqueIndex("_TagToTask_AB_unique").using("btree", table.a.asc().nullsLast().op("text_ops"), table.b.asc().nullsLast().op("text_ops")),
-	index().using("btree", table.b.asc().nullsLast().op("text_ops")),
+	uniqueIndex("_TagToTask_AB_unique").using("btree", table.a.asc().nullsLast(), table.b.asc().nullsLast()),
+	index().using("btree", table.b.asc().nullsLast()),
 	foreignKey({
 			columns: [table.a],
 			foreignColumns: [tag.id],
