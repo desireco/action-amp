@@ -20,6 +20,7 @@
   import Chip from "../ui/Chip.svelte";
   import Icon from "../ui/Icon.svelte";
   import PickerSheet from "../ui/PickerSheet.svelte";
+  import Markdown from "../logbook/Markdown.svelte";
   import type { Ritual, RitualCadence, RitualInterval } from "../../stores/rituals.svelte";
 
   const INTERVALS: RitualInterval[] = ["MORNING", "MIDDAY", "EVENING"];
@@ -40,6 +41,8 @@
   let cadence = $state<RitualCadence>("DAILY");
   let weekday = $state<number | null>(null);
   let intervalDays = $state<number | null>(null);
+  let guidance = $state("");
+  let benefit = $state("");
   // Creation defaults the lens to Me (the included lens) — changeable here.
   let lensId = $state<string | null>(null);
   let lensPickerOpen = $state(false);
@@ -50,6 +53,8 @@
   let editCadence = $state<RitualCadence>("DAILY");
   let editWeekday = $state<number | null>(null);
   let editIntervalDays = $state<number | null>(null);
+  let editGuidance = $state("");
+  let editBenefit = $state("");
   let editError = $state<string | null>(null);
 
   function focusOnMount(node: HTMLElement) {
@@ -88,6 +93,8 @@
       cadence,
       weekday: cadence === "WEEKLY" ? weekday : null,
       intervalDays: cadence === "INTERVAL" ? intervalDays : null,
+      guidance: guidance || null,
+      benefit: benefit || null,
     });
     submitting = false;
     if (!result.ok) {
@@ -101,6 +108,8 @@
     cadence = "DAILY";
     weekday = null;
     intervalDays = null;
+    guidance = "";
+    benefit = "";
     lensId = null;
   }
 
@@ -111,6 +120,8 @@
     editCadence = row.cadence;
     editWeekday = row.weekday;
     editIntervalDays = row.intervalDays;
+    editGuidance = row.guidance ?? "";
+    editBenefit = row.benefit ?? "";
     editError = null;
   }
 
@@ -124,6 +135,8 @@
       cadence: editCadence,
       weekday: editCadence === "WEEKLY" ? editWeekday : null,
       intervalDays: editCadence === "INTERVAL" ? editIntervalDays : null,
+      guidance: editGuidance || null,
+      benefit: editBenefit || null,
     });
     if (!editError) editing = null;
   }
@@ -169,6 +182,14 @@
         <label class="aa-field">
           Ritual
           <input use:focusOnMount bind:value={name} placeholder="Morning walk" />
+        </label>
+        <label class="aa-field">
+          Guidance <span class="aa-rituals__field-hint">what you do</span>
+          <input bind:value={guidance} placeholder="Ten minutes, three bullets, no editing" maxlength="500" />
+        </label>
+        <label class="aa-field">
+          Benefit <span class="aa-rituals__field-hint">what you get</span>
+          <input bind:value={benefit} placeholder="Clears the noise before the day starts" maxlength="500" />
         </label>
 
         <div class="aa-rituals__field">
@@ -273,6 +294,14 @@
                   Ritual
                   <input bind:value={editName} />
                 </label>
+                <label class="aa-field">
+                  Guidance <span class="aa-rituals__field-hint">what you do</span>
+                  <input bind:value={editGuidance} maxlength="500" />
+                </label>
+                <label class="aa-field">
+                  Benefit <span class="aa-rituals__field-hint">what you get</span>
+                  <input bind:value={editBenefit} maxlength="500" />
+                </label>
                 <div class="aa-rituals__field">
                   <span class="aa-rituals__field-label">Time of day</span>
                   <div class="aa-rituals__segmented" role="radiogroup" aria-label="Interval">
@@ -338,7 +367,21 @@
               </form>
             {:else}
               <div class="aa-rituals__row-main">
-                <span class="aa-rituals__row-name">{row.name}</span>
+                <div class="aa-rituals__row-copy">
+                  <span class="aa-rituals__row-name">{row.name}</span>
+                  {#if row.guidance}
+                    <div class="aa-rituals__row-def aa-rituals__row-def--g">
+                      <span class="aa-rituals__def-tag" aria-hidden="true">g</span>
+                      <Markdown text={row.guidance} />
+                    </div>
+                  {/if}
+                  {#if row.benefit}
+                    <div class="aa-rituals__row-def aa-rituals__row-def--b">
+                      <span class="aa-rituals__def-tag" aria-hidden="true">b</span>
+                      <Markdown text={row.benefit} />
+                    </div>
+                  {/if}
+                </div>
                 <span class="aa-rituals__row-meta">
                   <Chip variant="muted" small>{INTERVAL_LABELS[row.interval]}</Chip>
                   <span class="aa-rituals__row-cadence">{cadenceLabel(row)}</span>

@@ -15,6 +15,7 @@
   import "../../styles/rituals.css";
   import CompletionCircle from "../ui/CompletionCircle.svelte";
   import RitualReflectionDialog from "./RitualReflectionDialog.svelte";
+  import Markdown from "../logbook/Markdown.svelte";
   import {
     INTERVAL_LABELS,
     cadenceLabel,
@@ -99,6 +100,35 @@
                 <CompletionCircle filled={row.checked} onclick={() => onCircle(row)} />
               </span>
               <span class="aa-ritual-strip__name">{row.name}</span>
+              {#if row.guidance}
+                <!-- (g) — hover (or focus) shows the guidance, markdown-rendered. -->
+                <span
+                  class="aa-ritual-strip__hint"
+                  tabindex="0"
+                  title="Guidance"
+                  aria-label="Guidance: {row.guidance}"
+                >
+                  (g)
+                  <span class="aa-ritual-strip__hint-pop" role="tooltip">
+                    <span class="aa-ritual-strip__hint-tag">Guidance</span>
+                    <Markdown text={row.guidance} />
+                  </span>
+                </span>
+              {/if}
+              {#if row.benefit}
+                <span
+                  class="aa-ritual-strip__hint"
+                  tabindex="0"
+                  title="Benefit"
+                  aria-label="Benefit: {row.benefit}"
+                >
+                  (b)
+                  <span class="aa-ritual-strip__hint-pop" role="tooltip">
+                    <span class="aa-ritual-strip__hint-tag">Benefit</span>
+                    <Markdown text={row.benefit} />
+                  </span>
+                </span>
+              {/if}
               {#if row.checked && row.mood}
                 <span
                   class="aa-ritual-strip__mood"

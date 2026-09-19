@@ -686,6 +686,10 @@ export const ritual = pgTable("Ritual", {
 	weekday: integer(),
 	/** 2–365 — read when cadence = INTERVAL; phase anchor is the creation local date. */
 	intervalDays: integer(),
+	/** Optional definition fields (added 2026-09-19): guidance = what to do,
+	 *  benefit = what you get. Plain text, shown quietly on the Planning page. */
+	guidance: text(),
+	benefit: text(),
 	goalId: text(),
 	order: integer().default(0).notNull(),
 	/** Pause hides from due-ness without touching history. */

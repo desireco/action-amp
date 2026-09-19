@@ -65,6 +65,8 @@ export function createRitualEntities(db: DomainDb): RitualEntities {
             cadence: args.data.cadence,
             weekday: args.data.weekday,
             intervalDays: args.data.intervalDays,
+            guidance: args.data.guidance,
+            benefit: args.data.benefit,
             goalId: args.data.goalId,
             order: args.data.order,
             pausedAt: null,

@@ -51,6 +51,9 @@ export const RitualSchema = z.object({
   weekday: z.number().int().min(0).max(6).nullable(),
   /** 2–365 — read when cadence = INTERVAL. */
   intervalDays: z.number().int().min(2).max(365).nullable(),
+  /** Definition fields (markdown): what to do / what you get. */
+  guidance: z.string().max(500).nullable(),
+  benefit: z.string().max(500).nullable(),
   goalId: z.string().nullable(),
   order: z.number().int(),
   /** Pause hides from due-ness without touching history. */
@@ -98,6 +101,8 @@ export const createRitual = oc
       cadence: RitualCadenceSchema.optional(),
       weekday: z.number().int().min(0).max(6).nullable().optional(),
       intervalDays: z.number().int().min(2).max(365).nullable().optional(),
+      guidance: z.string().max(500).nullable().optional(),
+      benefit: z.string().max(500).nullable().optional(),
       goalId: z.string().nullable().optional(),
     }),
   )
@@ -114,6 +119,8 @@ export const updateRitual = oc
       cadence: RitualCadenceSchema.optional(),
       weekday: z.number().int().min(0).max(6).nullable().optional(),
       intervalDays: z.number().int().min(2).max(365).nullable().optional(),
+      guidance: z.string().max(500).nullable().optional(),
+      benefit: z.string().max(500).nullable().optional(),
       goalId: z.string().nullable().optional(),
     }),
   )

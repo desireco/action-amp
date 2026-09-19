@@ -23,6 +23,8 @@ interface RitualsClientSlice {
     cadence?: RitualCadence;
     weekday?: number | null;
     intervalDays?: number | null;
+    guidance?: string | null;
+    benefit?: string | null;
     goalId?: string | null;
   }): Promise<{ id: string; name: string }>;
   update(input: {
@@ -32,6 +34,8 @@ interface RitualsClientSlice {
     cadence?: RitualCadence;
     weekday?: number | null;
     intervalDays?: number | null;
+    guidance?: string | null;
+    benefit?: string | null;
     goalId?: string | null;
   }): Promise<{ id: string }>;
   complete(input: {
@@ -64,6 +68,9 @@ export interface Ritual {
   cadence: RitualCadence;
   weekday: number | null;
   intervalDays: number | null;
+  /** Definition fields (markdown): what to do / what you get. */
+  guidance: string | null;
+  benefit: string | null;
   goalId: string | null;
   order: number;
   paused: boolean;
@@ -162,6 +169,8 @@ class RitualsStore {
     cadence?: RitualCadence;
     weekday?: number | null;
     intervalDays?: number | null;
+    guidance?: string | null;
+    benefit?: string | null;
   }): Promise<{ ok: true } | { ok: false; gate: GateMessage | null; message: string }> {
     try {
       await rpc.create(input);
@@ -179,6 +188,8 @@ class RitualsStore {
     cadence?: RitualCadence;
     weekday?: number | null;
     intervalDays?: number | null;
+    guidance?: string | null;
+    benefit?: string | null;
   }): Promise<string | null> {
     try {
       await rpc.update(input);

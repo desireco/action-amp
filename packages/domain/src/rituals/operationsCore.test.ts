@@ -65,6 +65,8 @@ function row(overrides: Partial<RitualRow> = {}): RitualRow {
     cadence: "DAILY",
     weekday: null,
     intervalDays: null,
+    guidance: null,
+    benefit: null,
     goalId: null,
     order: 0,
     pausedAt: null,
@@ -231,6 +233,8 @@ describe("createRitualCore", () => {
         cadence: "WEEKLY",
         weekday: 4,
         intervalDays: null,
+        guidance: null,
+        benefit: null,
         goalId: null,
         order: 8,
       },
@@ -420,5 +424,58 @@ describe("setRitualPausedCore / archiveRitualCore", () => {
 
     const call = db.Ritual.update.mock.calls[0]?.[0];
     expect(call?.data.archivedAt).toBeInstanceOf(Date);
+  });
+});
+
+describe("guidance + benefit", () => {
+  it("create trims and stores both definition fields", async () => {
+    const db = entities();
+    db.Ritual.findMaxOrder.mockResolvedValue(null);
+    db.Ritual.create.mockResolvedValue(row());
+
+    await createRitualCore(db, {
+      userId: "user-1",
+      lensId: "lens-me",
+      name: "Journaling",
+      guidance: "  Ten minutes, three bullets, no editing.  ",
+      benefit: "Clears the noise before the day starts",
+    });
+
+    const data = db.Ritual.create.mock.calls[0]?.[0]?.data;
+    expect(data?.guidance).toBe("Ten minutes, three bullets, no editing.");
+    expect(data?.benefit).toBe("Clears the noise before the day starts");
+  });
+
+  it("caps each definition field at 500 characters", async () => {
+    const db = entities();
+    await expect(
+      createRitualCore(db, {
+        userId: "user-1",
+        lensId: "lens-me",
+        name: "Journaling",
+        guidance: "x".repeat(501),
+      }),
+    ).rejects.toThrow("Guidance must be 500 characters or fewer.");
+    await expect(
+      createRitualCore(db, {
+        userId: "user-1",
+        lensId: "lens-me",
+        name: "Journaling",
+        benefit: "x".repeat(501),
+      }),
+    ).rejects.toThrow("Benefit must be 500 characters or fewer.");
+  });
+
+  it("update can clear either field with null", async () => {
+    const db = entities();
+    db.Ritual.findFirst.mockResolvedValue(row({ guidance: "old", benefit: "old" }));
+    db.Ritual.update.mockResolvedValue(row());
+
+    await updateRitualCore(db, { userId: "user-1", id: "ritual-1", guidance: null });
+
+    expect(db.Ritual.update).toHaveBeenLastCalledWith({
+      where: { id: "ritual-1" },
+      data: { guidance: null },
+    });
   });
 });

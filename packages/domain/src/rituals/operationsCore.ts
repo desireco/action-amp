@@ -53,6 +53,9 @@ export interface RitualRow {
   weekday: number | null;
   /** 2–365 — read when cadence = INTERVAL. */
   intervalDays: number | null;
+  /** Optional definition fields: what to do / what you get (2026-09-19). */
+  guidance: string | null;
+  benefit: string | null;
   goalId: string | null;
   order: number;
   pausedAt: Date | null;
@@ -98,6 +101,8 @@ export interface RitualCreateData {
   cadence: RitualCadence;
   weekday: number | null;
   intervalDays: number | null;
+  guidance: string | null;
+  benefit: string | null;
   goalId: string | null;
   order: number;
 }
@@ -108,6 +113,8 @@ export interface RitualUpdateData {
   cadence?: RitualCadence;
   weekday?: number | null;
   intervalDays?: number | null;
+  guidance?: string | null;
+  benefit?: string | null;
   goalId?: string | null;
   pausedAt?: Date | null;
   archivedAt?: Date | null;
@@ -213,6 +220,7 @@ export function assertRitualsAllowed(user: RitualsUser | null): void {
 
 export const MAX_RITUAL_NAME_LENGTH = 120;
 export const MAX_RITUAL_NOTE_LENGTH = 500;
+export const MAX_RITUAL_DEFINITION_LENGTH = 500;
 
 /**
  * Is this ritual's rhythm on this calendar date? A pure function of cadence
@@ -262,6 +270,19 @@ function normalizedName(name: string): string {
     throw new Error(`Ritual name must be ${MAX_RITUAL_NAME_LENGTH} characters or fewer.`);
   }
   return value;
+}
+
+/** Guidance/benefit: optional one-or-two-sentence definition fields. */
+function normalizedDefinition(
+  value: string | null | undefined,
+  fieldName: string,
+): string | null {
+  const trimmed = value?.trim() ?? "";
+  if (!trimmed) return null;
+  if (trimmed.length > MAX_RITUAL_DEFINITION_LENGTH) {
+    throw new Error(`${fieldName} must be ${MAX_RITUAL_DEFINITION_LENGTH} characters or fewer.`);
+  }
+  return trimmed;
 }
 
 function normalizedNote(note: string | null | undefined): string | null {
@@ -412,6 +433,8 @@ export async function createRitualCore(
     cadence = "DAILY",
     weekday = null,
     intervalDays = null,
+    guidance = null,
+    benefit = null,
     goalId = null,
   }: {
     userId: string;
@@ -421,6 +444,8 @@ export async function createRitualCore(
     cadence?: RitualCadence;
     weekday?: number | null;
     intervalDays?: number | null;
+    guidance?: string | null;
+    benefit?: string | null;
     goalId?: string | null;
   },
 ): Promise<RitualRow> {
@@ -435,6 +460,8 @@ export async function createRitualCore(
       cadence,
       weekday: fields.weekday,
       intervalDays: fields.intervalDays,
+      guidance: normalizedDefinition(guidance, "Guidance"),
+      benefit: normalizedDefinition(benefit, "Benefit"),
       goalId,
       order: (previous ?? -1) + 1,
     },
@@ -451,6 +478,8 @@ export async function updateRitualCore(
     cadence,
     weekday,
     intervalDays,
+    guidance,
+    benefit,
     goalId,
   }: {
     userId: string;
@@ -460,6 +489,8 @@ export async function updateRitualCore(
     cadence?: RitualCadence;
     weekday?: number | null;
     intervalDays?: number | null;
+    guidance?: string | null;
+    benefit?: string | null;
     goalId?: string | null;
   },
 ): Promise<RitualRow> {
@@ -468,6 +499,12 @@ export async function updateRitualCore(
   if (name !== undefined) data.name = normalizedName(name);
   if (interval !== undefined) data.interval = interval;
   if (goalId !== undefined) data.goalId = goalId;
+  if (guidance !== undefined) {
+    data.guidance = normalizedDefinition(guidance, "Guidance");
+  }
+  if (benefit !== undefined) {
+    data.benefit = normalizedDefinition(benefit, "Benefit");
+  }
   if (cadence !== undefined || weekday !== undefined || intervalDays !== undefined) {
     // Validate the EFFECTIVE combination, then write the caller's fields —
     // plus the nulls a cadence switch must clear (DAILY/WEEKDAYS carry none).

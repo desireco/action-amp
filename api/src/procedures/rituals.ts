@@ -107,6 +107,8 @@ function toRitualDto(row: RitualListRow) {
     cadence: row.cadence,
     weekday: row.weekday,
     intervalDays: row.intervalDays,
+    guidance: row.guidance,
+    benefit: row.benefit,
     goalId: row.goalId,
     order: row.order,
     paused: row.pausedAt !== null,
@@ -125,6 +127,8 @@ function toTodayRitualDto(row: TodayRitualRow) {
     cadence: row.cadence,
     weekday: row.weekday,
     intervalDays: row.intervalDays,
+    guidance: row.guidance,
+    benefit: row.benefit,
     goalId: row.goalId,
     order: row.order,
     paused: row.pausedAt !== null,
@@ -189,6 +193,8 @@ const create = ORPC.create.handler(async ({ context, input }) =>
       cadence: input.cadence,
       weekday: input.weekday ?? null,
       intervalDays: input.intervalDays ?? null,
+      guidance: input.guidance ?? null,
+      benefit: input.benefit ?? null,
       goalId: input.goalId ?? null,
     });
     return { id: row.id, name: row.name };
@@ -207,6 +213,8 @@ const update = ORPC.update.handler(async ({ context, input }) =>
       cadence: input.cadence,
       weekday: input.weekday,
       intervalDays: input.intervalDays,
+      guidance: input.guidance,
+      benefit: input.benefit,
       goalId: input.goalId,
     });
     return { id: row.id };
