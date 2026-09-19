@@ -2,7 +2,8 @@
   // FocusView — full-screen single-task view (the FocusMode port, centered
   // session layout). One large countdown ring; pause/resume inside the ring;
   // Add note / Pause / Wrap up actions; append-only thread (newest first);
-  // n / p / d / Esc / ⌘↵ keyboard; the clock freezes while the wrap-up
+  // n / p / d / Esc / ⌘↵ keyboard (Esc leaves focus — the session keeps
+  // running; pausing is explicit); the clock freezes while the wrap-up
   // composer is open.
   import SnoozeSheet from "./SnoozeSheet.svelte";
   import { formatDuration } from "../taskView";
@@ -69,7 +70,13 @@
   const sessionStartedAt = $derived(
     openSession ? new Date(openSession.startedAt).getTime() : null,
   );
-  const clockNowMs = $derived(clockFrozenAt ?? Date.now());
+  // `tick` is the heartbeat: Date.now() isn't reactive, so without reading it
+  // the countdown (and the ring, and the auto-complete-at-zero effect) would
+  // compute once at mount and freeze.
+  const clockNowMs = $derived.by(() => {
+    void tick;
+    return clockFrozenAt ?? Date.now();
+  });
   const sessionElapsedMs = $derived(
     sessionStartedAt !== null
       ? Math.max(0, clockNowMs - sessionStartedAt)
@@ -183,13 +190,21 @@
     }
   }
 
-  async function exitFocus() {
+  // Pause is explicit (Pause action, p/Space, the ring's ❚❚). Esc and ✕ only
+  // leave focus — the session keeps running and Do keeps showing the task as
+  // Now ("The Now state persists across navigation", WORKFLOW.md §2.3).
+  async function pauseAndExit() {
     await whatNow.pause(task.id);
     goto("/");
   }
 
+  function leaveFocus() {
+    goto("/");
+  }
+
   // Window-scoped keyboard. Esc — layered: snooze sheet → composer → cancel
-  // content editor → exit focus. Typing targets swallow everything but Esc.
+  // content editor → leave focus (session keeps running). Typing targets
+  // swallow everything but Esc.
   function onKey(e: KeyboardEvent) {
     if (e.key === "Escape") {
       if (snoozeOpen) {
@@ -205,7 +220,7 @@
         editingContent = false;
         return;
       }
-      void exitFocus();
+      leaveFocus();
       return;
     }
     const target = e.target as HTMLElement | null;
@@ -220,7 +235,7 @@
     // p / Space — pause + exit focus.
     if (e.key === "p" || e.key === "P" || e.key === " ") {
       e.preventDefault();
-      void exitFocus();
+      void pauseAndExit();
       return;
     }
     if (e.key === "d" || e.key === "D") {
@@ -269,9 +284,9 @@
   <button
     type="button"
     class="aa-focus__close"
-    aria-label="Pause and exit focus"
-    title="Pause and exit focus (Esc)"
-    onclick={() => void exitFocus()}
+    aria-label="Exit focus"
+    title="Exit focus (Esc) — the session keeps running"
+    onclick={leaveFocus}
   >
     ×
   </button>
@@ -327,7 +342,7 @@
             aria-label={sessionComplete ? "Start another focus session" : "Pause focus session"}
             onclick={() => {
               if (sessionComplete) void whatNow.startSession(task.id);
-              else void exitFocus();
+              else void pauseAndExit();
             }}
           >
             {sessionComplete ? "▶" : "❚❚"}
@@ -396,7 +411,7 @@
         <button type="button" class="aa-focus-action aa-focus-action--note" onclick={() => (composerMode = "note")}>
           ✎ <span>Add note</span>
         </button>
-        <button type="button" class="aa-focus-action aa-focus-action--pause" onclick={() => void exitFocus()}>
+        <button type="button" class="aa-focus-action aa-focus-action--pause" onclick={() => void pauseAndExit()}>
           ❚❚ <span>Pause</span>
         </button>
         <button

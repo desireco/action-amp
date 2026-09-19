@@ -89,6 +89,10 @@
     const continuity = !t.startedAt
       ? resolveContinuity({ project: t.project, goal: t.goal, sessions: t.sessions, updates: t.notes })
       : null;
+    // The live countdown anchors on the open session (the task's startedAt is
+    // only a legacy pointer fallback; the picked-task path carries no sessions).
+    const openSessionStart =
+      t.sessions?.find((s) => s.endedAt === null)?.startedAt ?? t.startedAt;
     return {
       title: t.description,
       project: t.project?.name,
@@ -100,6 +104,8 @@
       continuityStats: continuity ? continuityStatsRow(continuity) : null,
       latestNote: !t.startedAt ? continuity?.latestNote ?? null : null,
       attachments: t.attachments,
+      sessionStartedAt: t.startedAt ? openSessionStart : null,
+      focusSessionMinutes: whatNow.appData?.focusSessionMinutes,
     };
   }
 </script>

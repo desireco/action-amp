@@ -177,7 +177,10 @@ Triage drains the universal Inbox across every Lens.
   `kind=COMPLETED` row to the task's `TaskUpdate` thread while leaving
   `status` untouched (so Today's Done section stays accurate). See
   `docs/features/focus-mode.md` + `docs/features/task-notes-completion-log.md`.
-- A **Now** state (`Task.startedAt`) persists across navigation.
+- A **Now** state (`Task.startedAt`) persists across navigation. Leaving the
+  focus screen (`Esc`, `✕`) never pauses — the session keeps running and Do
+  keeps the started task on stage with a live session countdown (revised
+  2026-09-19; pausing is always an explicit action).
 - **Three rationale layers on the Work surfaces, never conflated** (locked
   2026-08-10; implementation pending — see `specs/focus-goal-context.md`).
   Next and Focus already explain one question; Goal rationale and paused-work

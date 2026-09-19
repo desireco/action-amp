@@ -139,10 +139,13 @@ commands.
 - **Purpose:** you are doing the thing. The card is the world.
 - **Entry:** click **Start** / `Enter` from Normal (task focused). Navigates
   to the dedicated `/do/focus` route (not an overlay).
-- **Exit:** `Esc` (pauses), **Complete** (was "Done"; opens an inline optional
-  completion reflection), **Take a break** (pauses).
+- **Exit:** `Esc` (leaves focus — the session **keeps running**; Do keeps
+  showing the task as Now with a live countdown), **Complete** (was "Done";
+  opens an inline optional completion reflection), **Pause** (pauses —
+  always an explicit action, never a side effect of leaving the screen).
 - **Keyset (intentionally tiny):**
-  - `Esc` or `Space` — pause
+  - `Esc` — leave focus (session keeps running; revised 2026-09-19 — was pause)
+  - `Space` or `P` — pause
   - `D` — open the inline completion reflection
   - `⌘K` — **capture (the one exception)** — protects focus from stray thoughts
   - That's it. Zoom, mode-switch, lens — all suppressed. The world is this task.
