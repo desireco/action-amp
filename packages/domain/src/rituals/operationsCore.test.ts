@@ -12,10 +12,12 @@ import {
   assertRitualsAllowed,
   completeRitualCore,
   createRitualCore,
+  getArchivedRitualsData,
   getRitualHistoryCore,
   getRitualsData,
   getTodayRitualsData,
   reorderRitualsCore,
+  restoreRitualCore,
   isDueOn,
   setRitualPausedCore,
   uncheckRitualCore,
@@ -550,5 +552,25 @@ describe("goal link", () => {
     db.Ritual.create.mockResolvedValue(row());
     await createRitualCore(db, { userId: "user-1", lensId: "lens-me", name: "Water", goalId: "goal-1" });
     expect(db.Ritual.create.mock.calls[0]?.[0]?.data.goalId).toBe("goal-1");
+  });
+});
+
+describe("archive ↔ restore", () => {
+  it("the archived read uses the retired-only set", async () => {
+    const db = entities();
+    db.Ritual.findMany.mockResolvedValue([row({ archivedAt: new Date() })]);
+    await getArchivedRitualsData(db, { userId: "user-1", lensId: "lens-me" });
+    expect(db.Ritual.findMany).toHaveBeenCalledWith({
+      where: { userId: "user-1", lensId: "lens-me", archivedOnly: true, includePaused: true },
+    });
+  });
+
+  it("restore clears archivedAt", async () => {
+    const db = entities();
+    db.Ritual.findFirst.mockResolvedValue(row({ archivedAt: new Date() }));
+    db.Ritual.update.mockResolvedValue(row());
+    await restoreRitualCore(db, { userId: "user-1", id: "ritual-1" });
+    const call = db.Ritual.update.mock.calls[0]?.[0];
+    expect(call?.data.archivedAt).toBeNull();
   });
 });

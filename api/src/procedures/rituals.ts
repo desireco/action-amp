@@ -18,6 +18,7 @@ import { ritualsContract } from "@actionamp/contract";
 import {
   archiveRitualCore,
   assertRitualsAllowed,
+  getArchivedRitualsData,
   completeRitualCore,
   createRitualEntities,
   createRitualCore,
@@ -25,6 +26,7 @@ import {
   getRitualsData,
   getTodayRitualsData,
   reorderRitualsCore,
+  restoreRitualCore,
   setRitualPausedCore,
   uncheckRitualCore,
   updateReflectionCore,
@@ -194,6 +196,45 @@ const history = ORPC.history.handler(async ({ context, input }) =>
   }),
 );
 
+const archived = ORPC.archived.handler(async ({ context, input }) =>
+  guard(async () => {
+    const user = requireUser(context);
+    assertRitualsAllowed(user);
+    const rows = await getArchivedRitualsData(entities(context), {
+      userId: user.id,
+      lensId: input.lensId,
+    });
+    return rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      lensId: r.lensId,
+      interval: r.interval,
+      cadence: r.cadence,
+      weekday: r.weekday,
+      intervalDays: r.intervalDays,
+      guidance: r.guidance,
+      benefit: r.benefit,
+      goalId: r.goalId,
+      order: r.order,
+      paused: r.pausedAt !== null,
+      createdAt: r.createdAt.toISOString(),
+      updatedAt: r.updatedAt.toISOString(),
+    }));
+  }),
+);
+
+const restore = ORPC.restore.handler(async ({ context, input }) =>
+  guard(async () => {
+    const user = requireUser(context);
+    assertRitualsAllowed(user);
+    const row = await restoreRitualCore(entities(context), {
+      userId: user.id,
+      id: input.id,
+    });
+    return { id: row.id };
+  }),
+);
+
 const reorder = ORPC.reorder.handler(async ({ context, input }) =>
   guard(async () => {
     const user = requireUser(context);
@@ -338,6 +379,7 @@ export const ritualsProcedures = {
   list,
   today,
   history,
+  archived,
   create,
   update,
   complete,
@@ -345,5 +387,6 @@ export const ritualsProcedures = {
   updateReflection,
   setPaused,
   archive,
+  restore,
   reorder,
 };

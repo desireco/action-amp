@@ -56,7 +56,9 @@ import {
   completeRitualCore,
   createRitualCore,
   createRitualEntities,
+  getArchivedRitualsData,
   getRitualHistoryCore,
+  restoreRitualCore,
   getRitualsData,
   getTodayRitualsData,
   setRitualPausedCore,
@@ -1793,6 +1795,43 @@ export function createCliRoutes(deps: {
       return c.json({ ritual: ritualJson(ritual), status: "archived" });
     } catch (err) {
       return ritualErrorResponse(c, "ritual/archive", err);
+    }
+  });
+
+  // GET /api/cli/ritual/archived — query ?lensId (optional). The retired
+  // set, so `ritual restore` has a target.
+  rest.get("/api/cli/ritual/archived", async (c) => {
+    const user = requirePat(c);
+    if (user instanceof Response) return user;
+    try {
+      const rows = await getArchivedRitualsData(ritualEntities(), {
+        userId: user.id,
+        lensId: queryString(c.req.raw, "lensId") ?? undefined,
+      });
+      return c.json({ rituals: rows.map(ritualJson) });
+    } catch (err) {
+      console.error("[cli/ritual/archived] failed:", err);
+      return c.json({ error: "Could not load archived rituals." }, 500);
+    }
+  });
+
+  // POST /api/cli/ritual/restore — body { id }. Un-retires it.
+  rest.post("/api/cli/ritual/restore", async (c) => {
+    const user = requirePat(c);
+    if (user instanceof Response) return user;
+    const body = await parseBody(c.req.raw);
+    const id = bodyString(body, "id");
+    if (!id) {
+      return c.json({ error: "An id is required." }, 400);
+    }
+    try {
+      const ritual = await restoreRitualCore(ritualEntities(), {
+        userId: user.id,
+        id,
+      });
+      return c.json({ ritual: ritualJson(ritual), status: "restored" });
+    } catch (err) {
+      return ritualErrorResponse(c, "ritual/restore", err);
     }
   });
 

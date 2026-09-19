@@ -503,17 +503,25 @@
 }
 
 /* ---- Suggestion round (2026-09-19): examples, goal chip, history, dnd ---- */
+/* The starting points live INSIDE the empty card (ListEmpty's action
+   slot) — one composed unit, centered like the card's own text. */
 .aa-rituals__examples {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  gap: var(--aa-space-xs);
-  margin-top: calc(-1 * var(--aa-space-lg));
+  gap: var(--aa-space-sm);
 }
 
 .aa-rituals__examples-label {
   font-size: var(--aa-text-sm);
   color: var(--aa-text-4);
+}
+
+.aa-rituals__examples-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--aa-space-xs);
 }
 
 .aa-rituals__goal-choices {
@@ -589,4 +597,77 @@
 
 .aa-rituals__row--drag-over {
   box-shadow: 0 -2px 0 0 var(--aa-teal);
+}
+
+/* ---- The Archived section: retired rituals, one quiet toggle. ---- */
+.aa-rituals__archived {
+  margin-top: var(--aa-space-xl);
+  padding-top: var(--aa-space-md);
+  border-top: 1px solid var(--aa-border);
+}
+
+.aa-rituals__archived-toggle {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--aa-space-sm);
+  font-family: var(--aa-font);
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.aa-rituals__archived-toggle:hover {
+  color: var(--aa-text-3);
+}
+
+.aa-rituals__archived-count {
+  font-family: var(--aa-font-mono);
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-text-4);
+}
+
+.aa-rituals__archived-hint {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-medium);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.aa-rituals__archived-list {
+  list-style: none;
+  margin: var(--aa-space-md) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-xs);
+}
+
+.aa-rituals__archived-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  padding: var(--aa-space-xs) var(--aa-space-sm);
+  border-radius: var(--aa-radius-sm);
+}
+
+.aa-rituals__archived-row:hover {
+  background: var(--aa-surface-muted);
+}
+
+.aa-rituals__archived-name {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+  min-width: 0;
+}
+
+.aa-rituals__archived-row .aa-rituals__history {
+  width: 100%;
 }

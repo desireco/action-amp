@@ -128,11 +128,17 @@ export interface RitualEntities {
     findFirst(args: {
       where: { id: string; userId: string };
     }): Promise<RitualRow | null>;
-    /** Active rituals for a user, `[order, createdAt]` — `includePaused`
-     *  keeps paused rows (the Planning list); without it the delegate
-     *  filters paused AND archived (the Today due set). */
+    /** Rituals for a user, `[order, createdAt]` — `includePaused` keeps
+     *  paused rows (the Planning list); without it the delegate filters
+     *  paused AND archived (the Today due set); `archivedOnly` flips to the
+     *  retired set (the Archived section). */
     findMany(args: {
-      where: { userId: string; lensId?: string; includePaused?: boolean };
+      where: {
+        userId: string;
+        lensId?: string;
+        includePaused?: boolean;
+        archivedOnly?: boolean;
+      };
     }): Promise<RitualRow[]>;
     /** The lens's highest `order` (create appends after it). */
     findMaxOrder(args: {
@@ -708,4 +714,23 @@ export async function archiveRitualCore(
 ): Promise<RitualRow> {
   await requireOwnedRitual(entities, { userId, id });
   return entities.Ritual.update({ where: { id }, data: { archivedAt: new Date() } });
+}
+
+/** The retired set (the Archived section) — history stays reachable. */
+export async function getArchivedRitualsData(
+  entities: Pick<RitualEntities, "Ritual">,
+  { userId, lensId }: { userId: string; lensId?: string },
+): Promise<RitualRow[]> {
+  return entities.Ritual.findMany({
+    where: { userId, ...(lensId ? { lensId } : {}), archivedOnly: true, includePaused: true },
+  });
+}
+
+/** Restore un-retires an archived ritual (archivedAt back to null). */
+export async function restoreRitualCore(
+  entities: Pick<RitualEntities, "Ritual">,
+  { userId, id }: { userId: string; id: string },
+): Promise<RitualRow> {
+  await requireOwnedRitual(entities, { userId, id });
+  return entities.Ritual.update({ where: { id }, data: { archivedAt: null } });
 }

@@ -329,7 +329,7 @@ export function makeRitualCommand(): Command {
     });
 
   const lifecycle = (
-    name: "pause" | "resume" | "archive",
+    name: "pause" | "resume" | "archive" | "restore",
     description: string,
     human: string,
   ) => {
@@ -354,7 +354,32 @@ export function makeRitualCommand(): Command {
   };
   lifecycle("pause", "hide from due-ness without deleting history", "Paused");
   lifecycle("resume", "bring a paused ritual back", "Resumed");
-  lifecycle("archive", "retire it (history stays)", "Archived");
+  lifecycle("archive", "retire it (history stays; see 'ritual archived')", "Archived");
+  lifecycle("restore", "un-retire an archived ritual", "Restored");
+
+  ritual
+    .command("archived")
+    .description("list retired rituals (the 'ritual restore' targets)")
+    .option("--json", "emit JSON output")
+    .action(async (opts: { json?: boolean }) => {
+      const ctx: OutputCtx = { json: opts.json ?? false };
+      const result = await request<{ rituals: RitualRow[] }>("/api/cli/ritual/archived");
+      emit(
+        result,
+        () => {
+          if (result.rituals.length === 0) {
+            process.stdout.write("No archived rituals.\n");
+            return;
+          }
+          result.rituals.forEach((r, i) => {
+            process.stdout.write(
+              `  ${chalk.gray(`${i + 1}.`)} ${r.name} ${chalk.gray(`· ${r.interval.toLowerCase()} · ${cadenceLabel(r)}`)} ${chalk.gray(r.id)}\n`,
+            );
+          });
+        },
+        ctx,
+      );
+    });
 
   return ritual;
 }

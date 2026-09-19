@@ -190,6 +190,18 @@ export const ritualHistory = oc
   .input(z.object({ id: z.string() }))
   .output(z.array(RitualHistoryEntrySchema));
 
+/** The retired set (the Archived section) — history stays reachable. */
+export const archivedRituals = oc
+  .errors(ProGateErrorMap)
+  .input(z.object({ lensId: z.string().min(1).optional() }))
+  .output(z.array(RitualSchema.omit({ entryToday: true })));
+
+/** Restore un-retires an archived ritual (back on the active list). */
+export const restoreRitual = oc
+  .errors(ProGateErrorMap)
+  .input(z.object({ id: z.string() }))
+  .output(z.object({ id: z.string() }));
+
 /** Sequence the lens's active rituals: `order = index` for each id
  *  (full-array write, the drag-and-drop + goals-reorder precedent). */
 export const reorderRituals = oc
@@ -207,6 +219,7 @@ export const ritualsContract = {
   list: listRituals,
   today: todayRituals,
   history: ritualHistory,
+  archived: archivedRituals,
   create: createRitual,
   update: updateRitual,
   complete: completeRitual,
@@ -214,5 +227,6 @@ export const ritualsContract = {
   updateReflection: updateRitualReflection,
   setPaused: setRitualPaused,
   archive: archiveRitual,
+  restore: restoreRitual,
   reorder: reorderRituals,
 };

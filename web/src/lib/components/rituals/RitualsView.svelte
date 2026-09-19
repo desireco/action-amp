@@ -71,6 +71,9 @@
   let historyFor = $state<string | null>(null);
   let historyRows = $state<RitualHistoryEntry[]>([]);
 
+  // The Archived section — collapsed by default, one quiet toggle.
+  let archivedOpen = $state(false);
+
   // Drag-and-drop reorder (HTML5 DnD; the drop writes order = index).
   let dragId = $state<string | null>(null);
   let dragOverId = $state<string | null>(null);
@@ -389,19 +392,90 @@
       <ListEmpty
         title="No rituals yet."
         text="Rituals are the rhythms that shouldn't need a decision. They check off in Today and never compete with commitments."
-      />
-      <div class="aa-rituals__examples" aria-label="Starting points">
-        <span class="aa-rituals__examples-label">Start with</span>
-        {#each EXAMPLES as example (example.label)}
-          <button
-            type="button"
-            class="aa-rituals__segment"
-            onclick={() => startExample(example)}
-          >
-            {example.label}
-          </button>
-        {/each}
-      </div>
+      >
+        {#snippet action()}
+          <div class="aa-rituals__examples">
+            <span class="aa-rituals__examples-label">Start with</span>
+            <div class="aa-rituals__examples-row">
+              {#each EXAMPLES as example (example.label)}
+                <button
+                  type="button"
+                  class="aa-rituals__segment"
+                  onclick={() => startExample(example)}
+                >
+                  {example.label}
+                </button>
+              {/each}
+            </div>
+          </div>
+        {/snippet}
+      </ListEmpty>
+    {/if}
+
+    {#if rituals.archivedRows.length > 0}
+      <section class="aa-rituals__archived" aria-label="Archived rituals">
+        <button
+          type="button"
+          class="aa-rituals__archived-toggle"
+          aria-expanded={archivedOpen}
+          onclick={() => (archivedOpen = !archivedOpen)}
+        >
+          Archived
+          <span class="aa-rituals__archived-count">{rituals.archivedRows.length}</span>
+          <span class="aa-rituals__archived-hint">{archivedOpen ? "Hide" : "Show"}</span>
+        </button>
+        {#if archivedOpen}
+          <ul class="aa-rituals__archived-list">
+            {#each rituals.archivedRows as row (row.id)}
+              <li class="aa-rituals__archived-row">
+                <span class="aa-rituals__archived-name">{row.name}</span>
+                <span class="aa-rituals__row-cadence">
+                  {INTERVAL_LABELS[row.interval].toLowerCase()} · {cadenceLabel(row)}
+                </span>
+                <span class="aa-rituals__row-actions">
+                  <button
+                    type="button"
+                    class="aa-btn aa-btn--ghost"
+                    onclick={() => void toggleHistory(row.id)}
+                  >
+                    History
+                  </button>
+                  <button
+                    type="button"
+                    class="aa-btn aa-btn--ghost"
+                    onclick={() => void rituals.restore(row.id)}
+                  >
+                    Restore
+                  </button>
+                </span>
+                {#if historyFor === row.id}
+                  <div class="aa-rituals__history">
+                    {#if historyRows.length === 0}
+                      <p class="aa-rituals__history-empty">No checks recorded.</p>
+                    {:else}
+                      <ul class="aa-rituals__history-list">
+                        {#each historyRows as entry (entry.localDate)}
+                          <li>
+                            <span class="aa-rituals__history-date">{entry.localDate}</span>
+                            {#if entry.mood}
+                              <span class="aa-rituals__history-mood" aria-label="Mood: {entry.mood.toLowerCase()}">
+                                {entry.mood === "HAPPY" ? "▲" : entry.mood === "NEGATIVE" ? "▼" : "●"}
+                              </span>
+                            {/if}
+                            {#if entry.note}
+                              <span class="aa-rituals__history-note">{entry.note}</span>
+                            {/if}
+                          </li>
+                        {/each}
+                      </ul>
+                    {/if}
+                  </div>
+                {/if}
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </section>
     {/if}
 
     {#if rituals.rituals.length > 0}

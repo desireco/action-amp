@@ -5,7 +5,7 @@
 // create (`mintId()`), `updatedAt` re-stamped on updates, `undefined` leaves
 // a column untouched / `null` writes NULL, missing rows on update throw the
 // P2025 analogue). Tests fake these slices with vi.fn() spies.
-import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { goal, lens, ritual, ritualEntry } from "../db/schema/index.js";
 import { mintId } from "../db/client.js";
 import type { DomainDb } from "../db/client.js";
@@ -29,10 +29,14 @@ export function createRitualEntities(db: DomainDb): RitualEntities {
         return rows[0] ?? null;
       },
       findMany: async (args) => {
-        // Archived rows never list (history stays queryable via entries).
-        // Paused rows stay on the Planning list (`includePaused`) and are
-        // hidden from the Today due set otherwise.
-        const conditions = [eq(ritual.userId, args.where.userId), isNull(ritual.archivedAt)];
+        // The default set is the active one (archived rows never list);
+        // `archivedOnly` flips to the retired set. Paused rows stay on the
+        // Planning list (`includePaused`) and are hidden from the Today due
+        // set otherwise.
+        const conditions = [
+          eq(ritual.userId, args.where.userId),
+          args.where.archivedOnly ? isNotNull(ritual.archivedAt) : isNull(ritual.archivedAt),
+        ];
         if (args.where.lensId !== undefined) {
           conditions.push(eq(ritual.lensId, args.where.lensId));
         }

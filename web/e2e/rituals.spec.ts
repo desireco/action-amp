@@ -186,6 +186,35 @@ test.describe("Rituals", () => {
     await expect(page.locator(".aa-ritual-strip__row", { hasText: "Take vitamins" })).toBeVisible();
   });
 
+  test("an archived ritual lives in the Archived section and restores back", async ({ page }) => {
+    await loginAs(page, PRO_EMAIL);
+    await page.goto("/rituals");
+
+    // Archive the weekly review (not due most days — safe to retire).
+    const row = page.locator(".aa-rituals__row", { hasText: "Week plan review" });
+    await row.getByRole("button", { name: "Archive" }).click();
+    await expect(page.locator(".aa-rituals__row", { hasText: "Week plan review" })).toHaveCount(0);
+
+    // The retired set: one quiet toggle, the row inside, muted.
+    const section = page.locator(".aa-rituals__archived");
+    await expect(section).toBeVisible();
+    await expect(section.getByText("Archived")).toBeVisible();
+    await section.locator(".aa-rituals__archived-toggle").click();
+    const archivedRow = section.locator(".aa-rituals__archived-row", { hasText: "Week plan review" });
+    await expect(archivedRow).toBeVisible();
+
+    // History stays reachable on the retired row.
+    await archivedRow.getByRole("button", { name: "History" }).click();
+    await expect(archivedRow.locator(".aa-rituals__history")).toBeVisible();
+
+    // Restore returns it to the active list.
+    await archivedRow.getByRole("button", { name: "Restore" }).click();
+    await expect(
+      page.locator(".aa-rituals__row", { hasText: "Week plan review" }),
+    ).toBeVisible();
+    await expect(archivedRow).toHaveCount(0);
+  });
+
   test("the empty state offers one-tap starting points that prefill the composer", async ({ page }) => {
     await loginAs(page, "rituals-empty@test.local");
     await page.goto("/rituals");

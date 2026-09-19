@@ -51,6 +51,8 @@ interface RitualsClientSlice {
   }): Promise<{ id: string }>;
   setPaused(input: { id: string; paused: boolean }): Promise<{ id: string }>;
   archive(input: { id: string }): Promise<{ id: string }>;
+  restore(input: { id: string }): Promise<{ id: string }>;
+  archived(input?: { lensId?: string }): Promise<Ritual[]>;
   history(input: { id: string }): Promise<RitualHistoryEntry[]>;
   reorder(input: { lensId?: string; orderedIds: string[] }): Promise<{ lensId: string }>;
 }
@@ -121,6 +123,8 @@ export function cadenceLabel(r: Pick<Ritual, "cadence" | "weekday" | "intervalDa
 class RitualsStore {
   /** Planning list (lens-scoped, paused rows included). */
   rituals = $state<Ritual[]>([]);
+  /** The retired set — the Archived section. */
+  archivedRows = $state<Ritual[]>([]);
   /** Today's due set (all lenses, with checked state). */
   today = $state<TodayRitual[]>([]);
   error = $state<string | null>(null);
@@ -147,6 +151,8 @@ class RitualsStore {
     try {
       const lensId = lenses.activeLensId ?? undefined;
       this.rituals = await rpc.list({ lensId });
+      // Same fetch, same scope: the retired set rides along quietly.
+      this.archivedRows = await rpc.archived({ lensId });
       this.loadedLensId = lensId ?? null;
       this.loaded = true;
     } catch (e) {
@@ -256,6 +262,17 @@ class RitualsStore {
   async archive(id: string): Promise<void> {
     try {
       await rpc.archive({ id });
+      await this.load();
+      await this.loadToday();
+    } catch {
+      // Same quiet stance.
+    }
+  }
+
+  /** Un-retire — back on the active list. */
+  async restore(id: string): Promise<void> {
+    try {
+      await rpc.restore({ id });
       await this.load();
       await this.loadToday();
     } catch {
