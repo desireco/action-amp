@@ -387,6 +387,16 @@ normal release verification and publish path.
 
 <!-- Moved here when a spec's status flips to done. Populate as Build ships + Discover signs off. -->
 
+- **mobile-goal-management** (`shipped` 2026-09-18) — goals are manageable
+  end-to-end on a phone, retiring the capture-first scope for planning
+  (reversal recorded in WORKFLOW.md Decision 6 + TRIAGE.md §6). The mobile
+  dock's Plan item now opens a section menu (Upcoming / Projects / Goals /
+  Someday — the Lens menu's pattern), the goals screens got their
+  responsive pass (single-column grid, touch-sized reorder arrows, no
+  horizontal overflow), and project→goal linking moved to the shared
+  PickerSheet on every viewport. Pure `web/` work — no backend changes.
+  E2e at 375×667 in `web/e2e/mobile-goals.spec.ts`; review:
+  `docs/reviews/mobile-goal-management.md`.
 - **cli-agent-skills-npm-publish** (`shipped` 2026-09-15) — the CLI now
   bundles agent skills: seven `aa-*` skills (capture, complete, hygiene,
   now, review, setup, triage) built from the repo-root `skills/` directory

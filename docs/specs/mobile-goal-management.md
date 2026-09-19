@@ -1,6 +1,6 @@
 ---
 feature: mobile-goal-management
-status: ready
+status: review
 spec_owner: discover
 build_owner: build
 kind: spec
