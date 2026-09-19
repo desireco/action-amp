@@ -109,6 +109,7 @@ export interface RitualCreateData {
 
 export interface RitualUpdateData {
   name?: string;
+  order?: number;
   interval?: RitualInterval;
   cadence?: RitualCadence;
   weekday?: number | null;
@@ -152,6 +153,11 @@ export interface RitualEntities {
     findMany(args: {
       where: { ritualIds: string[]; localDate: Date };
     }): Promise<RitualEntryRow[]>;
+    /** A ritual's checked days, newest first — the quiet history read. */
+    findManyForRitual(args: {
+      where: { ritualId: string };
+      take: number;
+    }): Promise<RitualEntryRow[]>;
     create(args: {
       data: {
         ritualId: string;
@@ -171,6 +177,12 @@ export interface RitualEntities {
   Lens: {
     /** id + name pairs for the Today rows' lens pills. */
     findNames(args: { where: { userId: string } }): Promise<{ id: string; name: string }[]>;
+  };
+  Goal: {
+    /** Tenancy-safe ownership read — the optional goal link's guard. */
+    findOwned(args: {
+      where: { id: string; userId: string };
+    }): Promise<{ id: string } | null>;
   };
 }
 
@@ -320,6 +332,17 @@ function validatedCadenceFields(
   return { weekday: null, intervalDays: null };
 }
 
+/** The goal link is optional sugar from a picker — foreign ids get the calm
+ *  404, never a raw FK error. */
+async function requireOwnedGoalId(
+  entities: Pick<RitualEntities, "Goal">,
+  { userId, goalId }: { userId: string; goalId: string | null },
+): Promise<void> {
+  if (!goalId) return;
+  const goal = await entities.Goal.findOwned({ where: { id: goalId, userId } });
+  if (!goal) throw new Error("Goal not found.");
+}
+
 async function requireOwnedRitual(
   entities: Pick<RitualEntities, "Ritual">,
   { userId, id }: { userId: string; id: string },
@@ -420,11 +443,62 @@ async function joinEntryToday(
 }
 
 // ----------------------------------------------------------------
+// Reads: history + reorder
+// ----------------------------------------------------------------
+
+/**
+ * A ritual's checked days, newest first — the quiet per-ritual history
+ * (Planning page + `ritual show`). Backward-looking evidence only: each
+ * occurrence's mood glyph and note, exactly as recorded, never aggregated.
+ */
+export async function getRitualHistoryCore(
+  entities: Pick<RitualEntities, "Ritual" | "RitualEntry">,
+  {
+    userId,
+    ritualId,
+    limit = 60,
+  }: { userId: string; ritualId: string; limit?: number },
+): Promise<RitualEntryRow[]> {
+  await requireOwnedRitual(entities, { userId, id: ritualId });
+  return entities.RitualEntry.findManyForRitual({
+    where: { ritualId },
+    take: limit,
+  });
+}
+
+/**
+ * Sequence the active rituals in a lens: `order = index` for each id
+ * (full-array write, the goals-reorder precedent). Every id must belong to
+ * the user in that lens — foreign or missing rows reject, so the array and
+ * the lens stay consistent.
+ */
+export async function reorderRitualsCore(
+  entities: Pick<RitualEntities, "Ritual">,
+  {
+    userId,
+    lensId,
+    orderedIds,
+  }: { userId: string; lensId: string; orderedIds: string[] },
+): Promise<{ lensId: string }> {
+  const lensRituals = await entities.Ritual.findMany({
+    where: { userId, lensId, includePaused: true },
+  });
+  const lensIds = new Set(lensRituals.map((r) => r.id));
+  if (orderedIds.length !== lensRituals.length || orderedIds.some((id) => !lensIds.has(id))) {
+    throw new Error("orderedIds must cover exactly the lens's rituals.");
+  }
+  for (const [index, id] of orderedIds.entries()) {
+    await entities.Ritual.update({ where: { id }, data: { order: index } });
+  }
+  return { lensId };
+}
+
+// ----------------------------------------------------------------
 // Writes
 // ----------------------------------------------------------------
 
 export async function createRitualCore(
-  entities: Pick<RitualEntities, "Ritual">,
+  entities: Pick<RitualEntities, "Ritual" | "Goal">,
   {
     userId,
     lensId,
@@ -450,6 +524,7 @@ export async function createRitualCore(
   },
 ): Promise<RitualRow> {
   const fields = validatedCadenceFields(cadence, weekday, intervalDays);
+  await requireOwnedGoalId(entities, { userId, goalId });
   const previous = await entities.Ritual.findMaxOrder({ where: { userId, lensId } });
   return entities.Ritual.create({
     data: {
@@ -469,7 +544,7 @@ export async function createRitualCore(
 }
 
 export async function updateRitualCore(
-  entities: Pick<RitualEntities, "Ritual">,
+  entities: Pick<RitualEntities, "Ritual" | "Goal">,
   {
     userId,
     id,
@@ -495,6 +570,9 @@ export async function updateRitualCore(
   },
 ): Promise<RitualRow> {
   const current = await requireOwnedRitual(entities, { userId, id });
+  if (goalId !== undefined) {
+    await requireOwnedGoalId(entities, { userId, goalId });
+  }
   const data: RitualUpdateData = {};
   if (name !== undefined) data.name = normalizedName(name);
   if (interval !== undefined) data.interval = interval;

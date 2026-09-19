@@ -21,8 +21,10 @@ import {
   completeRitualCore,
   createRitualEntities,
   createRitualCore,
+  getRitualHistoryCore,
   getRitualsData,
   getTodayRitualsData,
+  reorderRitualsCore,
   setRitualPausedCore,
   uncheckRitualCore,
   updateReflectionCore,
@@ -175,6 +177,39 @@ const today = ORPC.today.handler(async ({ context }) =>
   }),
 );
 
+const history = ORPC.history.handler(async ({ context, input }) =>
+  guard(async () => {
+    const user = requireUser(context);
+    assertRitualsAllowed(user);
+    const rows = await getRitualHistoryCore(entities(context), {
+      userId: user.id,
+      ritualId: input.id,
+    });
+    return rows.map((e) => ({
+      localDate: e.localDate.toISOString().slice(0, 10),
+      mood: e.mood,
+      note: e.note,
+      createdAt: e.createdAt.toISOString(),
+    }));
+  }),
+);
+
+const reorder = ORPC.reorder.handler(async ({ context, input }) =>
+  guard(async () => {
+    const user = requireUser(context);
+    assertRitualsAllowed(user);
+    const lensId = input.lensId ?? (await primaryLensId(context, user.id));
+    if (!lensId) {
+      throw new ORPCError("BAD_REQUEST", { message: "No Lens found for this account." });
+    }
+    return await reorderRitualsCore(entities(context), {
+      userId: user.id,
+      lensId,
+      orderedIds: input.orderedIds,
+    });
+  }),
+);
+
 const create = ORPC.create.handler(async ({ context, input }) =>
   guard(async () => {
     const user = requireUser(context);
@@ -302,6 +337,7 @@ const archive = ORPC.archive.handler(async ({ context, input }) =>
 export const ritualsProcedures = {
   list,
   today,
+  history,
   create,
   update,
   complete,
@@ -309,4 +345,5 @@ export const ritualsProcedures = {
   updateReflection,
   setPaused,
   archive,
+  reorder,
 };

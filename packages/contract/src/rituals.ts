@@ -172,10 +172,41 @@ export const archiveRitual = oc
   .input(z.object({ id: z.string() }))
   .output(z.object({ id: z.string() }));
 
+/** One checked day in the quiet history read. */
+export const RitualHistoryEntrySchema = z.object({
+  /** yyyy-MM-dd — the user's calendar day at check time. */
+  localDate: z.string(),
+  mood: RitualMoodSchema.nullable(),
+  note: z.string().nullable(),
+  createdAt: datetime(),
+});
+
+/**
+ * A ritual's checked days, newest first (the Planning page's history toggle
+ * + `ritual show`). Evidence only — exactly as recorded, never aggregated.
+ */
+export const ritualHistory = oc
+  .errors(ProGateErrorMap)
+  .input(z.object({ id: z.string() }))
+  .output(z.array(RitualHistoryEntrySchema));
+
+/** Sequence the lens's active rituals: `order = index` for each id
+ *  (full-array write, the drag-and-drop + goals-reorder precedent). */
+export const reorderRituals = oc
+  .errors(ProGateErrorMap)
+  .input(
+    z.object({
+      lensId: z.string().min(1).optional(),
+      orderedIds: z.array(z.string()).min(1),
+    }),
+  )
+  .output(z.object({ lensId: z.string() }));
+
 /** The rituals namespace — paths: POST /rpc/rituals/{list,today,…}. */
 export const ritualsContract = {
   list: listRituals,
   today: todayRituals,
+  history: ritualHistory,
   create: createRitual,
   update: updateRitual,
   complete: completeRitual,
@@ -183,4 +214,5 @@ export const ritualsContract = {
   updateReflection: updateRitualReflection,
   setPaused: setRitualPaused,
   archive: archiveRitual,
+  reorder: reorderRituals,
 };

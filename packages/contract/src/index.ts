@@ -201,6 +201,7 @@ export {
   ritualsContract,
   RitualCadenceSchema,
   RitualEntryStateSchema,
+  RitualHistoryEntrySchema,
   RitualIntervalSchema,
   RitualMoodSchema,
   RitualSchema,

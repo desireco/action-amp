@@ -6,7 +6,7 @@
 // a column untouched / `null` writes NULL, missing rows on update throw the
 // P2025 analogue). Tests fake these slices with vi.fn() spies.
 import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
-import { lens, ritual, ritualEntry } from "../db/schema/index.js";
+import { goal, lens, ritual, ritualEntry } from "../db/schema/index.js";
 import { mintId } from "../db/client.js";
 import type { DomainDb } from "../db/client.js";
 import type { RitualEntities } from "./operationsCore.js";
@@ -153,6 +153,14 @@ export function createRitualEntities(db: DomainDb): RitualEntities {
             ),
           );
       },
+      findManyForRitual: async (args) => {
+        return db
+          .select()
+          .from(ritualEntry)
+          .where(eq(ritualEntry.ritualId, args.where.ritualId))
+          .orderBy(desc(ritualEntry.localDate))
+          .limit(args.take);
+      },
     },
     Lens: {
       findNames: async (args) => {
@@ -160,6 +168,16 @@ export function createRitualEntities(db: DomainDb): RitualEntities {
           .select({ id: lens.id, name: lens.name })
           .from(lens)
           .where(eq(lens.userId, args.where.userId));
+      },
+    },
+    Goal: {
+      findOwned: async (args) => {
+        const rows = await db
+          .select({ id: goal.id })
+          .from(goal)
+          .where(and(eq(goal.id, args.where.id), eq(goal.userId, args.where.userId)))
+          .limit(1);
+        return rows[0] ?? null;
       },
     },
   };

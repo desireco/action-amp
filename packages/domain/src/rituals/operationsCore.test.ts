@@ -12,8 +12,10 @@ import {
   assertRitualsAllowed,
   completeRitualCore,
   createRitualCore,
+  getRitualHistoryCore,
   getRitualsData,
   getTodayRitualsData,
+  reorderRitualsCore,
   isDueOn,
   setRitualPausedCore,
   uncheckRitualCore,
@@ -37,6 +39,7 @@ function entryDelegate() {
   return {
     findFirst: vi.fn(),
     findMany: vi.fn(),
+    findManyForRitual: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
@@ -48,6 +51,7 @@ function entities() {
     Ritual: ritualDelegate(),
     RitualEntry: entryDelegate(),
     Lens: { findNames: vi.fn() },
+    Goal: { findOwned: vi.fn().mockResolvedValue({ id: "goal-1" }) },
   } as unknown as RitualEntities & {
     Ritual: ReturnType<typeof ritualDelegate>;
     RitualEntry: ReturnType<typeof entryDelegate>;
@@ -477,5 +481,74 @@ describe("guidance + benefit", () => {
       where: { id: "ritual-1" },
       data: { guidance: null },
     });
+  });
+});
+
+describe("history + reorder", () => {
+  it("history requires ownership and returns the delegate's rows", async () => {
+    const db = entities();
+    db.Ritual.findFirst.mockResolvedValue(row());
+    db.RitualEntry.findManyForRitual.mockResolvedValue([]);
+
+    await getRitualHistoryCore(db, { userId: "user-1", ritualId: "ritual-1", limit: 30 });
+
+    expect(db.RitualEntry.findManyForRitual).toHaveBeenCalledWith({
+      where: { ritualId: "ritual-1" },
+      take: 30,
+    });
+  });
+
+  it("history rejects a foreign ritual", async () => {
+    const db = entities();
+    db.Ritual.findFirst.mockResolvedValue(null);
+    await expect(
+      getRitualHistoryCore(db, { userId: "user-1", ritualId: "other" }),
+    ).rejects.toThrow("Ritual not found.");
+  });
+
+  it("reorder writes order = index for the full array", async () => {
+    const db = entities();
+    db.Ritual.findMany.mockResolvedValue([
+      row({ id: "r-a", order: 1 }),
+      row({ id: "r-b", order: 0 }),
+    ]);
+    db.Ritual.update.mockResolvedValue(row());
+
+    await reorderRitualsCore(db, { userId: "user-1", lensId: "lens-me", orderedIds: ["r-b", "r-a"] });
+
+    expect(db.Ritual.update).toHaveBeenCalledTimes(2);
+    expect(db.Ritual.update).toHaveBeenNthCalledWith(1, { where: { id: "r-b" }, data: { order: 0 } });
+    expect(db.Ritual.update).toHaveBeenNthCalledWith(2, { where: { id: "r-a" }, data: { order: 1 } });
+  });
+
+  it("reorder rejects foreign or partial arrays", async () => {
+    const db = entities();
+    db.Ritual.findMany.mockResolvedValue([row({ id: "r-a" }), row({ id: "r-b" })]);
+    await expect(
+      reorderRitualsCore(db, { userId: "user-1", lensId: "lens-me", orderedIds: ["r-a"] }),
+    ).rejects.toThrow(/cover exactly/);
+    await expect(
+      reorderRitualsCore(db, { userId: "user-1", lensId: "lens-me", orderedIds: ["r-a", "foreign"] }),
+    ).rejects.toThrow(/cover exactly/);
+    expect(db.Ritual.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("goal link", () => {
+  it("create with a foreign goal id rejects with the calm 404", async () => {
+    const db = entities();
+    (db as unknown as { Goal: { findOwned: ReturnType<typeof vi.fn> } }).Goal.findOwned.mockResolvedValue(null);
+    await expect(
+      createRitualCore(db, { userId: "user-1", lensId: "lens-me", name: "Water", goalId: "foreign" }),
+    ).rejects.toThrow("Goal not found.");
+    expect(db.Ritual.create).not.toHaveBeenCalled();
+  });
+
+  it("create with an owned goal passes it through", async () => {
+    const db = entities();
+    db.Ritual.findMaxOrder.mockResolvedValue(null);
+    db.Ritual.create.mockResolvedValue(row());
+    await createRitualCore(db, { userId: "user-1", lensId: "lens-me", name: "Water", goalId: "goal-1" });
+    expect(db.Ritual.create.mock.calls[0]?.[0]?.data.goalId).toBe("goal-1");
   });
 });
