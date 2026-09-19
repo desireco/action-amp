@@ -173,7 +173,7 @@ live — open it to see every component against the real tokens.
 - Reserve amber for genuine human emphasis (Important, "why this matters").
 - Layer two soft, blue-tinted shadows for elevation; add a 1px hairline border for definition.
 - Leave generous whitespace. If a section feels crowded, remove something.
-- Keep radii in the 4–8px range for UI; `radius-full` only for the completion circle. One identity exception: goal cards carry `--aa-radius-goal` (80px, ≈25% of the card's min-height — Jake, 2026-09-19); the soft-round shape is what separates goals from projects at a glance.
+- Keep radii in the 4–8px range for UI; `radius-full` only for the completion circle. Two identity exceptions, both Jake, 2026-09-19: goal cards carry `--aa-radius-goal` (80px, ≈25% of the card's min-height) — the soft-round shape separates goals from projects at a glance — and ritual cards carry `--aa-radius-ritual` (36px), between projects (2xl) and goals: shape orders the Planning surfaces, outcomes roundest, rhythms between, work sharpest.
 - Make secondary/tertiary buttons look tappable: visible `border-strong` + subtle shadow, never a faint outline alone.
 - Lay out buttons `inline-flex` with icon *leading*, never stacked above the label.
 - Set `<html data-theme>` and `<html data-lens>` so the runtime tokens resolve.
