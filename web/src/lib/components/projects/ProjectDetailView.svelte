@@ -132,12 +132,13 @@
     if (!project) return;
     relinkError = null;
     const ok = await projects.update({ id: project.id, goalId });
+    pickingGoal = false;
     if (!ok) {
+      // The sheet closes either way; a failure surfaces inline in the Why row.
       relinkError = projects.error ?? "Couldn't change the goal.";
       projects.error = null;
       return;
     }
-    pickingGoal = false;
     await refresh();
   }
 
@@ -298,38 +299,7 @@
         {#if project.type !== "SIMPLE_LIST"}
           <div class="aa-project__why">
             <span class="aa-project__why-eyebrow">Why</span>
-            {#if pickingGoal}
-              <div class="aa-relink-picker">
-                <button
-                  type="button"
-                  class="aa-project__relink-opt"
-                  class:is-active={project.goal === null}
-                  onclick={() => handleRelink(null)}
-                >
-                  None (standalone)
-                </button>
-                {#each goals.lensGoals as g (g.id)}
-                  <button
-                    type="button"
-                    class="aa-project__relink-opt"
-                    class:is-active={project.goal?.id === g.id}
-                    onclick={() => handleRelink(g.id)}
-                  >
-                    {g.name}
-                  </button>
-                {/each}
-                <button
-                  type="button"
-                  class="aa-btn aa-btn--secondary"
-                  onclick={() => (pickingGoal = false)}
-                >
-                  Cancel
-                </button>
-                {#if relinkError}
-                  <p class="aa-error" role="alert">{relinkError}</p>
-                {/if}
-              </div>
-            {:else if project.goal}
+            {#if project.goal}
               <div class="aa-project__why-value">
                 <a href="/goals/{project.goal.permalink}" class="aa-project__why-link">
                   {project.goal.name}
@@ -342,6 +312,9 @@
               <button type="button" class="aa-project__why-empty" onclick={openGoalPicker}>
                 Link a goal →
               </button>
+            {/if}
+            {#if relinkError}
+              <p class="aa-error" role="alert">{relinkError}</p>
             {/if}
           </div>
         {/if}
@@ -616,6 +589,24 @@
     confirmLabel="Archive project"
     onConfirm={handleArchive}
     onClose={() => (confirmArchive = false)}
+  />
+{/if}
+
+<!-- Goal link sheet — the single-choice destination picker (same control
+     the task property chips use for long lists), incl. standalone. -->
+{#if pickingGoal && project}
+  <PickerSheet
+    title="Link this project to a goal"
+    items={[
+      { id: "__none__", label: "None (standalone)", current: project.goal === null },
+      ...goals.lensGoals.map((g) => ({
+        id: g.id,
+        label: g.name,
+        current: project.goal?.id === g.id,
+      })),
+    ]}
+    onPick={(id) => void handleRelink(id === "__none__" ? null : id)}
+    onClose={() => (pickingGoal = false)}
   />
 {/if}
 

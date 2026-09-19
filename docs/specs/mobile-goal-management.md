@@ -50,8 +50,13 @@ Pure client work (`web/`). No backend, contract, caps, or entitlement changes.
   link/unlink projects, reorder. The screens' markup already works on touch
   (plain forms, buttons, confirm dialog); the work is entry + responsive CSS.
 - **Linking stays project-side**, via the project detail's goal picker —
-  rendered as a PickerSheet on mobile (the established popover/sheet dual
-  pattern). No goal-side "add project" control appears (parity with desktop).
+  rendered as a PickerSheet on **all viewports**, and no
+  goal-side "add project" control appears (parity with desktop). *(Revised
+  during build: the draft said "PickerSheet on mobile, desktop unchanged",
+  but the codebase's popover/sheet dual pattern is option-count-driven, not
+  viewport-driven — PropertyChips renders sheets for long lists on every
+  viewport, and a matchMedia branch would have introduced a new pattern.
+  The inline button row is retired and its styles removed.)*
 - **Creation from capture/triage on mobile stays out.** OQ3's lean stands.
 
 ## Done-conditions
@@ -83,9 +88,10 @@ Pure client work (`web/`). No backend, contract, caps, or entitlement changes.
 
 ### Slice 3 — Project→goal linking on touch
 
-- On mobile, the project detail's goal picker renders as a PickerSheet
-  (single-choice list including "None (standalone)"); linking/unlinking
-  works end-to-end from the sheet. Desktop picker unchanged.
+- The project detail's goal picker renders as a PickerSheet (single-choice
+  list including "None (standalone)") on every viewport; linking/unlinking
+  works end-to-end from the sheet, and a failed relink surfaces inline in
+  the Why row. The retired inline picker's styles are gone.
 
 ### Tests
 
