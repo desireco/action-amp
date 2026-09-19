@@ -132,6 +132,11 @@ completion-log.md` and `docs/specs/done/goal-planning.md`.
              └─ ListItem    ← checklist row (SIMPLE_LIST only: title, order, completedAt)
                               + ListItemAttachment
 
+  Ritual          ← the habits layer (Pro): recurring rhythms with check-off
+                     semantics only — never a focus candidate. Lens-scoped;
+                     due-ness DERIVED from cadence (daily/weekdays/weekly/
+                     every-N-days), never stored. RitualEntry = one checked
+                     local day (optional mood + note).
   Tag             ← GTD "@context": #errands, #phone, ~15m, low-energy
                      (focus refinements — Phase 2 nuance; `#`-prefixed at capture per grammar v2)
   Archive         ← PARa's A: completed/dead items  [Logbook]
@@ -162,6 +167,13 @@ completion-log.md` and `docs/specs/done/goal-planning.md`.
   through its Project, and optional image attachments. It has no Task
   scheduling, hierarchy, priority, size, focus, triage, or review semantics.
 - **Archive** = where completed/dead items go. (PARA "Archive" / our Logbook.)
+- **Ritual** = a recurring rhythm (medication, water, the morning walk).
+  Assigned to a daily interval (morning/midday/evening — a grouping, not an
+  alarm) and one of four cadences; optional **guidance** (what you do) and
+  **benefit** (what you get) render as markdown; pausing hides without
+  deleting history, archiving retires it. Checking records a `RitualEntry`
+  for the local calendar day with an optional mood + note — moods are plain
+  facts, never aggregated. Pro-only.
 - **Tag** = GTD "@context" — cross-cutting labels for focus refinement.
 - **Review** = one user-owned cadence/period record. `answers` and `snapshot`
   are JSON; `snapshot` preserves names, Outcomes, hierarchy/Lens labels, and

@@ -20,7 +20,10 @@ and notification actions open Capture, Next, or Today. The preference is a
 local `PlainTime` plus an IANA time zone; delivery checks compare exact
 instants after resolving that local clock. Saving reminder preferences may
 initialize the account time zone, but never silently replaces an existing
-account time-zone choice.
+account time-zone choice. When rituals await (due and unchecked in the
+user's persisted zone), the body gains one calm line — `Today: … · 2
+rituals due`, or `2 rituals due today. Nothing planned yet.` when the day
+holds no committed tasks (added 2026-09-19).
 
 **Deployment configuration.** Set all three server environment variables:
 `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT` (a `mailto:` or

@@ -341,8 +341,8 @@ normal release verification and publish path.
     so it sits in this tier (post-gauntlet), not the validation gauntlet.
     Interactive prototype at `docs/mockups/today-merged.html`. Spec at
     `docs/specs/work-area-merged.md`.
-8. **rituals** (`draft` — spec ready; was `habits-recurring-activities`,
-   `idea`) — the habits layer: recurring personal rhythms (daily, weekdays,
+8. **rituals** (`built` 2026-09-19 — awaiting sign-off; was
+   `habits-recurring-activities`) — the habits layer: recurring personal rhythms (daily, weekdays,
    weekly, every-N-days) as a first-class lens-scoped Ritual entity
    (creation defaults to Me), each assigned to a daily interval — morning,
    midday, or evening. Due rituals surface as a quiet cap-exempt section on
@@ -355,8 +355,11 @@ normal release verification and publish path.
    daily push reminder gains one calm line when rituals are due. Discovery
    done + decisions locked 2026-09-15 (WORKFLOW.md §5.14; a same-day dual
    check/work mode was reversed back to check-off only). Spec at
-   `docs/specs/rituals.md`. Still product-depth work after validation
-   signal, not part of the current acquisition gauntlet.
+   `docs/specs/rituals.md`. Built across the full stack (schema → domain →
+   contract → API → web → push line → `actionamp ritual` CLI → e2e), plus
+   optional markdown **guidance** (what you do) / **benefit** (what you get)
+   fields with `(g)/(b)` hover markers on Today. Catalog:
+   `docs/features/rituals.md`.
 
 ## Queue notes
 

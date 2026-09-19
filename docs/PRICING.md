@@ -186,6 +186,7 @@ Pro = Work + unlimited structure + power.
 | **Lens** (Work/Me scope) | **Me only** (personal scope; Work visible-but-locked) | Work + Me + custom Lenses (soft cap 8) |
 | **Projects** | **3** | Unlimited |
 | **Goals** | **1** | Unlimited |
+| **Rituals** (habits layer — recurring rhythms, check-off only) | — | ✅ |
 | Upcoming / Someday views | **Full** | Full |
 | Command palette (F20) | — | ✅ |
 | Sitewide search across work + Inbox history (F22) | — | ✅ |

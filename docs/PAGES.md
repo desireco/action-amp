@@ -174,6 +174,16 @@ sequences projects under each goal ("Next: <name>").
 - Each Goal: linked Projects (ordered), aggregate progress, current focus project.
 - Create/edit Goal inline.
 
+### P7a. Rituals → `/rituals` (new stack; `/do/rituals` in the legacy map)
+
+The habits layer's Planning surface (Pro-only): lens-scoped management —
+inline create (name, interval morning/midday/evening, cadence
+daily/weekdays/weekly/every-N-days; lens defaults to Me), edit, pause,
+archive. Rows render optional guidance/benefit as markdown. Checking never
+happens here — Today's Rituals section (cap-exempt, grouped by interval) is
+the only doing-surface, and `actionamp ritual` mirrors the whole surface
+from the terminal.
+
 ### P8. Review cadences → `/do/review/today`, `/do/review/week`, `/do/review/month`
 
 Three distinct completion debriefs: Today closes the day, Week recognizes
