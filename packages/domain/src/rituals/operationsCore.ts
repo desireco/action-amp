@@ -21,6 +21,7 @@ import {
   calendarDayDifference,
   instantFrom,
   instantToPlainDate,
+  plainDateToDb,
   type PlainDate,
 } from "../shared/time/temporal.js";
 import { isEntitled, type EntitlementMessage } from "../billing/entitlements.js";
@@ -368,18 +369,11 @@ async function entriesFor(
 ): Promise<RitualEntryRow[]> {
   if (ritualIds.length === 0) return [];
   const rows = await entities.RitualEntry.findMany({
-    where: { ritualIds, localDate: entryDate(today) },
+    where: { ritualIds, localDate: plainDateToDb(today) },
   });
   // Tenancy belt-and-braces: the unique index already scopes by ritualId;
   // the userId filter keeps a foreign entry from ever joining.
   return rows.filter((e) => e.userId === userId);
-}
-
-/** Encode a calendar day for the @db.Date `localDate` column. */
-function entryDate(today: PlainDate): Date {
-  return new Date(
-    Date.UTC(today.year, today.month - 1, today.day),
-  );
 }
 
 /** Parse a stored `localDate` back to a calendar day (UTC-midnight Date). */
