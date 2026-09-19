@@ -21,6 +21,7 @@ function userRow(overrides: Partial<ReminderUserRow> = {}): ReminderUserRow {
     dailyReminderTime: "09:00",
     dailyReminderTimeZone: "UTC",
     lastDailyReminderAt: null,
+    timeZone: null,
     pushSubscriptions: [sub("s1")],
     ...overrides,
   };
@@ -33,6 +34,7 @@ interface World {
   failures: Map<string, { statusCode?: number }>;
   deleted: string[];
   tasks: { names: string[]; total: number };
+  ritualsDue: number;
   configured: number;
 }
 
@@ -46,6 +48,7 @@ function makeDeps(world: World, now = new Date("2026-09-02T09:00:00.000Z")): Rem
     now: () => now,
     listReminderUsers: async () => world.users,
     todayTasks: async () => world.tasks,
+    ritualsDueToday: async () => world.ritualsDue,
     async send(s, payload) {
       world.sends.push({ id: s.id, payload });
       const failure = world.failures.get(s.id);
@@ -71,6 +74,7 @@ function makeWorld(users: ReminderUserRow[]): World {
     failures: new Map(),
     deleted: [],
     tasks: { names: ["Write tests"], total: 1 },
+    ritualsDue: 0,
     configured: 0,
   };
 }
@@ -205,5 +209,32 @@ describe("runDailyReminderPass — claim + prune semantics", () => {
     expect(JSON.parse(world.sends[0]!.payload).body).toBe(
       "Nothing planned yet. Choose what matters.",
     );
+  });
+});
+
+describe("runDailyReminderPass — the rituals line", () => {
+  it("appends '· N rituals due' to the tasks body when rituals await", async () => {
+    const world = makeWorld([userRow()]);
+    world.ritualsDue = 2;
+    const { sent } = await runDailyReminderPass(makeDeps(world));
+    expect(sent).toBe(1);
+    const payload = JSON.parse(world.sends[0]!.payload) as { body: string };
+    expect(payload.body).toBe("Today: Write tests · 2 rituals due");
+  });
+
+  it("carries the line alone when nothing is planned but rituals await", async () => {
+    const world = makeWorld([userRow()]);
+    world.tasks = { names: [], total: 0 };
+    world.ritualsDue = 1;
+    await runDailyReminderPass(makeDeps(world));
+    const payload = JSON.parse(world.sends[0]!.payload) as { body: string };
+    expect(payload.body).toBe("1 ritual due today. Nothing planned yet.");
+  });
+
+  it("omits the line at zero (byte-parity with the pre-rituals body)", async () => {
+    const world = makeWorld([userRow()]);
+    await runDailyReminderPass(makeDeps(world));
+    const payload = JSON.parse(world.sends[0]!.payload) as { body: string };
+    expect(payload.body).toBe("Today: Write tests");
   });
 });

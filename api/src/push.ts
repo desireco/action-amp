@@ -33,9 +33,11 @@ import {
 } from "drizzle-orm";
 import webpush from "web-push";
 import { nowDate, savePushSubscriptionCore } from "@actionamp/domain/notifications";
+import { isDueOn } from "@actionamp/domain/rituals";
 import { notificationsContract } from "@actionamp/contract";
 import type { DomainDb } from "@actionamp/domain/db";
-import { pushSubscription, task, user } from "@actionamp/domain/db";
+import { pushSubscription, ritual, ritualEntry, task, user } from "@actionamp/domain/db";
+import { currentPlainDate, plainDateToDb } from "@actionamp/domain/shared/time";
 import { requireUser, type ApiContext } from "./context.js";
 import { logEvent } from "./logger.js";
 import { runDailyReminderPass, type ReminderDeps } from "./reminder.js";
@@ -97,6 +99,7 @@ export function createReminderDeps(db: DomainDb): ReminderDeps {
           dailyReminderTime: user.dailyReminderTime,
           dailyReminderTimeZone: user.dailyReminderTimeZone,
           lastDailyReminderAt: user.lastDailyReminderAt,
+          timeZone: user.timeZone,
         })
         .from(user)
         .where(eq(user.dailyReminderEnabled, true));
@@ -149,6 +152,38 @@ export function createReminderDeps(db: DomainDb): ReminderDeps {
         names: top.map((t) => t.description),
         total: totals[0]?.total ?? 0,
       };
+    },
+    async ritualsDueToday(userId, timeZone) {
+      // Due-ness is derived (isDueOn), never stored: load the user's active
+      // rituals + today's local-day entries, count the cadence matches. No
+      // entitlement read here — a FREE-equivalent account has no rituals
+      // surface in play; an empty set counts zero and the line is omitted.
+      const [rows, entries] = await Promise.all([
+        db
+          .select({
+            id: ritual.id,
+            cadence: ritual.cadence,
+            weekday: ritual.weekday,
+            intervalDays: ritual.intervalDays,
+            createdAt: ritual.createdAt,
+          })
+          .from(ritual)
+          .where(and(eq(ritual.userId, userId), isNull(ritual.pausedAt), isNull(ritual.archivedAt))),
+        db
+          .select({ ritualId: ritualEntry.ritualId })
+          .from(ritualEntry)
+          .where(
+            and(
+              eq(ritualEntry.userId, userId),
+              eq(ritualEntry.localDate, plainDateToDb(currentPlainDate(timeZone))),
+            ),
+          ),
+      ]);
+      if (rows.length === 0) return 0;
+      const today = currentPlainDate(timeZone);
+      // The line counts what awaits: due (cadence) and not yet checked today.
+      const checked = new Set(entries.map((e) => e.ritualId));
+      return rows.filter((r) => !checked.has(r.id) && isDueOn(r, today, timeZone)).length;
     },
     async send(subscription, payload) {
       // Rejections carry web-push's `statusCode` — the prune reads it.

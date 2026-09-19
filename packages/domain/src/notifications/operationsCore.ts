@@ -101,17 +101,30 @@ export function truncate(name: string, max = 48): string {
 }
 
 /**
- * Build the daily-reminder body string from the top Today tasks + the total
- * open-Today count. Three shapes: tasks present (named, top 3, +N more when
- * the count exceeds the named sample), or a calm "nothing planned" nudge.
+ * Build the daily-reminder body string from the top Today tasks, the total
+ * open-Today count, and the due-Ritual count. Shapes: tasks present (named,
+ * top 3, +N more when the count exceeds the named sample) with a calm
+ * rituals line appended when any are due; no tasks but rituals due (the
+ * rituals carry the line); or a calm "nothing planned" nudge. The rituals
+ * line only ever mentions count — never names, never pressure.
  * Pure + exported so the contract is unit-testable without web-push.
  */
-export function buildReminderBody(names: string[], totalCount: number): string {
+export function buildReminderBody(
+  names: string[],
+  totalCount: number,
+  ritualsDue = 0,
+): string {
+  const rituals =
+    ritualsDue > 0 ? ` · ${ritualsDue} ritual${ritualsDue === 1 ? "" : "s"} due` : "";
   const trimmed = names.map((n) => truncate(n));
   const extra = totalCount - trimmed.length;
-  return trimmed.length > 0
-    ? `Today: ${trimmed.join(", ")}${extra > 0 ? ` (+${extra} more)` : ""}`
-    : "Nothing planned yet. Choose what matters.";
+  if (trimmed.length > 0) {
+    return `Today: ${trimmed.join(", ")}${extra > 0 ? ` (+${extra} more)` : ""}${rituals}`;
+  }
+  if (ritualsDue > 0) {
+    return `${ritualsDue} ritual${ritualsDue === 1 ? "" : "s"} due today. Nothing planned yet.`;
+  }
+  return "Nothing planned yet. Choose what matters.";
 }
 
 /** The push payload the service worker's `push` handler decodes. */

@@ -21,12 +21,14 @@ export interface ReminderSubscriptionRow {
   auth: string;
 }
 
-/** The user fields the send loop reads (webapp findMany select parity). */
+/** The user fields the send loop reads (webapp findMany select parity +
+ *  `timeZone`, the persisted IANA zone due-Ritual counting derives in). */
 export interface ReminderUserRow {
   id: string;
   dailyReminderTime: string;
   dailyReminderTimeZone: string;
   lastDailyReminderAt: Date | null;
+  timeZone: string | null;
   pushSubscriptions: ReminderSubscriptionRow[];
 }
 
@@ -47,6 +49,9 @@ export interface ReminderDeps {
   listReminderUsers(): Promise<ReminderUserRow[]>;
   /** Top-3 open TODAY task names + the total open-TODAY count. */
   todayTasks(userId: string): Promise<{ names: string[]; total: number }>;
+  /** Due-Ritual count for the user's local today (0 for FREE-equivalent
+   *  accounts — the gate is binary; no count, no line). */
+  ritualsDueToday(userId: string, timeZone: string): Promise<number>;
   send: PushSendFn;
   /** Dead-endpoint prune (404/410 rejections only). */
   deleteSubscription(id: string): Promise<void>;
@@ -97,7 +102,8 @@ export async function runDailyReminderPass(deps: ReminderDeps): Promise<Reminder
     if (!claimed) continue;
 
     const { names, total } = await deps.todayTasks(u.id);
-    const body = buildReminderBody(names, total);
+    const ritualsDue = await deps.ritualsDueToday(u.id, u.timeZone ?? "UTC");
+    const body = buildReminderBody(names, total, ritualsDue);
     const payload = buildReminderPayload(body);
 
     const results = await Promise.allSettled(
