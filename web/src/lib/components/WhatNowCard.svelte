@@ -1,10 +1,10 @@
 <script lang="ts">
   // WhatNowCard — the composite task card, the product's wedge (webapp
-  // ui/NextCard verbatim port: markup + CSS). Title → live session countdown
-  // (now state only) → meta → amber "why" line → goal rationale + continuity
-  // (next state only) → Start / Resume + Pause|Not now. Flat app-shell
-  // variant: no card chrome, centered, 520px. No completion control on the
-  // card — completing happens in focus mode.
+  // ui/NextCard verbatim port: markup + CSS). Title → meta → amber "why"
+  // line → goal rationale + continuity (next state only) → Start / Pause|Not
+  // now. Flat app-shell variant: no card chrome, centered, 520px. No
+  // completion control on the card — completing happens in focus mode
+  // (a running task never renders this card: Do hands off to focus).
   import type { Snippet } from "svelte";
   import type { GoalContext } from "../taskView";
 
@@ -19,11 +19,6 @@
     continuityStats?: string | null;
     latestNote?: string | null;
     attachments?: { id: string; filename: string }[];
-    /** ISO start of the open focus session (or the task's startedAt as a
-     *  legacy fallback) — drives the live countdown while the task is Now. */
-    sessionStartedAt?: string | null;
-    /** The user's focus-session length (User.focusSessionMinutes, 25|45). */
-    focusSessionMinutes?: number;
   }
 
   let {
@@ -43,31 +38,6 @@
   } = $props();
 
   let doing = $state(false);
-  let tick = $state(0);
-
-  // The Now card stays honest about the running session: one calm live
-  // countdown under the title. `tick` is the heartbeat — Date.now() alone
-  // isn't reactive (same rule as FocusView's clock).
-  $effect(() => {
-    if (cardState !== "now" || !task.sessionStartedAt) return;
-    const id = setInterval(() => (tick += 1), 1_000);
-    return () => clearInterval(id);
-  });
-
-  const remainingMs = $derived.by(() => {
-    if (cardState !== "now" || !task.sessionStartedAt) return null;
-    void tick;
-    const plannedMs = (task.focusSessionMinutes ?? 25) * 60_000;
-    const elapsed = Date.now() - new Date(task.sessionStartedAt).getTime();
-    return Math.max(0, plannedMs - elapsed);
-  });
-
-  function formatCountdown(ms: number): string {
-    const totalSeconds = Math.ceil(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-  }
 
   function handleDo() {
     doing = true;
@@ -81,13 +51,6 @@
   {/if}
 
   <h2 class="aa-wn-card__title" class:strike={doing}>{task.title}</h2>
-
-  {#if cardState === "now" && remainingMs !== null}
-    <div class="aa-wn-card__clock" aria-label="Focus session time remaining">
-      <span class="aa-wn-card__clock-glyph" aria-hidden="true">◷</span>
-      <time class="aa-wn-card__clock-time">{formatCountdown(remainingMs)}</time>
-    </div>
-  {/if}
 
   {#if task.project || task.due || task.size}
     <div class="aa-wn-card__meta">
@@ -136,11 +99,7 @@
 
   <div class="aa-wn-card__actions">
     <button type="button" class="aa-btn aa-btn--primary" onclick={handleDo} disabled={doing}>
-      {#if cardState === "now"}
-        Resume
-      {:else}
-        {doing ? "Done ✓" : "Start"}
-      {/if}
+      {doing ? "Done ✓" : "Start"}
     </button>
     {#if cardState === "now"}
       <button type="button" class="aa-btn aa-btn--secondary" onclick={() => onPause?.()} disabled={doing}>
@@ -205,24 +164,6 @@
   .aa-wn-card__title.strike {
     text-decoration: line-through;
     color: var(--aa-text-3);
-  }
-
-  /* Live session countdown (now state) — the quiet proof the task is running.
-     Teal = system/state; tabular-nums keeps the digits from jittering. */
-  .aa-wn-card__clock {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    margin: 0 0 12px;
-    color: var(--aa-teal-cta);
-    font-size: var(--aa-text-base);
-    font-weight: var(--aa-weight-semibold);
-  }
-
-  .aa-wn-card__clock-time {
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.02em;
   }
 
   /* Meta line (project · due · size) */

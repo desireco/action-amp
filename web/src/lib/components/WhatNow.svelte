@@ -51,6 +51,16 @@
   const isNow = $derived(!!task?.startedAt);
   const loading = $derived(whatNow.loading && !entered);
 
+  // "Do is focus while running": once the stage resolves to a started task,
+  // the store holds its focused detail and this hands off to the focus
+  // route — clicking Do (or coming back to it) lands in the ticking session,
+  // not on a card. replaceState keeps Back on the page the user came from.
+  // The store's load clears `focused` whenever nothing is running, so this
+  // can't loop with /focus's own empty-bounce.
+  $effect(() => {
+    if (entered && whatNow.focused) void goto("/focus", { replaceState: true });
+  });
+
   function dueLabel(t: { status: string; scheduledDate: string | null }): string | null {
     return t.status === "TODAY" ? "due today" : t.scheduledDate ? `due ${formatWhen(t.scheduledDate)}` : null;
   }
@@ -89,10 +99,6 @@
     const continuity = !t.startedAt
       ? resolveContinuity({ project: t.project, goal: t.goal, sessions: t.sessions, updates: t.notes })
       : null;
-    // The live countdown anchors on the open session (the task's startedAt is
-    // only a legacy pointer fallback; the picked-task path carries no sessions).
-    const openSessionStart =
-      t.sessions?.find((s) => s.endedAt === null)?.startedAt ?? t.startedAt;
     return {
       title: t.description,
       project: t.project?.name,
@@ -104,8 +110,6 @@
       continuityStats: continuity ? continuityStatsRow(continuity) : null,
       latestNote: !t.startedAt ? continuity?.latestNote ?? null : null,
       attachments: t.attachments,
-      sessionStartedAt: t.startedAt ? openSessionStart : null,
-      focusSessionMinutes: whatNow.appData?.focusSessionMinutes,
     };
   }
 </script>

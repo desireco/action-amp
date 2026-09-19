@@ -82,6 +82,17 @@ class WhatNowStore {
       }
       if (lensId !== this.lensId) return; // a switch superseded this load
       const task = this.picked ?? this.topTask;
+      // Do is focus while a task is Now: resolve the focused detail (the
+      // full thread + sessions the focus view renders) so the Do page's
+      // handoff effect can send the user straight to /focus. Nothing
+      // running → drop any stale focused cache so /focus re-resolves
+      // honestly.
+      if (task?.startedAt) {
+        if (this.focused?.id !== task.id) this.focused = null;
+        await this.loadFocused();
+      } else {
+        this.focused = null;
+      }
       // Alternatives render only while deciding — a started task keeps the
       // stage to itself.
       this.alternatives =
