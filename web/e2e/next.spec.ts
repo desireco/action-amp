@@ -74,7 +74,9 @@ test.describe("What Now home", () => {
 
     await page.getByRole("button", { name: /^start$/i }).click();
     await expect(page).toHaveURL(/\/focus$/);
-    await expect(page.getByLabel(/focus:/i)).toBeVisible();
+    // Role-scoped: the sidebar Now tile's "In focus: …" label also contains
+    // "focus:", so a bare getByLabel(/focus:/i) resolves to two elements.
+    await expect(page.getByRole("dialog", { name: /^Focus:/i })).toBeVisible();
   });
 
   test("completing a task in focus mode removes it from Next (F16)", async ({ page }) => {
@@ -88,9 +90,17 @@ test.describe("What Now home", () => {
 
     await page.goto("/");
 
-    // The task is Now — Start just navigates.
-    await page.getByRole("button", { name: /^start$/i }).click();
-    await expect(page).toHaveURL(/\/focus$/);
+    // Do-is-focus handoff (1c1e7c8): when the task is already Now — F13 left
+    // it running, and re-runs too — "/" hands off straight to /focus and no
+    // Start button exists. A fresh state shows the card with Start instead;
+    // wait for whichever state lands, then enter focus.
+    const focusUp = page.getByRole("dialog", { name: /^Focus:/i });
+    const start = page.getByRole("button", { name: /^start$/i });
+    await expect(focusUp.or(start)).toBeVisible();
+    if ((await focusUp.count()) === 0) {
+      await start.click();
+    }
+    await expect(focusUp).toBeVisible();
 
     // Wrap up → composer → Mark complete (current labels per the redesign).
     await page.getByRole("button", { name: /wrap up/i }).click();

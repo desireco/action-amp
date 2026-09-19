@@ -112,7 +112,9 @@ test("Command stays suppressed while Working and Capture keeps Cmd+K", async ({
   await createTodayTask(page, title);
   await page.goto("/");
   await page.getByRole("button", { name: /^start$/i }).click();
-  await expect(page.getByLabel(/focus:/i)).toBeVisible();
+  // Role-scoped: the sidebar Now tile's "In focus: …" label also contains
+  // "focus:", so a bare getByLabel(/focus:/i) resolves to two elements.
+  await expect(page.getByRole("dialog", { name: /^Focus:/i })).toBeVisible();
 
   await page.keyboard.press("Meta+\\");
   await expect(
