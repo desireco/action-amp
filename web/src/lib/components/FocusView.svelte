@@ -87,6 +87,17 @@
   const sessionDurationMs = $derived(task.focusSessionMinutes * 60_000);
   const completedFocusSessions = $derived(
     Math.max(0, Math.floor(task.sessions?.filter((s) => s.completed).length ?? 0)),
+);
+  // Pomodoro dots — one per closed session on this task, oldest first: a full
+  // dot recorded a completed countdown; a crossed dot was interrupted
+  // (paused, abandoned, or the task wrapped up mid-interval). The open
+  // session gets no dot — the ring is it.
+  const closedSessions = $derived((task.sessions ?? []).filter((s) => s.endedAt !== null));
+  const interruptedSessions = $derived(closedSessions.length - completedFocusSessions);
+  const sessionDotsAria = $derived(
+    `${completedFocusSessions} completed ${completedFocusSessions === 1 ? "pomodoro" : "pomodoros"}${
+      interruptedSessions > 0 ? `, ${interruptedSessions} interrupted` : ""
+    }`,
   );
   const sessionComplete = $derived(
     !openSession && (task.sessions?.at(-1)?.completed ?? false),
@@ -330,14 +341,25 @@
           <span class="aa-focus-timer__label">
             {sessionComplete ? "session complete" : `${task.focusSessionMinutes} min focus`}
           </span>
-          {#if completedFocusSessions > 0}
-            <span
-              class="aa-focus-timer__cycles"
-              aria-label="{completedFocusSessions} completed focus {completedFocusSessions === 1
-                ? "session"
-                : "sessions"}"
-            >
-              ◷ {completedFocusSessions}
+          {#if closedSessions.length > 0}
+            <span class="aa-focus-timer__dots" aria-label={sessionDotsAria}>
+              {#each closedSessions as session}
+                <svg
+                  viewBox="0 0 8 8"
+                  class="aa-focus-timer__dot{session.completed ? "" : " aa-focus-timer__dot--crossed"}"
+                  aria-hidden="true"
+                >
+                  {#if session.completed}
+                    <circle cx="4" cy="4" r="3" fill="currentColor" />
+                  {:else}
+                    <circle cx="4" cy="4" r="2.5" fill="none" stroke="currentColor" stroke-width="1.1" />
+                    <line
+                      x1="1.7" y1="6.3" x2="6.3" y2="1.7"
+                      stroke="currentColor" stroke-width="1.1" stroke-linecap="round"
+                    />
+                  {/if}
+                </svg>
+              {/each}
             </span>
           {/if}
           <button
@@ -444,6 +466,9 @@
             <p class="aa-focus-composer__prompt">
               {#if composerMode === "completion"}
                 {sessionElapsedMs !== null ? `You focused for ${formatDuration(sessionElapsedMs)}. ` : ""}
+                {completedFocusSessions > 0
+                  ? `${completedFocusSessions} ${completedFocusSessions === 1 ? "pomodoro" : "pomodoros"} completed. `
+                  : ""}
                 Capture a result, decision, learning, or next step.
                 <span class="aa-focus-composer__optional">Optional</span>
               {:else}
@@ -601,9 +626,22 @@
     font-size: var(--aa-text-sm);
     color: var(--aa-text-muted, oklch(0.5 0.01 240));
   }
-  .aa-focus-timer__cycles {
-    font-size: var(--aa-text-xs);
+  .aa-focus-timer__dots {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.35rem;
+    max-width: 9rem;
+    margin-top: 0.15rem;
     color: var(--aa-teal-cta);
+  }
+  .aa-focus-timer__dot {
+    display: block;
+    width: 0.45rem;
+    height: 0.45rem;
+  }
+  .aa-focus-timer__dot--crossed {
+    color: var(--aa-text-muted, oklch(0.5 0.01 240));
   }
   .aa-focus-timer__control {
     margin-top: 0.4rem;

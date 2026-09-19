@@ -32,6 +32,13 @@ The running state stays visible everywhere: the desktop sidebar carries a
 compact Now tile (countdown + truncated task name, links back to `/focus`)
 above the user footer; hidden on mobile with the sidebar. The Do nav item
 reads as active while focus is open (Do *is* focus).
+Every closed session on the focused task reads as a dot under the countdown
+inside the ring — **full = completed Pomodoro** (countdown reached zero and
+was confirmed), **crossed = interrupted** (explicit pause, wrap-up
+mid-interval, or the unconfirmed self-stop expiry). Navigation away never
+interrupts: the session is server-side, and returning within the break still
+confirms a countdown that hit zero while away. The wrap-up prompt states the
+task's completed-Pomodoro count ("3 pomodoros completed.").
 See `WORKFLOW.md` §2.3 and `INTERACTION.md` WORKING mode.
 
 **Revised 2026-08-07 (centered focus session).** The focus screen:
