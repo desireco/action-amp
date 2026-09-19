@@ -194,3 +194,20 @@ export type {
   FeedbackLens,
   FeedbackSection,
 } from "./feedback.js";
+// Rituals (the habits layer, docs/specs/rituals.md) fragment — additive
+// exports of the slice's own schemas only; the `rituals:` composition line
+// lives in src/router.ts.
+export {
+  ritualsContract,
+  RitualCadenceSchema,
+  RitualEntryStateSchema,
+  RitualIntervalSchema,
+  RitualMoodSchema,
+  RitualSchema,
+  TodayRitualSchema,
+} from "./rituals.js";
+export type {
+  RitualCadence,
+  RitualInterval,
+  RitualMood,
+} from "./rituals.js";
