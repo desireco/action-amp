@@ -66,7 +66,9 @@ npm run build && ./dist/index.js     # built
 | `ritual check <id> [--mood good\|okay\|rough] [--note <text>]`       | Check off today (the local day derives server-side)                                                                          |
 | `ritual uncheck <id>`                                                  | Undo today's check — the entry and reflection are deleted                                                                    |
 | `ritual pause <id>` / `ritual resume <id>`                             | Hide from due-ness / bring back (history stays)                                                                              |
-| `ritual archive <id>`                                                  | Retire it — history stays for review evidence                                                                                |
+| `ritual archive <id>`                                                  | Retire it — history stays; find it with `ritual archived`                                                                       |
+| `ritual archived`                                                      | List retired rituals (the `restore` targets)                                                                                  |
+| `ritual restore <id>`                                                  | Un-retire an archived ritual                                                                                                  |                                                                                |
 | `logbook [--lens-id <id>]`                                             | Completed tasks, finished projects/goals, archived                                                                           |
 | `review week [--previous\|--for <date>]`                               | Read-only weekly check-in or finished review                                                                                 |
 | `review month [--previous\|--for <date>]`                              | Read-only monthly check-in or finished review                                                                                |

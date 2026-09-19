@@ -21,9 +21,12 @@ preserves data losslessly and gates ops).
 
 - **Planning page** (`/rituals`) — lens-scoped management like Projects:
   inline create (name, interval morning/midday/evening, cadence, lens
-  defaulting to Me), edit, pause, archive. Rows carry the interval label +
-  cadence chip and render **guidance** and **benefit** as markdown (the safe
-  logbook Markdown component) with small `g`/`b` tags.
+  defaulting to Me), edit, pause, archive; the empty state offers one-tap
+  starting points. Rows carry the interval label + cadence chip and render
+  **guidance** and **benefit** as markdown (the safe logbook Markdown
+  component) with small `g`/`b` tags. Archived rituals live in a quiet
+  **Archived** section under the list (History + Restore — retired, not
+  gone).
 - **Today section** — the day's due rituals, universal across lenses,
   grouped morning → midday → evening, **outside `todayCap`**; renders nothing
   when nothing is due. The CompletionCircle checks (opens the reflection) /
