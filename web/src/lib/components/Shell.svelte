@@ -597,7 +597,9 @@
     {/if}
     {#if mobilePlanOpen}
       <!-- Plan section menu — the whole Plan group in one dock slot (the lens
-          menu's pattern). Anchors navigate; the menu closes on pick. -->
+          menu's pattern). Anchors navigate; the menu closes on pick. Grid
+          reads column-wise: time horizons (Upcoming/Someday) left, structure
+          (Projects/Goals) right. -->
       <div class="aa-mobile-plan-menu" role="menu" aria-label="Plan">
         <a
           class="aa-mobile-plan-menu__item"
@@ -625,16 +627,6 @@
         <a
           class="aa-mobile-plan-menu__item"
           role="menuitem"
-          class:active={isActive("/goals")}
-          href="/goals"
-          onclick={() => (mobilePlanOpen = false)}
-        >
-          {@render goalsIcon()}
-          <span>Goals</span>
-        </a>
-        <a
-          class="aa-mobile-plan-menu__item"
-          role="menuitem"
           class:active={isActive("/someday")}
           href="/someday"
           onclick={() => (mobilePlanOpen = false)}
@@ -644,6 +636,16 @@
           {#if counts.someday > 0}
             <span class="aa-mobile-plan-menu__count">{counts.someday}</span>
           {/if}
+        </a>
+        <a
+          class="aa-mobile-plan-menu__item"
+          role="menuitem"
+          class:active={isActive("/goals")}
+          href="/goals"
+          onclick={() => (mobilePlanOpen = false)}
+        >
+          {@render goalsIcon()}
+          <span>Goals</span>
         </a>
       </div>
     {/if}

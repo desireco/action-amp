@@ -64,8 +64,10 @@ Pure client work (`web/`). No backend, contract, caps, or entitlement changes.
 ### Slice 1 — Plan section menu (reachability)
 
 - Tapping the dock's Plan item opens a menu above the dock listing Upcoming
-  (with count), Projects, Goals, Someday (with count); tapping an entry
-  navigates and closes the menu.
+  (with count), Projects, Someday (with count), Goals — laid out so the time
+  horizons (Upcoming/Someday) sit in the left column and the structure
+  destinations (Projects/Goals) in the right (Jake's arrangement, 2026-09-19);
+  tapping an entry navigates and closes the menu.
 - The Plan item uses the Lens button's exact mechanics: `aria-expanded`,
   active highlight, opening one menu closes the other, Esc closes, and the
   dock keeps 5 slots.
