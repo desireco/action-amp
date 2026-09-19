@@ -41,6 +41,13 @@ interface RitualTodayRow extends RitualRow {
   note: string | null;
 }
 
+interface RitualHistoryEntry {
+  localDate: string;
+  mood: string | null;
+  note: string | null;
+  createdAt: string;
+}
+
 const WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
 function cadenceLabel(r: Pick<RitualRow, "cadence" | "weekday" | "intervalDays">): string {
@@ -125,6 +132,39 @@ export function makeRitualCommand(): Command {
     });
 
   ritual
+    .command("show <id>")
+    .description("show a ritual and its checked days (newest first)")
+    .option("--json", "emit JSON output")
+    .action(async (id: string, opts: { json?: boolean }) => {
+      const ctx: OutputCtx = { json: opts.json ?? false };
+      const result = await request<{ ritual: RitualRow; entries: RitualHistoryEntry[] }>(
+        `/api/cli/ritual/show?id=${encodeURIComponent(id)}`,
+      );
+      emit(
+        result,
+        () => {
+          const r = result.ritual;
+          process.stdout.write(`${r.name}${hints(r)} ${chalk.gray(`· ${r.interval.toLowerCase()} · ${cadenceLabel(r)}`)}\n`);
+          if (r.guidance) process.stdout.write(`  ${chalk.gray("guidance:")} ${r.guidance}\n`);
+          if (r.benefit) process.stdout.write(`  ${chalk.gray("benefit:")} ${r.benefit}\n`);
+          if (result.entries.length === 0) {
+            process.stdout.write(`  ${chalk.gray("No checks recorded yet.")}\n`);
+            return;
+          }
+          for (const e of result.entries.slice(0, 15)) {
+            const mood = e.mood ? ` ${chalk.gray(`(${e.mood.toLowerCase()})`)}` : "";
+            const note = e.note ? ` ${chalk.gray(`— ${e.note}`)}` : "";
+            process.stdout.write(`  ${chalk.green("✓")} ${e.localDate}${mood}${note}\n`);
+          }
+          if (result.entries.length > 15) {
+            process.stdout.write(`  ${chalk.gray(`… ${result.entries.length - 15} more`)}\n`);
+          }
+        },
+        ctx,
+      );
+    });
+
+  ritual
     .command("create <name>")
     .description("create a ritual (defaults: morning, every day, Me lens)")
     .option("--lens-id <id>", "lens to create the ritual in (default: Me)")
@@ -134,6 +174,7 @@ export function makeRitualCommand(): Command {
     .option("--every <days>", "every N days, 2-365 (interval cadence)")
     .option("--guidance <text>", "what you do (markdown)")
     .option("--benefit <text>", "what you get (markdown)")
+    .option("--goal <id>", "link the ritual to a goal (the why at all)")
     .option("--json", "emit JSON output")
     .action(
       async (
@@ -146,6 +187,7 @@ export function makeRitualCommand(): Command {
           every?: string;
           guidance?: string;
           benefit?: string;
+          goal?: string;
           json?: boolean;
         },
       ) => {
@@ -172,6 +214,7 @@ export function makeRitualCommand(): Command {
         if (opts.every) body.intervalDays = opts.every;
         if (opts.guidance) body.guidance = opts.guidance;
         if (opts.benefit) body.benefit = opts.benefit;
+        if (opts.goal) body.goalId = opts.goal;
         const result = await request<{ ritual: RitualRow }>("/api/cli/ritual/create", {
           method: "POST",
           body,
@@ -200,6 +243,7 @@ export function makeRitualCommand(): Command {
     .option("--every <days>", "every N days, 2-365 (interval cadence)")
     .option("--guidance <text>", "what you do (markdown; pass '' to clear)")
     .option("--benefit <text>", "what you get (markdown; pass '' to clear)")
+    .option("--goal <id>", "link to a goal (pass '' to clear)")
     .option("--json", "emit JSON output")
     .action(
       async (
@@ -212,6 +256,7 @@ export function makeRitualCommand(): Command {
           every?: string;
           guidance?: string;
           benefit?: string;
+          goal?: string;
           json?: boolean;
         },
       ) => {
@@ -225,6 +270,7 @@ export function makeRitualCommand(): Command {
         // Present-but-empty clears the definition field (null semantics).
         if (opts.guidance !== undefined) body.guidance = opts.guidance || null;
         if (opts.benefit !== undefined) body.benefit = opts.benefit || null;
+        if (opts.goal !== undefined) body.goalId = opts.goal || null;
         const result = await request<{ ritual: RitualRow }>("/api/cli/ritual/update", {
           method: "POST",
           body,

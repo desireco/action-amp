@@ -56,6 +56,7 @@ import {
   completeRitualCore,
   createRitualCore,
   createRitualEntities,
+  getRitualHistoryCore,
   getRitualsData,
   getTodayRitualsData,
   setRitualPausedCore,
@@ -1468,10 +1469,11 @@ export function createCliRoutes(deps: {
     };
   }
 
-  /** Core Error → the CLI envelope: 404 unknown, 400 validation. */
+  /** Core Error → the CLI envelope: 404 unknown (the core's exact copy —
+   *  "Ritual not found." / "Goal not found."), 400 validation. */
   function ritualErrorResponse(c: Context, route: string, err: unknown): Response {
     if (err instanceof Error && /not found/i.test(err.message)) {
-      return c.json({ error: "Ritual not found." }, 404);
+      return c.json({ error: err.message }, 404);
     }
     if (err instanceof Error && err.message) {
       return c.json({ error: err.message }, 400);
@@ -1605,6 +1607,7 @@ export function createCliRoutes(deps: {
         intervalDays,
         guidance: bodyString(body, "guidance"),
         benefit: bodyString(body, "benefit"),
+        goalId: bodyString(body, "goalId") ?? null,
       });
       return c.json({ ritual: ritualJson(ritual) }, 201);
     } catch (err) {
@@ -1665,6 +1668,9 @@ export function createCliRoutes(deps: {
     }
     if (body && "benefit" in body) {
       patch.benefit = typeof body.benefit === "string" ? body.benefit : null;
+    }
+    if (body && "goalId" in body) {
+      patch.goalId = typeof body.goalId === "string" ? body.goalId : null;
     }
 
     try {
@@ -1787,6 +1793,40 @@ export function createCliRoutes(deps: {
       return c.json({ ritual: ritualJson(ritual), status: "archived" });
     } catch (err) {
       return ritualErrorResponse(c, "ritual/archive", err);
+    }
+  });
+
+  // GET /api/cli/ritual/show — query ?id. The ritual + its checked days,
+  // newest first (the quiet history read; evidence only).
+  rest.get("/api/cli/ritual/show", async (c) => {
+    const user = requirePat(c);
+    if (user instanceof Response) return user;
+    const id = queryString(c.req.raw, "id");
+    if (!id) {
+      return c.json({ error: "An id is required." }, 400);
+    }
+    try {
+      const rows = await getRitualHistoryCore(ritualEntities(), {
+        userId: user.id,
+        ritualId: id,
+      });
+      const owned = await ritualEntities().Ritual.findFirst({
+        where: { id, userId: user.id },
+      });
+      if (!owned) {
+        return c.json({ error: "Ritual not found." }, 404);
+      }
+      return c.json({
+        ritual: ritualJson(owned),
+        entries: rows.map((e) => ({
+          localDate: e.localDate.toISOString().slice(0, 10),
+          mood: e.mood,
+          note: e.note,
+          createdAt: e.createdAt.toISOString(),
+        })),
+      });
+    } catch (err) {
+      return ritualErrorResponse(c, "ritual/show", err);
     }
   });
 

@@ -18,7 +18,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import type { Hono } from "hono";
 import type { DomainDb, Entities } from "@actionamp/domain/db";
 import { createDb, createEntities, mintId } from "@actionamp/domain/db";
-import { and, eq } from "drizzle-orm";
+import { and, eq, like } from "drizzle-orm";
 import { ritual as ritualTable, session as sessionTable, task as taskTable } from "@actionamp/domain/db";
 import { isLocalDatabaseUrl } from "../db.js";
 import { drizzleSessionIssuePort, issueSessionCore } from "../auth/issue.js";
@@ -1460,8 +1460,14 @@ d("S18 — rituals (the habits layer, docs/specs/rituals.md)", () => {
     expect(created.interval).toBe("EVENING");
     expect(created.guidance).toBe("Ten minutes, three bullets");
     expect(created.benefit).toBe("Clears the noise");
+    const createdId = created.id as string;
+    const createdUserId = created.lensId ? undefined : undefined; // (shape note)
     cleanup.push(async () => {
-      await db.delete(ritualTable).where(eq(ritualTable.id, created.id as string));
+      // Wipe every probe-prefixed leftover (renames + goal-linked variants
+      // from this and prior runs) — the fixture user owns nothing else
+      // ritual-shaped.
+      await db.delete(ritualTable).where(like(ritualTable.name, `${PROBE}%`));
+      void createdId;
     });
   });
 
@@ -1578,6 +1584,62 @@ d("S18 — rituals (the habits layer, docs/specs/rituals.md)", () => {
     });
     expect(missing.status).toBe(404);
     expect((missing.body as { error: string }).error).toBe("Ritual not found.");
+  });
+
+  it("show returns the row (goalId round-trip) + checked days newest-first", async () => {
+    const list = (await req("/api/cli/ritual/list", { token: fx.pro.token }))
+      .body as unknown as { rituals: Array<{ id: string; name: string }> };
+    // The update test renames the probe to "<PROBE> v2"; goal-linked
+    // variants carry their own suffix — match the v2 name exactly.
+    const probe = list.rituals.find((r) => r.name === `${PROBE} v2`) ?? list.rituals.find((r) => r.name === PROBE)!;
+
+    await req("/api/cli/ritual/check", {
+      method: "POST",
+      token: fx.pro.token,
+      body: { id: probe.id, mood: "okay" },
+    });
+    const shown = await req(`/api/cli/ritual/show?id=${probe.id}`, { token: fx.pro.token });
+    expect(shown.status).toBe(200);
+    const body = shown.body as {
+      ritual: { goalId: string | null };
+      entries: Array<{ localDate: string; mood: string | null }>;
+    };
+    expect(body.ritual.goalId).toBeNull();
+    expect(body.entries.length).toBeGreaterThan(0);
+    expect(body.entries[0]?.mood).toBe("NEUTRAL");
+
+    const missing = await req("/api/cli/ritual/show?id=none", { token: fx.pro.token });
+    expect(missing.status).toBe(404);
+  });
+
+  it("create accepts an owned goalId; a foreign one is the calm 404", async () => {
+    // A real goal id: cli-pro's lens + goal list (the picker's source).
+    const lensesRes = (await req("/api/cli/lens/list", { token: fx.pro.token }))
+      .body as unknown as { lenses: Array<{ id: string }> };
+    const lensId = lensesRes.lenses[0]!.id;
+    const goalsRes = (await req(`/api/cli/goal/list?lensId=${lensId}`, { token: fx.pro.token }))
+      .body as unknown as { goals: Array<{ id: string }> };
+    const goalId = goalsRes.goals[0]?.id;
+
+    if (goalId) {
+      const ok = await req("/api/cli/ritual/create", {
+        method: "POST",
+        token: fx.pro.token,
+        body: { name: `${PROBE} goal-linked`, goalId },
+      });
+      expect(ok.status).toBe(201);
+      expect((ok.body as { ritual: { goalId: string | null } }).ritual.goalId).toBe(goalId);
+    }
+
+    // A foreign goal id never reaches the DB — the core's ownership guard
+    // answers 404, never a raw FK error.
+    const foreign = await req("/api/cli/ritual/create", {
+      method: "POST",
+      token: fx.pro.token,
+      body: { name: `${PROBE} bad-goal`, goalId: "goal-that-does-not-exist" },
+    });
+    expect(foreign.status).toBe(404);
+    expect((foreign.body as { error: string }).error).toBe("Goal not found.");
   });
 
   it("weekly without a weekday is the core's 400 (effective-combination rule)", async () => {
