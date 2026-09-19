@@ -34,6 +34,10 @@ class WhatNowStore {
   alternatives = $state<RankedTask[]>([]);
   otherCounts = $state<{ lensId: string; lensName: string; count: number }[]>([]);
   focused = $state<FocusedTask | null>(null);
+  /** Whether the user's single Now is live — lens-independent, resolved per
+   *  load() off the focused read. The Do → focus handoff signal; the full
+   *  payload stays /focus's business (`focused` above). */
+  nowActive = $state(false);
   loading = $state(false);
   error = $state<string | null>(null);
 
@@ -82,16 +86,19 @@ class WhatNowStore {
       }
       if (lensId !== this.lensId) return; // a switch superseded this load
       const task = this.picked ?? this.topTask;
-      // Do is focus while a task is Now: resolve the focused detail (the
-      // full thread + sessions the focus view renders) so the Do page's
-      // handoff effect can send the user straight to /focus. Nothing
-      // running → drop any stale focused cache so /focus re-resolves
-      // honestly.
-      if (task?.startedAt) {
-        if (this.focused?.id !== task.id) this.focused = null;
-        await this.loadFocused();
+      // Do is focus while a task is Now — and the single-Now invariant is
+      // lens-independent (`getFocusedTaskData` filters on startedAt only),
+      // so the handoff keys on the focused READ, not on the lens-scoped
+      // stage: a session keeps running across lens switches and status
+      // moves, and Do must re-enter it. The payload is discarded here —
+      // /focus owns `focused` and re-resolves with its own stale-cache
+      // guard. Inspecting another task (a picked row that isn't the one
+      // running) stays on its card: an explicit choice to look elsewhere.
+      if (this.picked && !this.picked.startedAt) {
+        this.nowActive = false;
       } else {
-        this.focused = null;
+        this.nowActive =
+          (await client.tasks.focusedTask().catch(() => null)) !== null;
       }
       // Alternatives render only while deciding — a started task keeps the
       // stage to itself.

@@ -166,17 +166,19 @@ Triage drains the universal Inbox across every Lens.
   user's persisted IANA `timeZone`, not the server's local zone. Done tasks are
   left alone; `startedAt` (the Now state) is preserved.
 - This is the only area with a focus mode. Focus is a **dedicated route**
-  (`/do/focus`, `FocusRoute` in `main.wasp.ts`) entered from Next's one-tap "Start"
-  or any task row's focus affordance. The centered-session redesign (locked
-  2026-08-07) removes the detached margin clock. One large centered countdown
-  ring carries the user's 25- or 45-minute focus-session preference and the
-  pause/resume control. Task title, task clarification, and explicit Note / Pause /
-  Complete actions follow in one centered decision path. A completed countdown
-  closes and marks its `TaskSession` complete without completing the Task; another
-  focus session can begin on the same Task. Completing the Task still appends a
-  `kind=COMPLETED` row to the task's `TaskUpdate` thread while leaving
-  `status` untouched (so Today's Done section stays accurate). See
-  `docs/features/focus-mode.md` + `docs/features/task-notes-completion-log.md`.
+  (`/focus` on the new stack; the legacy `/do/focus` path redirects) entered
+  from Next's one-tap "Start", any task row's focus affordance, or the Do
+  handoff (§2.3: while a task is Now, Do *is* focus). The centered-session
+  redesign (locked 2026-08-07) removes the detached margin clock. One large
+  centered countdown ring carries the user's 25- or 45-minute focus-session
+  preference and the pause/resume control. Task title, task clarification, and
+  explicit Note / Pause / Wrap up actions follow in one centered decision
+  path. A completed countdown closes and marks its `TaskSession` complete
+  without completing the Task; another focus session can begin on the same
+  Task. Completing the Task still appends a `kind=COMPLETED` row to the
+  task's `TaskUpdate` thread while leaving `status` untouched (so Today's
+  Done section stays accurate). See `docs/features/focus-mode.md` +
+  `docs/features/task-notes-completion-log.md`.
 - A **Now** state (`Task.startedAt`) persists across navigation. While a task
   is Now, the Do chooser *is* the focus view: `/` (Do) hands off to the focus
   route and returning to Do re-enters the running session's countdown

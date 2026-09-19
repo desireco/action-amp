@@ -13,6 +13,18 @@ verified: 2026-08-16
 `main.wasp.ts:108`), entered from Next's one-tap "Start" or from any task row.
 Hides the sidebar; no counts, no list — just the one task. Esc exits.
 
+**Revised 2026-09-19 (Do hands off to focus; new-stack route `/focus`).** On
+the new stack (`web/` + `api/`) the route is `/focus` and the Do chooser hands
+off to it: while the user's single Now (`Task.startedAt`, lens-independent) is
+live, landing on Do — clicking the Do nav, or returning to it from any page —
+redirects straight into the running session (the store resolves the focused
+read per load; `/focus` owns the payload). Sidebar navigation away never
+pauses; every exit from the focus view (Esc, ✕, `p`/Space, the ring's ❚❚, the
+Pause action) pauses and returns to the chooser. The countdown ticks live (a
+1s heartbeat feeds the ring), and a server-time-guarded session completion
+backs off ~30s between retries when the client clock reaches zero early.
+See `WORKFLOW.md` §2.3 and `INTERACTION.md` WORKING mode.
+
 **Revised 2026-08-07 (centered focus session).** The focus screen:
 
 - **Centered countdown ring** — one 25- or 45-minute Pomodoro control replaces

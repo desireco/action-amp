@@ -103,11 +103,17 @@
   );
 
   // Reaching zero records the Pomodoro but leaves the Task in focus; guard
-  // against double submission while the query refreshes.
+  // against double submission while the query refreshes. A rejection is the
+  // server-time guard ("Focus session is still running.") — the client clock
+  // can reach zero early, so back off ~30s before letting the effect retry
+  // instead of hot-looping for the length of the skew.
+  let sessionRetryAfterTick = $state(0);
   $effect(() => {
     if (!sessionRunning || remainingMs > 0 || completingSession) return;
+    if (tick < sessionRetryAfterTick) return;
     completingSession = true;
     void whatNow.completeSession(task.id).catch(() => {}).finally(() => {
+      sessionRetryAfterTick = tick + 30;
       completingSession = false;
     });
   });
@@ -193,8 +199,10 @@
   // Every exit from the sanctuary pauses: Esc/✕/p/Space, the ring's ❚❚, the
   // Pause action. Sidebar navigation away never pauses — Do re-enters the
   // running session on return (WORKFLOW.md §2.3: the Now state persists).
+  // A failed pause never traps the user here: navigation proceeds, and Do
+  // re-enters the still-running session (the honest state).
   async function exitFocus() {
-    await whatNow.pause(task.id);
+    await whatNow.pause(task.id).catch(() => {});
     goto("/");
   }
 

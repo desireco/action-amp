@@ -138,15 +138,16 @@ commands.
 
 - **Purpose:** you are doing the thing. The card is the world.
 - **Entry:** click **Start** / `Enter` from Normal (task focused). Navigates
-  to the dedicated `/do/focus` route (not an overlay). Revised 2026-09-19:
+  to the dedicated `/focus` route (not an overlay). Revised 2026-09-19:
   while a task is Now, the Do chooser redirects here — Do *is* focus while
   something runs, so returning to Do re-enters the ticking session.
-- **Exit:** `Esc` (pauses), **Complete** (was "Done"; opens an inline optional
-  completion reflection), **Take a break** (pauses). Sidebar navigation away
-  never pauses — the Now state persists and Do re-enters the session.
+- **Exit:** `Esc` (pauses), **Wrap up** (opens the inline optional completion
+  reflection), **Pause** (pauses). Sidebar navigation away never pauses —
+  the Now state persists and Do re-enters the session.
 - **Keyset (intentionally tiny):**
-  - `Esc` or `Space` — pause
-  - `D` — open the inline completion reflection
+  - `Esc` or `Space` / `P` — pause and exit to the chooser
+  - `N` — open the progress-note composer
+  - `D` — open the completion reflection (`⌘↵`/`Ctrl↵` submits a composer)
   - `⌘K` — **capture (the one exception)** — protects focus from stray thoughts
   - That's it. Zoom, mode-switch, lens — all suppressed. The world is this task.
 - **Sub-states:** `working → session complete → working` for repeat focus
@@ -160,20 +161,23 @@ commands.
   timer symbol and count inside the ring show how many completed focus sessions
   have been recorded for this Task.
 - **Centered action hierarchy.** Large Task title and durable clarification
-  follow the ring. Labeled **Add note**, **Pause**, and **Complete task** actions
+  follow the ring. Labeled **Add note**, **Pause**, and **Wrap up** actions
   sit below.
 - **One inline composer.** The notes thread is always visible; its composer
   appears on demand rather than permanently. Add note opens the progress-note
-  prompt. Complete opens the same notes-area surface with **How did it go?**, an
-  optional Outcome field, **Keep working**, and **Complete task**. No completion
+  prompt. Wrap up opens the same notes-area surface with **How did it go?**, an
+  optional Outcome field, **Keep working**, and **Mark complete**. No completion
   modal or backdrop interrupts the task. Notes write a `TaskUpdate` with
   `kind=NOTE`; completion writes `kind=COMPLETED` (see
   `task-notes-completion-log.md`).
 - **Mobile:** long-press the card → enters working. Tap the timer control =
   pause/resume. Task completion remains a labeled action; no completion gesture
   is required for discoverability.
-- **Chrome:** **all chrome hidden** (not dimmed — gone). Only the centered timer,
-  Task content, explicit actions, notes thread + summoned composer, and exit.
+- **Chrome:** the main column drops its padding and the focus view owns the
+  viewport (no phantom scrollbar). The sidebar stays reachable on desktop —
+  that's what makes "navigate away without pausing" possible; in the view
+  itself only the centered timer, Task content, explicit actions, notes
+  thread + summoned composer, and exit remain.
 - **Indicator:** `WORKING` (teal) or `PAUSED` (amber).
 
 ### CAPTURE mode (`⌘K`)

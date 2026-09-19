@@ -3,8 +3,9 @@
   // ui/NextCard verbatim port: markup + CSS). Title → meta → amber "why"
   // line → goal rationale + continuity (next state only) → Start / Pause|Not
   // now. Flat app-shell variant: no card chrome, centered, 520px. No
-  // completion control on the card — completing happens in focus mode
-  // (a running task never renders this card: Do hands off to focus).
+  // completion control on the card — completing happens in focus mode. The
+  // now state normally never renders (Do hands off to focus); its card is
+  // the fetch-failure/race fallback, which is why the Pause branch stays.
   import type { Snippet } from "svelte";
   import type { GoalContext } from "../taskView";
 
