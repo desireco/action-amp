@@ -120,6 +120,14 @@
     padding: 30px 28px;
   }
 
+  /* Phone-width full-bleed cards breathe with a trimmed inset (the base
+     28px sides eat a 272px card). Scoped here so it outranks the base rule. */
+  @media (max-width: 430px) {
+    .aa-progress-card.project {
+      padding: var(--aa-space-lg) var(--aa-space-md);
+    }
+  }
+
   /* Goal identity: the soft-round card (≈25% of its min-height) — projects
      keep the standard 2xl radius. Shape is the goal/project differentiator. */
   .aa-progress-card.goal {
@@ -226,6 +234,10 @@
     font-size: var(--aa-text-sm);
     font-weight: var(--aa-weight-semibold);
     color: var(--aa-text-3);
+    /* Long focus names wrap inside the chip instead of poking out on
+       narrow cards. */
+    max-width: 100%;
+    overflow-wrap: break-word;
   }
 
   .aa-progress-card__focus--amber {

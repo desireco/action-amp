@@ -809,6 +809,38 @@
   padding: 9px 10px;
 }
 
+/* ---- Mobile (≤768px): the projects surfaces in the phone shell (mirrors
+   the goals.css pass). One column — the 320px minmax grid track overflows
+   a phone frame; header wraps so the create control drops under the title;
+   the detail drops its double horizontal inset (app-main already pads). ---- */
+@media (max-width: 768px) {
+  .aa-projects .aa-grid {
+    grid-template-columns: 1fr;
+    gap: var(--aa-space-md);
+  }
+
+  .aa-projects .aa-list-header {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .aa-detail.aa-project {
+    padding: var(--aa-space-lg) 0;
+  }
+}
+
+@media (max-width: 430px) {
+  /* Very narrow: the create control goes full-width under the header. */
+  .aa-projects .aa-list-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .aa-projects .aa-create-control {
+    justify-content: center;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .aa-project__progress-fill,
   .aa-project__row-ctrl {

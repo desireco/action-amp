@@ -18,6 +18,12 @@
   max-width: 760px;
   margin: 0 auto;
   padding: 1.5rem 1rem 3rem;
+  /* The hub is a flex item of the root screen-container (column flex); its
+     auto cross-axis margins disable stretch and size it fit-content, which
+     floors at the tabs' nowrap min-content (445px) — wider than a phone. A
+     definite width restores shrink-to-fit while keeping the 760px centered
+     look on desktop. */
+  width: 100%;
 }
 
 .aa-settings-hub--full {

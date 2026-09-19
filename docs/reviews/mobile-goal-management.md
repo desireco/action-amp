@@ -99,3 +99,13 @@ a handful of cleanups; all fixed in the review-fix commit:
   ≈25% of the card's min-height) via the goal variant of ProgressCard;
   project cards keep `--aa-radius-2xl`. Recorded in DESIGN-SYSTEM.md's
   radii guidance as the one deliberate exception.
+- **Follow-up (Jake, same day): the rest of the phone audit.** A
+  measured sweep (375/320, all reachable routes) found two more
+  offenders: /projects overflowed 24px at 320 (the same 320px grid-track
+  bug goals had — now single-column with header wrap and trimmed card
+  inset, mirroring goals.css), and every /settings page overflowed ~94px
+  at 375 (the hub's auto cross-axis margins made it fit-content, floored
+  at the tabs' 445px nowrap min-content — fixed with `width: 100%`).
+  Everything else (Do, Today, Upcoming, Week, Someday, Logbook, Inbox,
+  both detail pages) measured clean; long focus-chip names now wrap
+  instead of poking narrow cards.
