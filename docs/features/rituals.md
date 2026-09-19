@@ -37,9 +37,15 @@ preserves data losslessly and gates ops).
   optional; Complete is always enabled (completing with nothing entered is a
   valid check), X/Esc exits without saving. Moods are plain facts — never
   aggregated, scored, or colored.
-- **Daily push reminder** — one calm line when rituals await:
-  `Today: … · 2 rituals due` (count of due-and-unchecked in the user's
-  persisted timeZone).
+- **Daily push reminder** — one calm line when rituals await, naming the
+  first: `Today: … · Journaling +1 more due` (due-and-unchecked in the
+  user's persisted timeZone, interval- then order-sorted).
+- **Goal alignment, starting points, history, drag-and-drop** (2026-09-19) —
+  a Goal picker in the composer/edit form with a star-chip on rows; the
+  empty state prefills Journaling/Gratitude (markdown guidance + benefit),
+  Medication, Morning walk; a per-row History toggle shows the checked days
+  (mood glyph + note, never aggregated); Planning rows drag to reorder
+  (order = index).
 - **CLI** (`actionamp ritual …` + `/api/cli/ritual/*`) — list, today,
   create, update, pause/resume, archive, check/uncheck. Enum words arrive
   lowercase (`morning`, `mon`, `good`); the local day derives server-side;
