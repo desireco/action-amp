@@ -544,6 +544,8 @@
     position: relative;
     min-height: 100dvh;
     padding: 3.5rem 1rem 2.5rem;
+    display: flex;
+    flex-direction: column;
   }
   .aa-focus__close {
     position: absolute;
@@ -560,7 +562,10 @@
   }
   .aa-focus__body {
     max-width: 34rem;
-    margin: 0 auto;
+    /* Vertical centering with a safe fallback: auto margins center in spare
+       space and resolve to 0 when the content overflows a short viewport —
+       no clipped top, the page just scrolls. */
+    margin: auto;
     display: flex;
     flex-direction: column;
     gap: 1.1rem;
@@ -840,6 +845,15 @@
     }
     .aa-focus-timer {
       width: min(13rem, 70vw, 30vh);
+      /* A width-set flex child aligns cross-start; center it like the
+         stretched base case so the ring shares the title's axis. */
+      margin: 0 auto;
+    }
+    .aa-focus-timer__ring {
+      /* Fill the compacted box — the base 16rem ring would overflow it and
+         auto margins resolve to 0 on overflow, dropping it off-axis. */
+      width: 100%;
+      height: 100%;
     }
   }
 </style>
