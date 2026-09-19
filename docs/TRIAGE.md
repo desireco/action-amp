@@ -227,11 +227,21 @@ state, the co-author spec list, the full keyset. But the UI stays calm
 (PRODUCT.md: whitespace is the point). "More sophisticated" = *the context
 lets us offer more*, never *the surface is heavier*.
 
+**Planning is the carve-out (revised 2026-09-18).** Capture-first stays the
+rule for capture and triage — but the Planning area itself is reachable and
+manageable on mobile: the dock's Plan item opens a section menu
+(Upcoming / Projects / Goals / Someday), and Goals support the full
+lifecycle on a phone (create, edit, link projects, complete, delete).
+Mobile graduated from capture terminal to full client for *deliberate*
+structure work; quick-capture paths still never create goals (§Open
+question 3's lean stands). Spec: `docs/specs/mobile-goal-management.md`.
+
 | Surface | Mobile | Desktop |
 |---|---|---|
 | Capture | Bottom sheet (FAB / pull-down). Text + optional chips. | Full palette: rapid-fire, Shift+Expand, `/` commands |
 | Property editing | Inline chips only (tap to remove). No spec list. | Co-author spec list (triage + expanded capture) |
 | Triage | Not surfaced — do it on desktop. | Full walkthrough (§2) |
+| Planning (Projects/Goals) | Dock Plan menu → full section; goals end-to-end | Sidebar Plan group |
 | Keyboard shortcuts | n/a (no keyboard) | Full keyset (§7) |
 | Defaults | Identical — Upcoming / M / Normal / General (§5) | Identical |
 

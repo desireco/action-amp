@@ -258,6 +258,9 @@ Planning exists in every Lens (all Lenses are life areas).
   commitment, kept for "when I'm ready." A planning concept, not a working one.
 - Creating Projects and Goals happens here (not in triage — triage _files into_
   them; Shift+P / last-picker-row is the one bridge, which navigates here).
+  The Planning area is reachable on mobile via the dock's Plan section menu
+  (2026-09-18) — Goals are manageable end-to-end there; creation from
+  capture/triage on mobile stays out (goals are deliberate).
 
 ### 2.5 Review / Reporting Area — reflection
 
@@ -450,9 +453,15 @@ Lens` while skipping the standalone lens picker by default. See
    - **Do** — flat star-icon link to `/do` (Next, the What-Now chooser).
    - **Plan** group — Upcoming, Projects, Goals, Someday.
    - **Review** group — enabled Today, Week, and Month cadences, then Logbook.
-   - Mobile dock stays as-is (Inbox / Do / Plan / Review / Lens); the
-     dock items now highlight via route matching against the section's
-     routes (not the now-removed focus-section state).
+   - Mobile dock: Inbox / Do / Plan / Review / Lens, highlighting via route
+     matching against the section's routes. **The Plan item opens a section
+     menu (revised 2026-09-18)** — Upcoming / Projects / Goals / Someday rise
+     above the dock (same pattern as the Lens menu) instead of linking
+     straight to Projects. Until this revision the dock went Plan→Projects
+     and Goals was reachable on mobile only by URL or the command palette.
+     Reason: mobile is a full client now, not a capture terminal — goals
+     (and the rest of Plan) are manageable end-to-end on a phone
+     (`docs/specs/mobile-goal-management.md`).
    - A future **hard focus** (each mode as a distinct full-screen layout)
      remains the north star, parked in `docs/ROADMAP.md` §Icebox.
 7. **Today rolls over daily (locked 2026-06-30).** At the start of each new
