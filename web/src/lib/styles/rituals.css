@@ -164,6 +164,12 @@
 }
 
 /* ---- The completion reflection dialog (over Overlays.css's shell) ---- */
+.aa-ritual-dialog {
+  /* The overlay shell carries no padding (.aa-confirm's does this for the
+     confirm dialog) — without it the content sits flush against the card. */
+  padding: var(--aa-space-md) var(--aa-space-lg);
+}
+
 .aa-ritual-dialog__head {
   display: flex;
   align-items: center;
@@ -195,9 +201,9 @@
 .aa-ritual-dialog__mood {
   flex: 1;
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: var(--aa-space-xs);
+  gap: 2px;
   font-family: var(--aa-font);
   font-size: var(--aa-text-sm);
   font-weight: var(--aa-weight-medium);
@@ -205,12 +211,20 @@
   background: var(--aa-surface);
   border: 1px solid var(--aa-border-strong);
   border-radius: var(--aa-radius-sm);
-  padding: 8px 10px;
+  padding: 10px 10px 8px;
   cursor: pointer;
   transition:
     background 0.15s var(--aa-ease-out),
     border-color 0.15s var(--aa-ease-out),
     color 0.15s var(--aa-ease-out);
+}
+
+.aa-ritual-dialog__mood-face {
+  margin-bottom: 2px;
+}
+
+.aa-ritual-dialog__mood-label {
+  line-height: 1.2;
 }
 
 .aa-ritual-dialog__mood:hover {

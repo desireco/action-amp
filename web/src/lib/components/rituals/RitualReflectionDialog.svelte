@@ -43,6 +43,14 @@
     { value: "NEGATIVE", label: "Rough", key: "3" },
   ];
 
+  // The three faces (stroke, currentColor — 16px grid, app icon style):
+  // circle head, dot eyes, and the mouth carries the mood.
+  const FACE_PATHS: Record<RitualMood, string> = {
+    HAPPY: "M4.5 9.5c.9 1.4 2.1 2.2 3.5 2.2s2.6-.8 3.5-2.2",
+    NEUTRAL: "M4.8 11h6.4",
+    NEGATIVE: "M4.5 11.5c.9-1.4 2.1-2.2 3.5-2.2s2.6.8 3.5 2.2",
+  };
+
   function confirm() {
     onConfirm(mood, note);
   }
@@ -89,7 +97,25 @@
           aria-checked={mood === m.value}
           onclick={() => (mood = mood === m.value ? null : m.value)}
         >
-          {m.label}
+          <svg
+            class="aa-ritual-dialog__mood-face"
+            width="26"
+            height="26"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.3" />
+            <circle cx="5.8" cy="6.4" r="0.9" fill="currentColor" />
+            <circle cx="10.2" cy="6.4" r="0.9" fill="currentColor" />
+            <path
+              d={FACE_PATHS[m.value]}
+              stroke="currentColor"
+              stroke-width="1.3"
+              stroke-linecap="round"
+            />
+          </svg>
+          <span class="aa-ritual-dialog__mood-label">{m.label}</span>
           <span class="aa-ritual-dialog__mood-key" aria-hidden="true">{m.key}</span>
         </button>
       {/each}
