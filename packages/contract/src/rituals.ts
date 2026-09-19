@@ -82,7 +82,6 @@ export const listRituals = oc
 /** Today's due set across every lens (universal like Today). 402 for FREE. */
 export const todayRituals = oc
   .errors(ProGateErrorMap)
-  .input(z.object({}).strict())
   .output(z.array(TodayRitualSchema));
 
 /**

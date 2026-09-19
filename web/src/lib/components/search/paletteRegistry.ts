@@ -62,6 +62,14 @@ export const PALETTE_COMMANDS: readonly PaletteCommandDefinition[] = [
     common: true,
   },
   {
+    id: "rituals",
+    title: "Rituals",
+    subtitle: "Open view",
+    aliases: ["habits", "routines", "rhythm"],
+    href: "/rituals",
+    common: true,
+  },
+  {
     id: "triage",
     title: "Triage",
     subtitle: "Review inbox",

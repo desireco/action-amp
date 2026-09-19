@@ -193,7 +193,7 @@
   // Section-level active state for the mobile dock (Plan/Review dock items
   // each represent a whole section, not one route).
   const inPlan = $derived(
-    ["upcoming", "projects", "goals", "someday"].some((p) =>
+    ["upcoming", "projects", "goals", "rituals", "someday"].some((p) =>
       path.startsWith(`/${p}`),
     ),
   );
@@ -412,6 +412,11 @@
     />
   </svg>
 {/snippet}
+{#snippet ritualsIcon()}
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <path d="M13 8a5 5 0 1 1-1.5-3.5M13 2.5V5h-2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+  </svg>
+{/snippet}
 {#snippet logbookIcon()}
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
     <path
@@ -557,6 +562,7 @@
           {@render navItem({ icon: calendarIcon, label: "Upcoming", active: isActive("/upcoming"), to: "/upcoming", count: counts.upcoming })}
           {@render navItem({ icon: projectsIcon, label: "Projects", active: isActive("/projects"), to: "/projects" })}
           {@render navItem({ icon: goalsIcon, label: "Goals", active: isActive("/goals"), to: "/goals" })}
+          {@render navItem({ icon: ritualsIcon, label: "Rituals", active: isActive("/rituals"), to: "/rituals" })}
           {@render navItem({ icon: somedayIcon, label: "Someday", active: isActive("/someday"), to: "/someday", count: counts.someday })}
         </div>
       </div>
@@ -739,6 +745,16 @@
         >
           {@render goalsIcon()}
           <span>Goals</span>
+        </a>
+        <a
+          class="aa-mobile-plan-menu__item"
+          role="menuitem"
+          class:active={isActive("/rituals")}
+          href="/rituals"
+          onclick={() => (mobilePlanOpen = false)}
+        >
+          {@render ritualsIcon()}
+          <span>Rituals</span>
         </a>
       </div>
     {/if}

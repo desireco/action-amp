@@ -1,0 +1,354 @@
+/* Rituals — the habits layer's styles (docs/specs/rituals.md). Shared
+   composer/list/button classes come from projects.css + goals.css (the
+   GoalsView import pattern); only rituals-specific surfaces live here.
+   No new visual values — everything reads tokens.css. */
+
+/* ---- /rituals Planning page ---- */
+.aa-rituals {
+  width: min(100%, 720px);
+  margin: 0 auto;
+}
+
+.aa-rituals__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-xs);
+  margin-bottom: var(--aa-space-md);
+}
+
+.aa-rituals__field-label {
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+}
+
+.aa-rituals__segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aa-space-xs);
+}
+
+.aa-rituals__segment {
+  font-family: var(--aa-font);
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-text-2);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border-strong);
+  border-radius: var(--aa-radius-full);
+  padding: 4px 12px;
+  cursor: pointer;
+  transition:
+    background 0.15s var(--aa-ease-out),
+    border-color 0.15s var(--aa-ease-out),
+    color 0.15s var(--aa-ease-out);
+}
+
+.aa-rituals__segment:hover {
+  background: var(--aa-surface-muted);
+  color: var(--aa-text);
+}
+
+.aa-rituals__segment--on {
+  background: var(--aa-teal-soft);
+  border-color: var(--aa-teal-soft-strong);
+  color: var(--aa-teal-text);
+}
+
+.aa-rituals__segment--day {
+  padding: 4px 10px;
+}
+
+.aa-rituals__interval-input {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-2);
+}
+
+.aa-rituals__interval-input input {
+  width: 5ch;
+  text-align: center;
+}
+
+.aa-rituals__picker-button {
+  font-family: var(--aa-font);
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border-strong);
+  border-radius: var(--aa-radius-sm);
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.aa-rituals__picker-button:hover {
+  background: var(--aa-surface-muted);
+}
+
+.aa-rituals__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-sm);
+}
+
+.aa-rituals__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-sm);
+  padding: var(--aa-space-md);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-xl);
+  box-shadow: var(--aa-shadow-sm);
+}
+
+.aa-rituals__row--paused .aa-rituals__row-name {
+  color: var(--aa-text-3);
+}
+
+.aa-rituals__row-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--aa-space-sm);
+  min-width: 0;
+}
+
+.aa-rituals__row-name {
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-text);
+}
+
+.aa-rituals__row-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+  min-width: 0;
+}
+
+.aa-rituals__row-cadence {
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+}
+
+.aa-rituals__row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+}
+
+.aa-rituals__edit {
+  width: 100%;
+}
+
+/* ---- The completion reflection dialog (over Overlays.css's shell) ---- */
+.aa-ritual-dialog__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--aa-space-sm);
+}
+
+.aa-ritual-dialog__name {
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-text);
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.aa-ritual-dialog__question {
+  margin: var(--aa-space-sm) 0 var(--aa-space-sm);
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
+}
+
+.aa-ritual-dialog__moods {
+  display: flex;
+  gap: var(--aa-space-xs);
+  margin-bottom: var(--aa-space-md);
+}
+
+.aa-ritual-dialog__mood {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--aa-space-xs);
+  font-family: var(--aa-font);
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-text-2);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border-strong);
+  border-radius: var(--aa-radius-sm);
+  padding: 8px 10px;
+  cursor: pointer;
+  transition:
+    background 0.15s var(--aa-ease-out),
+    border-color 0.15s var(--aa-ease-out),
+    color 0.15s var(--aa-ease-out);
+}
+
+.aa-ritual-dialog__mood:hover {
+  background: var(--aa-surface-muted);
+  color: var(--aa-text);
+}
+
+/* Teal = system/state (selection) — the two-accent rule. */
+.aa-ritual-dialog__mood--on {
+  background: var(--aa-teal-soft);
+  border-color: var(--aa-teal-soft-strong);
+  color: var(--aa-teal-text);
+}
+
+.aa-ritual-dialog__mood-key {
+  font-family: var(--aa-font-mono);
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+}
+
+.aa-ritual-dialog__note {
+  width: 100%;
+  font-family: var(--aa-font);
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text);
+  background: var(--aa-surface);
+  border: 1px solid var(--aa-border-strong);
+  border-radius: var(--aa-radius-sm);
+  padding: 8px 10px;
+  resize: none;
+}
+
+.aa-ritual-dialog__note:focus {
+  outline: none;
+  border-color: var(--aa-teal);
+}
+
+.aa-ritual-dialog__foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--aa-space-md);
+}
+
+/* ---- Today's Rituals section ---- */
+.aa-ritual-strip {
+  margin-top: var(--aa-space-xl);
+  padding-top: var(--aa-space-md);
+  border-top: 1px solid var(--aa-border);
+}
+
+.aa-ritual-strip__header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--aa-space-sm);
+  margin-bottom: var(--aa-space-sm);
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+}
+
+.aa-ritual-strip__count {
+  font-family: var(--aa-font-mono);
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-text-4);
+}
+
+.aa-ritual-strip__interval {
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--aa-text-4);
+  margin: var(--aa-space-sm) 0 var(--aa-space-xs);
+}
+
+.aa-ritual-strip__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-xs);
+}
+
+.aa-ritual-strip__row {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  min-width: 0;
+  padding: 6px var(--aa-space-xs);
+  border-radius: var(--aa-radius-sm);
+  cursor: pointer;
+}
+
+.aa-ritual-strip__row:hover {
+  background: var(--aa-surface-muted);
+}
+
+.aa-ritual-strip__row:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+.aa-ritual-strip__circle {
+  display: inline-flex;
+  flex: none;
+}
+
+.aa-ritual-strip__row--done .aa-ritual-strip__name {
+  color: var(--aa-text-3);
+}
+
+.aa-ritual-strip__name {
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A recorded mood renders as a small neutral glyph — never colored. */
+.aa-ritual-strip__mood {
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+  flex: none;
+}
+
+.aa-ritual-strip__lens {
+  margin-left: auto;
+  flex: none;
+}
+
+.aa-ritual-strip__lens-name {
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+}
+
+.aa-ritual-strip__cadence {
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-4);
+  flex: none;
+}
+
+@media (max-width: 720px) {
+  .aa-ritual-strip__cadence {
+    display: none;
+  }
+}

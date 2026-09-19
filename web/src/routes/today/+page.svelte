@@ -11,6 +11,7 @@
   import ListEmpty from "../../lib/components/ui/ListEmpty.svelte";
   import CompletionCircle from "../../lib/components/ui/CompletionCircle.svelte";
   import RowEditor from "../../lib/components/RowEditor.svelte";
+  import RitualStrip from "../../lib/components/rituals/RitualStrip.svelte";
   import { lists } from "../../lib/stores/lists.svelte";
   import { feedback } from "../../lib/stores/feedback.svelte";
   import type { TaskLensListRowDto } from "../../lib/dto";
@@ -197,6 +198,10 @@
       {/if}
     </section>
   {/if}
+
+  <!-- The Rituals section — quiet, cap-exempt, renders nothing when no
+       ritual is due or the account is FREE (WORKFLOW.md §2.3). -->
+  <RitualStrip />
 </section>
 
 <!-- The feedback dialog is the Shell's now (AppShell parity — one global mount
