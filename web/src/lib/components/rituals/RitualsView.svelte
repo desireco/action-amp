@@ -11,8 +11,17 @@
   import "../../styles/projects.css";
   import "../../styles/goals.css";
   import "../../styles/rituals.css";
-  import { INTERVAL_LABELS, cadenceLabel, rituals } from "../../stores/rituals.svelte";
+  import {
+    INTERVAL_LABELS,
+    cadenceLabel,
+    rituals,
+    type Ritual,
+    type RitualCadence,
+    type RitualHistoryEntry,
+    type RitualInterval,
+  } from "../../stores/rituals.svelte";
   import { lenses } from "../../stores/lenses.svelte";
+  import { goals } from "../../stores/goals.svelte";
   import type { GateMessage } from "../../stores/projects.svelte";
   import ProGate from "../ui/ProGate.svelte";
   import ListEmpty from "../ui/ListEmpty.svelte";
@@ -21,7 +30,6 @@
   import Icon from "../ui/Icon.svelte";
   import PickerSheet from "../ui/PickerSheet.svelte";
   import Markdown from "../logbook/Markdown.svelte";
-  import type { Ritual, RitualCadence, RitualInterval } from "../../stores/rituals.svelte";
 
   const INTERVALS: RitualInterval[] = ["MORNING", "MIDDAY", "EVENING"];
   const CADENCES: { value: RitualCadence; label: string }[] = [
@@ -46,6 +54,7 @@
   // Creation defaults the lens to Me (the included lens) — changeable here.
   let lensId = $state<string | null>(null);
   let lensPickerOpen = $state(false);
+  let goalId = $state<string | null>(null);
 
   let editing = $state<Ritual | null>(null);
   let editName = $state("");
@@ -55,7 +64,71 @@
   let editIntervalDays = $state<number | null>(null);
   let editGuidance = $state("");
   let editBenefit = $state("");
+  let editGoalId = $state<string | null>(null);
   let editError = $state<string | null>(null);
+
+  // Per-row history toggle (the quiet day list; evidence only).
+  let historyFor = $state<string | null>(null);
+  let historyRows = $state<RitualHistoryEntry[]>([]);
+
+  // Drag-and-drop reorder (HTML5 DnD; the drop writes order = index).
+  let dragId = $state<string | null>(null);
+  let dragOverId = $state<string | null>(null);
+
+  /** One-tap starting points — prefill the composer, nothing more. */
+  const EXAMPLES: { label: string; name: string; interval: RitualInterval; guidance?: string; benefit?: string }[] = [
+    {
+      label: "Journaling",
+      name: "Journaling",
+      interval: "EVENING",
+      guidance: "Ten minutes, three bullets, **no editing**",
+      benefit: "Clears the noise before sleep",
+    },
+    {
+      label: "Gratitude",
+      name: "Gratitude",
+      interval: "EVENING",
+      guidance: "Write **one thing** that went well and why",
+      benefit: "Ends the day on evidence, not worry",
+    },
+    { label: "Medication", name: "Medication", interval: "MORNING" },
+    { label: "Morning walk", name: "Morning walk", interval: "MORNING" },
+  ];
+
+  function startExample(example: (typeof EXAMPLES)[number]) {
+    creating = true;
+    name = example.name;
+    interval = example.interval;
+    cadence = "DAILY";
+    weekday = null;
+    intervalDays = null;
+    guidance = example.guidance ?? "";
+    benefit = example.benefit ?? "";
+    lensId = null;
+    goalId = null;
+  }
+
+  async function toggleHistory(id: string) {
+    if (historyFor === id) {
+      historyFor = null;
+      return;
+    }
+    historyFor = id;
+    historyRows = await rituals.history(id);
+  }
+
+  function onDrop(targetId: string) {
+    const from = dragId;
+    dragId = null;
+    dragOverId = null;
+    if (!from || from === targetId) return;
+    const ids = rituals.rituals.map((r) => r.id);
+    const fromIndex = ids.indexOf(from);
+    const toIndex = ids.indexOf(targetId);
+    if (fromIndex === -1 || toIndex === -1) return;
+    ids.splice(toIndex, 0, ...ids.splice(fromIndex, 1));
+    void rituals.reorder(ids);
+  }
 
   function focusOnMount(node: HTMLElement) {
     node.focus();
@@ -75,8 +148,12 @@
     void lenses.activeLensId;
     untrack(() => {
       void rituals.load();
+      // Active goals for the link picker + row attribution.
+      if (lenses.activeLensId) void goals.loadLens(lenses.activeLensId);
     });
   });
+
+  const goalById = $derived(new Map(goals.lensGoals.map((g) => [g.id, g.name])));
 
   const showEmptyState = $derived(rituals.loaded && rituals.rituals.length === 0 && !creating);
 
@@ -95,6 +172,7 @@
       intervalDays: cadence === "INTERVAL" ? intervalDays : null,
       guidance: guidance || null,
       benefit: benefit || null,
+      goalId: goalId ?? null,
     });
     submitting = false;
     if (!result.ok) {
@@ -111,6 +189,7 @@
     guidance = "";
     benefit = "";
     lensId = null;
+    goalId = null;
   }
 
   function startEdit(row: Ritual) {
@@ -122,6 +201,7 @@
     editIntervalDays = row.intervalDays;
     editGuidance = row.guidance ?? "";
     editBenefit = row.benefit ?? "";
+    editGoalId = row.goalId ?? null;
     editError = null;
   }
 
@@ -137,6 +217,7 @@
       intervalDays: editCadence === "INTERVAL" ? editIntervalDays : null,
       guidance: editGuidance || null,
       benefit: editBenefit || null,
+      goalId: editGoalId,
     });
     if (!editError) editing = null;
   }
@@ -144,6 +225,16 @@
   const lensItems = $derived(
     lenses.lenses.map((l) => ({ id: l.id, label: l.name, current: l.id === resolvedLensId })),
   );
+
+  const goalItems = $derived([
+    { id: "", label: "None", current: !goalId },
+    ...goals.lensGoals.map((g) => ({ id: g.id, label: g.name, current: g.id === goalId })),
+  ]);
+
+  const editGoalItems = $derived([
+    { id: "", label: "None", current: !editGoalId },
+    ...goals.lensGoals.map((g) => ({ id: g.id, label: g.name, current: g.id === editGoalId })),
+  ]);
 </script>
 
 <div class="aa-rituals">
@@ -263,6 +354,23 @@
           </button>
         </div>
 
+        <div class="aa-rituals__field">
+          <span class="aa-rituals__field-label">Goal <span class="aa-rituals__field-hint">the why at all — optional</span></span>
+          <div class="aa-rituals__segmented aa-rituals__goal-choices" role="radiogroup" aria-label="Goal">
+            {#each goalItems as g (g.id || "none")}
+              <button
+                type="button"
+                class="aa-rituals__segment {g.current ? "aa-rituals__segment--on" : ""}"
+                role="radio"
+                aria-checked={g.current}
+                onclick={() => (goalId = g.id || null)}
+              >
+                {g.label}
+              </button>
+            {/each}
+          </div>
+        </div>
+
         {#if createError}
           <p class="aa-error" role="alert">{createError}</p>
         {/if}
@@ -280,14 +388,50 @@
     {#if showEmptyState}
       <ListEmpty
         title="No rituals yet."
-        text="Rituals are the rhythms that shouldn't need a decision — medication, water, the morning walk. They check off in Today and never compete with commitments."
+        text="Rituals are the rhythms that shouldn't need a decision. They check off in Today and never compete with commitments."
       />
+      <div class="aa-rituals__examples" aria-label="Starting points">
+        <span class="aa-rituals__examples-label">Start with</span>
+        {#each EXAMPLES as example (example.label)}
+          <button
+            type="button"
+            class="aa-rituals__segment"
+            onclick={() => startExample(example)}
+          >
+            {example.label}
+          </button>
+        {/each}
+      </div>
     {/if}
 
     {#if rituals.rituals.length > 0}
       <ul class="aa-rituals__list">
         {#each rituals.rituals as row (row.id)}
-          <li class="aa-rituals__row {row.paused ? "aa-rituals__row--paused" : ""}">
+          <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+          <li
+            class="aa-rituals__row {row.paused ? "aa-rituals__row--paused" : ""}
+              {dragOverId === row.id && dragId !== row.id ? "aa-rituals__row--drag-over" : ""}
+              {dragId === row.id ? "aa-rituals__row--dragging" : ""}"
+            draggable={editing?.id !== row.id ? "true" : undefined}
+            ondragstart={(e) => {
+              dragId = row.id;
+              e.dataTransfer?.setData("text/plain", row.id);
+              e.dataTransfer && (e.dataTransfer.effectAllowed = "move");
+            }}
+            ondragover={(e) => {
+              e.preventDefault();
+              dragOverId = row.id;
+            }}
+            ondragleave={() => (dragOverId = dragOverId === row.id ? null : dragOverId)}
+            ondrop={(e) => {
+              e.preventDefault();
+              onDrop(row.id);
+            }}
+            ondragend={() => {
+              dragId = null;
+              dragOverId = null;
+            }}
+          >
             {#if editing?.id === row.id}
               <form class="aa-rituals__edit" onsubmit={handleUpdate}>
                 <label class="aa-field">
@@ -355,6 +499,22 @@
                     </label>
                   {/if}
                 </div>
+                <div class="aa-rituals__field">
+                  <span class="aa-rituals__field-label">Goal <span class="aa-rituals__field-hint">optional</span></span>
+                  <div class="aa-rituals__segmented aa-rituals__goal-choices" role="radiogroup" aria-label="Goal">
+                    {#each editGoalItems as g (g.id || "none")}
+                      <button
+                        type="button"
+                        class="aa-rituals__segment {g.current ? "aa-rituals__segment--on" : ""}"
+                        role="radio"
+                        aria-checked={g.current}
+                        onclick={() => (editGoalId = g.id || null)}
+                      >
+                        {g.label}
+                      </button>
+                    {/each}
+                  </div>
+                </div>
                 {#if editError}
                   <p class="aa-error" role="alert">{editError}</p>
                 {/if}
@@ -385,12 +545,26 @@
                 <span class="aa-rituals__row-meta">
                   <Chip variant="muted" small>{INTERVAL_LABELS[row.interval]}</Chip>
                   <span class="aa-rituals__row-cadence">{cadenceLabel(row)}</span>
+                  {#if row.goalId}
+                    <span class="aa-rituals__row-goal" title="Linked goal">
+                      <Icon name="star" size={11} />
+                      {goalById.get(row.goalId) ?? "Goal"}
+                    </span>
+                  {/if}
                   {#if row.paused}
                     <Chip variant="muted" small>Paused</Chip>
                   {/if}
                 </span>
               </div>
               <div class="aa-rituals__row-actions">
+                <button
+                  type="button"
+                  class="aa-btn aa-btn--ghost"
+                  aria-expanded={historyFor === row.id}
+                  onclick={() => void toggleHistory(row.id)}
+                >
+                  History
+                </button>
                 <button type="button" class="aa-btn aa-btn--ghost" onclick={() => startEdit(row)}>
                   Edit
                 </button>
@@ -404,6 +578,29 @@
                 <button type="button" class="aa-btn aa-btn--ghost" onclick={() => void rituals.archive(row.id)}>
                   Archive
                 </button>
+              </div>
+            {/if}
+            {#if historyFor === row.id}
+              <div class="aa-rituals__history">
+                {#if historyRows.length === 0}
+                  <p class="aa-rituals__history-empty">No checks recorded yet.</p>
+                {:else}
+                  <ul class="aa-rituals__history-list">
+                    {#each historyRows as entry (entry.localDate)}
+                      <li>
+                        <span class="aa-rituals__history-date">{entry.localDate}</span>
+                        {#if entry.mood}
+                          <span class="aa-rituals__history-mood" aria-label="Mood: {entry.mood.toLowerCase()}">
+                            {entry.mood === "HAPPY" ? "▲" : entry.mood === "NEGATIVE" ? "▼" : "●"}
+                          </span>
+                        {/if}
+                        {#if entry.note}
+                          <span class="aa-rituals__history-note">{entry.note}</span>
+                        {/if}
+                      </li>
+                    {/each}
+                  </ul>
+                {/if}
               </div>
             {/if}
           </li>

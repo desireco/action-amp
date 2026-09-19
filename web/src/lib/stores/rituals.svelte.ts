@@ -51,6 +51,8 @@ interface RitualsClientSlice {
   }): Promise<{ id: string }>;
   setPaused(input: { id: string; paused: boolean }): Promise<{ id: string }>;
   archive(input: { id: string }): Promise<{ id: string }>;
+  history(input: { id: string }): Promise<RitualHistoryEntry[]>;
+  reorder(input: { lensId?: string; orderedIds: string[] }): Promise<{ lensId: string }>;
 }
 
 const rpc = (client as unknown as { rituals: RitualsClientSlice }).rituals;
@@ -77,6 +79,15 @@ export interface Ritual {
   createdAt: string;
   updatedAt: string;
   entryToday: { mood: RitualMood | null; note: string | null } | null;
+}
+
+/** One checked day in the quiet history read (evidence only). */
+export interface RitualHistoryEntry {
+  /** yyyy-MM-dd — the user's calendar day at check time. */
+  localDate: string;
+  mood: RitualMood | null;
+  note: string | null;
+  createdAt: string;
 }
 
 /** The Today-section row (`rituals.today` output) — due, with checked state. */
@@ -171,6 +182,7 @@ class RitualsStore {
     intervalDays?: number | null;
     guidance?: string | null;
     benefit?: string | null;
+    goalId?: string | null;
   }): Promise<{ ok: true } | { ok: false; gate: GateMessage | null; message: string }> {
     try {
       await rpc.create(input);
@@ -190,6 +202,7 @@ class RitualsStore {
     intervalDays?: number | null;
     guidance?: string | null;
     benefit?: string | null;
+    goalId?: string | null;
   }): Promise<string | null> {
     try {
       await rpc.update(input);
@@ -247,6 +260,25 @@ class RitualsStore {
       await this.loadToday();
     } catch {
       // Same quiet stance.
+    }
+  }
+
+  /** A ritual's checked days, newest first — never aggregated. */
+  async history(id: string): Promise<RitualHistoryEntry[]> {
+    try {
+      return await rpc.history({ id });
+    } catch {
+      return [];
+    }
+  }
+
+  /** Full-array order write after a drag (order = index per id). */
+  async reorder(orderedIds: string[]): Promise<void> {
+    try {
+      await rpc.reorder({ lensId: lenses.activeLensId ?? undefined, orderedIds });
+      await this.load();
+    } catch {
+      // A failed reorder keeps the pre-drag order on next load.
     }
   }
 }
