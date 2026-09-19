@@ -144,8 +144,9 @@ class RitualsStore {
     try {
       this.today = await rpc.today();
       this.todayLoaded = true;
-    } catch {
+    } catch (e) {
       // The strip renders nothing on failure — never noisy on Today.
+      console.error("[rituals] loadToday failed:", e instanceof Error ? e.message : e);
       this.today = [];
     }
   }
