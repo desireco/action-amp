@@ -106,7 +106,9 @@
   flex-direction: column;
   align-items: flex-start;
   gap: var(--aa-space-sm);
-  padding: var(--aa-space-md);
+  /* The 36px corner eats into a 16px inset — left/top breathe wider so the
+     content clears the curve (Jake, 2026-09-19). */
+  padding: var(--aa-space-lg) var(--aa-space-xl);
   background: var(--aa-surface);
   border: 1px solid var(--aa-border);
   border-radius: var(--aa-radius-ritual);
