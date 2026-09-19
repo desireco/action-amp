@@ -50,6 +50,12 @@
   // a quick second tap opens the menu to switch (Jake, 2026-09-19).
   let mobilePlanOpen = $state(false);
   let lastPlanTap = 0;
+  // The mobile Do menu (Next vs Today — the two ways to approach doing).
+  // Same tap grammar as Plan: the first tap goes to the What-Now chooser —
+  // Do's default — and a quick second tap opens the menu to switch (Jake,
+  // 2026-09-19).
+  let mobileDoOpen = $state(false);
+  let lastDoTap = 0;
 
   // Tap grammar: the first tap navigates IMMEDIATELY (no delay to
   // disambiguate on touch); the double tap then opens the menu on top of
@@ -64,11 +70,32 @@
     if (now - lastPlanTap < 300) {
       lastPlanTap = 0;
       mobileLensOpen = false;
+      mobileDoOpen = false;
       mobilePlanOpen = true;
       return;
     }
     lastPlanTap = now;
     void goto("/upcoming");
+  }
+
+  // Do's mirror of onPlanTap: tap → the chooser at /, double tap → the
+  // Next/Today menu on top of it.
+  function onDoTap() {
+    const now = Date.now();
+    if (mobileDoOpen) {
+      mobileDoOpen = false;
+      lastDoTap = 0;
+      return;
+    }
+    if (now - lastDoTap < 300) {
+      lastDoTap = 0;
+      mobileLensOpen = false;
+      mobilePlanOpen = false;
+      mobileDoOpen = true;
+      return;
+    }
+    lastDoTap = now;
+    void goto("/");
   }
   let confirmLogout = $state(false);
 
@@ -198,6 +225,7 @@
     confirmLogout = false;
     mobileLensOpen = false;
     mobilePlanOpen = false;
+    mobileDoOpen = false;
   }
 
   function isTypingTarget(target: EventTarget | null): boolean {
@@ -234,6 +262,7 @@
       else if (lensOpen) lensOpen = false;
       else if (mobileLensOpen) mobileLensOpen = false;
       else if (mobilePlanOpen) mobilePlanOpen = false;
+      else if (mobileDoOpen) mobileDoOpen = false;
       return;
     }
 
@@ -629,6 +658,36 @@
         {/each}
       </div>
     {/if}
+    {#if mobileDoOpen}
+      <!-- Do menu — Next vs Today: the two ways to approach doing (the
+          chooser vs the list). The Plan menu's pattern and tap grammar;
+          entries navigate and close on pick. -->
+      <div class="aa-mobile-do-menu" role="menu" aria-label="Do">
+        <a
+          class="aa-mobile-do-menu__item"
+          role="menuitem"
+          class:active={isActive("/")}
+          href="/"
+          onclick={() => (mobileDoOpen = false)}
+        >
+          {@render starIcon()}
+          <span>Next</span>
+        </a>
+        <a
+          class="aa-mobile-do-menu__item"
+          role="menuitem"
+          class:active={isActive("/today")}
+          href="/today"
+          onclick={() => (mobileDoOpen = false)}
+        >
+          {@render clockIcon()}
+          <span>Today</span>
+          {#if counts.today > 0}
+            <span class="aa-mobile-do-menu__count">{counts.today}</span>
+          {/if}
+        </a>
+      </div>
+    {/if}
     {#if mobilePlanOpen}
       <!-- Plan section menu — the whole Plan group in one dock slot (the lens
           menu's pattern). Anchors navigate; the menu closes on pick. Grid
@@ -688,10 +747,18 @@
         {@render inboxIcon()}
         <span>Inbox</span>
       </a>
-      <a class="aa-mobile-dock__item" class:active={isActive("/")} href="/" aria-label="Do">
+      <button
+        type="button"
+        class="aa-mobile-dock__item"
+        class:active={isActive("/")}
+        aria-label="Do"
+        aria-expanded={mobileDoOpen}
+        aria-haspopup="menu"
+        onclick={onDoTap}
+      >
         {@render starIcon()}
         <span>Do</span>
-      </a>
+      </button>
       <button
         type="button"
         class="aa-mobile-dock__item"
@@ -716,7 +783,10 @@
         aria-expanded={mobileLensOpen}
         onclick={() => {
           mobileLensOpen = !mobileLensOpen;
-          if (mobileLensOpen) mobilePlanOpen = false;
+          if (mobileLensOpen) {
+            mobilePlanOpen = false;
+            mobileDoOpen = false;
+          }
         }}
       >
         <span class="aa-mobile-dock__lens-dot" aria-hidden="true"></span>
@@ -728,7 +798,7 @@
   <!-- Capture — lower-right floating action, pervasive across all modes.
       Hidden while a dock menu is open (the menus span the width above the
       dock and would cover it). -->
-  <CaptureFab hidden={mobileLensOpen || mobilePlanOpen} />
+  <CaptureFab hidden={mobileLensOpen || mobilePlanOpen || mobileDoOpen} />
 
   <!-- ---- Shell-scoped overlays ---- -->
   {#if feedback.open}

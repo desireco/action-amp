@@ -460,7 +460,7 @@ Lens` while skipping the standalone lens picker by default. See
    - **Universal nav**: Inbox + Today (always visible, span every lens —
      §3, §5.11). Today moved here from the Work section on 2026-07-21 when
      it went global.
-   - **Do** — flat star-icon link to `/do` (Next, the What-Now chooser).
+   - **Do** — flat star-icon link to `/` (Next, the What-Now chooser).
    - **Plan** group — Upcoming, Projects, Goals, Someday.
    - **Review** group — enabled Today, Week, and Month cadences, then Logbook.
    - Mobile dock: Inbox / Do / Plan / Review / Lens, highlighting via route
@@ -475,6 +475,10 @@ Lens` while skipping the standalone lens picker by default. See
      **Tap grammar (revised 2026-09-19):** a single tap navigates straight
      to Upcoming — the section's default; a quick second tap opens the
      section menu on top of it. The menu is the switcher, not the gate.
+     **Do got the same grammar (2026-09-19):** a single tap goes to the
+     What-Now chooser, and a quick second tap raises a two-entry menu —
+     **Next** (the chooser) vs **Today** (the list) — so the user picks how
+     to approach doing.
    - A future **hard focus** (each mode as a distinct full-screen layout)
      remains the north star, parked in `docs/ROADMAP.md` §Icebox.
 7. **Today rolls over daily (locked 2026-06-30).** At the start of each new

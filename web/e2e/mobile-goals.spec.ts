@@ -103,6 +103,33 @@ test("mobile: Plan menu → goal create → link via sheet → complete", async 
   await expectNoHorizontalOverflow(page, "project detail");
 });
 
+test("mobile: Do tap grammar — tap → Next, double tap → the menu", async ({ page }) => {
+  await loginAs(page);
+  await page.goto("/today");
+  // Scoped to the dock: Today's task rows carry their own "Do" buttons
+  // (start focus) that would collide with a bare role query.
+  const doBtn = page.locator(".aa-mobile-dock").getByRole("button", { name: "Do" });
+  const doMenu = page.locator(".aa-mobile-do-menu");
+
+  // Single tap → the What-Now chooser (Do's default).
+  await doBtn.click();
+  await expect(page).toHaveURL(/\/$/, { timeout: 10_000 });
+
+  // Space the taps past the 300ms double-tap window (same reasoning as
+  // Plan), then the double tap opens the menu on the already-open Do page.
+  await page.waitForTimeout(350);
+  await doBtn.dblclick();
+  await expect(doMenu).toBeVisible();
+  await expect(doBtn).toHaveAttribute("aria-expanded", "true");
+  await expect(doMenu.getByRole("menuitem", { name: "Next" })).toBeVisible();
+  await expect(doMenu.getByRole("menuitem", { name: /Today/ })).toBeVisible();
+
+  // Picking Today navigates and closes the menu.
+  await doMenu.getByRole("menuitem", { name: /Today/ }).click();
+  await expect(page).toHaveURL(/\/today$/, { timeout: 10_000 });
+  await expect(doMenu).toHaveCount(0);
+});
+
 test("mobile: Plan and Lens dock menus are mutually exclusive", async ({ page }) => {
   await loginAs(page);
   await page.goto("/");
@@ -130,4 +157,15 @@ test("mobile: Plan and Lens dock menus are mutually exclusive", async ({ page })
   await page.goto("/goals");
   await plan.click();
   await expect(page).toHaveURL(/\/upcoming$/, { timeout: 10_000 });
+
+  // The Do menu joins the exclusion set: opening Plan closes it.
+  const doBtn = page.locator(".aa-mobile-dock").getByRole("button", { name: "Do" });
+  await doBtn.dblclick();
+  await expect(page.locator(".aa-mobile-do-menu")).toBeVisible();
+  // Clear Plan's 300ms window first (the single tap above just navigated
+  // with it) or the dblclick's second click toggles the menu back closed.
+  await page.waitForTimeout(350);
+  await plan.dblclick();
+  await expect(page.locator(".aa-mobile-do-menu")).toHaveCount(0);
+  await expect(page.locator(".aa-mobile-plan-menu")).toBeVisible();
 });
