@@ -29,6 +29,7 @@
   import Chip from "../ui/Chip.svelte";
   import Icon from "../ui/Icon.svelte";
   import PickerSheet from "../ui/PickerSheet.svelte";
+  import ConfirmDialog from "../ui/ConfirmDialog.svelte";
   import Markdown from "../logbook/Markdown.svelte";
 
   const INTERVALS: RitualInterval[] = ["MORNING", "MIDDAY", "EVENING"];
@@ -73,6 +74,8 @@
 
   // The Archived section — collapsed by default, one quiet toggle.
   let archivedOpen = $state(false);
+  // The delete confirmation (destructive, archived rows only).
+  let deleteTarget = $state<Ritual | null>(null);
 
   // Drag-and-drop reorder (HTML5 DnD; the drop writes order = index).
   let dragId = $state<string | null>(null);
@@ -412,72 +415,6 @@
       </ListEmpty>
     {/if}
 
-    {#if rituals.archivedRows.length > 0}
-      <section class="aa-rituals__archived" aria-label="Archived rituals">
-        <button
-          type="button"
-          class="aa-rituals__archived-toggle"
-          aria-expanded={archivedOpen}
-          onclick={() => (archivedOpen = !archivedOpen)}
-        >
-          Archived
-          <span class="aa-rituals__archived-count">{rituals.archivedRows.length}</span>
-          <span class="aa-rituals__archived-hint">{archivedOpen ? "Hide" : "Show"}</span>
-        </button>
-        {#if archivedOpen}
-          <ul class="aa-rituals__archived-list">
-            {#each rituals.archivedRows as row (row.id)}
-              <li class="aa-rituals__archived-row">
-                <span class="aa-rituals__archived-name">{row.name}</span>
-                <span class="aa-rituals__row-cadence">
-                  {INTERVAL_LABELS[row.interval].toLowerCase()} · {cadenceLabel(row)}
-                </span>
-                <span class="aa-rituals__row-actions">
-                  <button
-                    type="button"
-                    class="aa-btn aa-btn--ghost"
-                    onclick={() => void toggleHistory(row.id)}
-                  >
-                    History
-                  </button>
-                  <button
-                    type="button"
-                    class="aa-btn aa-btn--ghost"
-                    onclick={() => void rituals.restore(row.id)}
-                  >
-                    Restore
-                  </button>
-                </span>
-                {#if historyFor === row.id}
-                  <div class="aa-rituals__history">
-                    {#if historyRows.length === 0}
-                      <p class="aa-rituals__history-empty">No checks recorded.</p>
-                    {:else}
-                      <ul class="aa-rituals__history-list">
-                        {#each historyRows as entry (entry.localDate)}
-                          <li>
-                            <span class="aa-rituals__history-date">{entry.localDate}</span>
-                            {#if entry.mood}
-                              <span class="aa-rituals__history-mood" aria-label="Mood: {entry.mood.toLowerCase()}">
-                                {entry.mood === "HAPPY" ? "▲" : entry.mood === "NEGATIVE" ? "▼" : "●"}
-                              </span>
-                            {/if}
-                            {#if entry.note}
-                              <span class="aa-rituals__history-note">{entry.note}</span>
-                            {/if}
-                          </li>
-                        {/each}
-                      </ul>
-                    {/if}
-                  </div>
-                {/if}
-              </li>
-            {/each}
-          </ul>
-        {/if}
-      </section>
-    {/if}
-
     {#if rituals.rituals.length > 0}
       <ul class="aa-rituals__list">
         {#each rituals.rituals as row (row.id)}
@@ -681,8 +618,96 @@
         {/each}
       </ul>
     {/if}
+
+    <!-- Archived — the very bottom of the page. -->
+    {#if rituals.archivedRows.length > 0}
+      <section class="aa-rituals__archived" aria-label="Archived rituals">
+        <button
+          type="button"
+          class="aa-rituals__archived-toggle"
+          aria-expanded={archivedOpen}
+          onclick={() => (archivedOpen = !archivedOpen)}
+        >
+          Archived
+          <span class="aa-rituals__archived-count">{rituals.archivedRows.length}</span>
+          <span class="aa-rituals__archived-hint">{archivedOpen ? "Hide" : "Show"}</span>
+        </button>
+        {#if archivedOpen}
+          <ul class="aa-rituals__archived-list">
+            {#each rituals.archivedRows as row (row.id)}
+              <li class="aa-rituals__archived-row">
+                <span class="aa-rituals__archived-name">{row.name}</span>
+                <span class="aa-rituals__row-cadence">
+                  {INTERVAL_LABELS[row.interval].toLowerCase()} · {cadenceLabel(row)}
+                </span>
+                <span class="aa-rituals__row-actions">
+                  <button
+                    type="button"
+                    class="aa-btn aa-btn--ghost"
+                    onclick={() => void toggleHistory(row.id)}
+                  >
+                    History
+                  </button>
+                  <button
+                    type="button"
+                    class="aa-btn aa-btn--ghost"
+                    onclick={() => void rituals.restore(row.id)}
+                  >
+                    Restore
+                  </button>
+                  <button
+                    type="button"
+                    class="aa-btn aa-btn--ghost"
+                    onclick={() => (deleteTarget = row)}
+                  >
+                    Delete
+                  </button>
+                </span>
+                {#if historyFor === row.id}
+                  <div class="aa-rituals__history">
+                    {#if historyRows.length === 0}
+                      <p class="aa-rituals__history-empty">No checks recorded.</p>
+                    {:else}
+                      <ul class="aa-rituals__history-list">
+                        {#each historyRows as entry (entry.localDate)}
+                          <li>
+                            <span class="aa-rituals__history-date">{entry.localDate}</span>
+                            {#if entry.mood}
+                              <span class="aa-rituals__history-mood" aria-label="Mood: {entry.mood.toLowerCase()}">
+                                {entry.mood === "HAPPY" ? "▲" : entry.mood === "NEGATIVE" ? "▼" : "●"}
+                              </span>
+                            {/if}
+                            {#if entry.note}
+                              <span class="aa-rituals__history-note">{entry.note}</span>
+                            {/if}
+                          </li>
+                        {/each}
+                      </ul>
+                    {/if}
+                  </div>
+                {/if}
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </section>
+    {/if}
   {/if}
 </div>
+
+{#if deleteTarget}
+  <ConfirmDialog
+    title="Delete ritual"
+    message={`This permanently deletes '${deleteTarget.name}' and its recorded history. This cannot be undone.`}
+    confirmLabel="Delete"
+    danger={true}
+    onConfirm={() => {
+      void rituals.remove(deleteTarget!.id);
+      deleteTarget = null;
+    }}
+    onClose={() => (deleteTarget = null)}
+  />
+{/if}
 
 {#if lensPickerOpen}
   <PickerSheet

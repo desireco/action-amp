@@ -202,6 +202,15 @@ export const restoreRitual = oc
   .input(z.object({ id: z.string() }))
   .output(z.object({ id: z.string() }));
 
+/**
+ * Hard-delete an ARCHIVED ritual (entries cascade with it). Active rituals
+ * answer 400 "Only archived rituals can be deleted." — archive first.
+ */
+export const deleteRitual = oc
+  .errors(ProGateErrorMap)
+  .input(z.object({ id: z.string() }))
+  .output(z.object({ id: z.string() }));
+
 /** Sequence the lens's active rituals: `order = index` for each id
  *  (full-array write, the drag-and-drop + goals-reorder precedent). */
 export const reorderRituals = oc
@@ -228,5 +237,6 @@ export const ritualsContract = {
   setPaused: setRitualPaused,
   archive: archiveRitual,
   restore: restoreRitual,
+  delete: deleteRitual,
   reorder: reorderRituals,
 };

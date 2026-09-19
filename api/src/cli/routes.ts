@@ -56,6 +56,7 @@ import {
   completeRitualCore,
   createRitualCore,
   createRitualEntities,
+  deleteRitualCore,
   getArchivedRitualsData,
   getRitualHistoryCore,
   restoreRitualCore,
@@ -1812,6 +1813,28 @@ export function createCliRoutes(deps: {
     } catch (err) {
       console.error("[cli/ritual/archived] failed:", err);
       return c.json({ error: "Could not load archived rituals." }, 500);
+    }
+  });
+
+  // POST /api/cli/ritual/delete — body { id }. Hard delete, ARCHIVED only
+  // (entries cascade); an active ritual answers the 400 that says to
+  // archive first.
+  rest.post("/api/cli/ritual/delete", async (c) => {
+    const user = requirePat(c);
+    if (user instanceof Response) return user;
+    const body = await parseBody(c.req.raw);
+    const id = bodyString(body, "id");
+    if (!id) {
+      return c.json({ error: "An id is required." }, 400);
+    }
+    try {
+      const ritual = await deleteRitualCore(ritualEntities(), {
+        userId: user.id,
+        id,
+      });
+      return c.json({ id: ritual.id, status: "deleted" });
+    } catch (err) {
+      return ritualErrorResponse(c, "ritual/delete", err);
     }
   });
 

@@ -12,6 +12,7 @@ import {
   assertRitualsAllowed,
   completeRitualCore,
   createRitualCore,
+  deleteRitualCore,
   getArchivedRitualsData,
   getRitualHistoryCore,
   getRitualsData,
@@ -34,6 +35,7 @@ function ritualDelegate() {
     findMaxOrder: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
+    delete: vi.fn(),
   };
 }
 
@@ -572,5 +574,34 @@ describe("archive ↔ restore", () => {
     await restoreRitualCore(db, { userId: "user-1", id: "ritual-1" });
     const call = db.Ritual.update.mock.calls[0]?.[0];
     expect(call?.data.archivedAt).toBeNull();
+  });
+});
+
+describe("deleteRitualCore", () => {
+  it("deletes an archived ritual", async () => {
+    const db = entities();
+    db.Ritual.findFirst.mockResolvedValue(row({ archivedAt: new Date() }));
+    db.Ritual.delete.mockResolvedValue(row());
+
+    await deleteRitualCore(db, { userId: "user-1", id: "ritual-1" });
+
+    expect(db.Ritual.delete).toHaveBeenCalledWith({ where: { id: "ritual-1" } });
+  });
+
+  it("refuses an ACTIVE ritual — archive first, then delete", async () => {
+    const db = entities();
+    db.Ritual.findFirst.mockResolvedValue(row()); // archivedAt: null
+    await expect(
+      deleteRitualCore(db, { userId: "user-1", id: "ritual-1" }),
+    ).rejects.toThrow("Only archived rituals can be deleted.");
+    expect(db.Ritual.delete).not.toHaveBeenCalled();
+  });
+
+  it("rejects a foreign ritual", async () => {
+    const db = entities();
+    db.Ritual.findFirst.mockResolvedValue(null);
+    await expect(
+      deleteRitualCore(db, { userId: "user-1", id: "other" }),
+    ).rejects.toThrow("Ritual not found.");
   });
 });

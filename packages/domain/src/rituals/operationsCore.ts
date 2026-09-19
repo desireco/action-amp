@@ -149,6 +149,8 @@ export interface RitualEntities {
       where: { id: string };
       data: RitualUpdateData;
     }): Promise<RitualRow>;
+    /** Hard delete (archived rituals only — the entries cascade). */
+    delete(args: { where: { id: string } }): Promise<RitualRow>;
   };
   RitualEntry: {
     /** The (ritualId, localDate) unique read — one row per checked day. */
@@ -733,4 +735,22 @@ export async function restoreRitualCore(
 ): Promise<RitualRow> {
   await requireOwnedRitual(entities, { userId, id });
   return entities.Ritual.update({ where: { id }, data: { archivedAt: null } });
+}
+
+/**
+ * Delete an archived ritual — the surface's one hard delete. Two-step by
+ * design: an ACTIVE ritual must be archived first (the calm sequencing, not
+ * a hidden trap — the error says exactly that). The ritual's entries
+ * cascade with the row (the FK), so the history goes with it; the web
+ * confirms before the call.
+ */
+export async function deleteRitualCore(
+  entities: Pick<RitualEntities, "Ritual">,
+  { userId, id }: { userId: string; id: string },
+): Promise<RitualRow> {
+  const ritual = await requireOwnedRitual(entities, { userId, id });
+  if (!ritual.archivedAt) {
+    throw new Error("Only archived rituals can be deleted.");
+  }
+  return entities.Ritual.delete({ where: { id } });
 }

@@ -25,8 +25,11 @@ preserves data losslessly and gates ops).
   starting points. Rows carry the interval label + cadence chip and render
   **guidance** and **benefit** as markdown (the safe logbook Markdown
   component) with small `g`/`b` tags. Archived rituals live in a quiet
-  **Archived** section under the list (History + Restore — retired, not
-  gone).
+  **Archived** section at the very bottom of the page (History, Restore,
+  and Delete — retired, not gone). Delete is a confirmed hard delete,
+  **archived rituals only** (an active ritual answers "Only archived
+  rituals can be deleted." — archive first, the calm two-step); the
+  ritual's entries cascade with it.
 - **Today section** — the day's due rituals, universal across lenses,
   grouped morning → midday → evening, **outside `todayCap`**; renders nothing
   when nothing is due. The CompletionCircle checks (opens the reflection) /

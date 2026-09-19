@@ -18,6 +18,7 @@ import { ritualsContract } from "@actionamp/contract";
 import {
   archiveRitualCore,
   assertRitualsAllowed,
+  deleteRitualCore,
   getArchivedRitualsData,
   completeRitualCore,
   createRitualEntities,
@@ -235,6 +236,18 @@ const restore = ORPC.restore.handler(async ({ context, input }) =>
   }),
 );
 
+const remove = ORPC.delete.handler(async ({ context, input }) =>
+  guard(async () => {
+    const user = requireUser(context);
+    assertRitualsAllowed(user);
+    const row = await deleteRitualCore(entities(context), {
+      userId: user.id,
+      id: input.id,
+    });
+    return { id: row.id };
+  }),
+);
+
 const reorder = ORPC.reorder.handler(async ({ context, input }) =>
   guard(async () => {
     const user = requireUser(context);
@@ -388,5 +401,6 @@ export const ritualsProcedures = {
   setPaused,
   archive,
   restore,
+  delete: remove,
   reorder,
 };

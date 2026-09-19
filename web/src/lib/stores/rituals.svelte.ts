@@ -52,6 +52,7 @@ interface RitualsClientSlice {
   setPaused(input: { id: string; paused: boolean }): Promise<{ id: string }>;
   archive(input: { id: string }): Promise<{ id: string }>;
   restore(input: { id: string }): Promise<{ id: string }>;
+  delete(input: { id: string }): Promise<{ id: string }>;
   archived(input?: { lensId?: string }): Promise<Ritual[]>;
   history(input: { id: string }): Promise<RitualHistoryEntry[]>;
   reorder(input: { lensId?: string; orderedIds: string[] }): Promise<{ lensId: string }>;
@@ -273,6 +274,17 @@ class RitualsStore {
   async restore(id: string): Promise<void> {
     try {
       await rpc.restore({ id });
+      await this.load();
+      await this.loadToday();
+    } catch {
+      // Same quiet stance.
+    }
+  }
+
+  /** Hard delete, archived only — entries cascade; the view confirms. */
+  async remove(id: string): Promise<void> {
+    try {
+      await rpc.delete({ id });
       await this.load();
       await this.loadToday();
     } catch {

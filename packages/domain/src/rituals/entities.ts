@@ -93,6 +93,13 @@ export function createRitualEntities(db: DomainDb): RitualEntities {
         assertFound(row, "Ritual");
         return row;
       },
+      delete: async (args) => {
+        // RitualEntry rows cascade with the ritual (the FK does the work).
+        const rows = await db.delete(ritual).where(eq(ritual.id, args.where.id)).returning();
+        const row = rows[0];
+        assertFound(row, "Ritual");
+        return row;
+      },
     },
     RitualEntry: {
       findFirst: async (args) => {

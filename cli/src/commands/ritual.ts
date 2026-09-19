@@ -358,6 +358,21 @@ export function makeRitualCommand(): Command {
   lifecycle("restore", "un-retire an archived ritual", "Restored");
 
   ritual
+    .command("delete <id>")
+    .description("hard-delete an ARCHIVED ritual (its history goes with it)")
+    .option("--json", "emit JSON output")
+    .action(async (id: string, opts: { json?: boolean }) => {
+      const ctx: OutputCtx = { json: opts.json ?? false };
+      const result = await request<{ id: string; status: string }>(
+        "/api/cli/ritual/delete",
+        { method: "POST", body: { id } },
+      );
+      emit(result, () => {
+        process.stdout.write("Deleted.\n");
+      }, ctx);
+    });
+
+  ritual
     .command("archived")
     .description("list retired rituals (the 'ritual restore' targets)")
     .option("--json", "emit JSON output")

@@ -21,6 +21,17 @@ import { loginAs } from "./helpers";
 const PRO_EMAIL = "rituals-pro@test.local";
 const FREE_EMAIL = "s4-today@test.local";
 
+
+/** Click the Archived toggle only when needed — the purge may leave the
+ *  section already open, and a blind toggle would close it. */
+async function openArchived(page: import("@playwright/test").Page) {
+  if (!(await page.locator(".aa-rituals__archived-list").isVisible())) {
+    await page.locator(".aa-rituals__archived-toggle").click();
+  }
+  await expect(page.locator(".aa-rituals__archived-list")).toBeVisible();
+  await page.waitForTimeout(300);
+}
+
 /** Normalize a row to unchecked before a test's own check gesture — a
  *  checked circle unchecks on tap instead of opening the dialog, and suite
  *  state (or a prior run without a re-seed) may have left it checked.
@@ -186,38 +197,98 @@ test.describe("Rituals", () => {
     await expect(page.locator(".aa-ritual-strip__row", { hasText: "Take vitamins" })).toBeVisible();
   });
 
-  test("an archived ritual lives in the Archived section and restores back", async ({ page }) => {
+  test("archived rituals live at the page bottom; delete needs the confirm", async ({ page }) => {
     await loginAs(page, PRO_EMAIL);
     await page.goto("/rituals");
+    // The purge may only run once the page has actually loaded its rows.
+    await expect(page.locator(".aa-rituals__list, .aa-list-empty").first()).toBeVisible();
+    await page.waitForTimeout(400);
 
-    // Archive the weekly review (not due most days — safe to retire).
-    const row = page.locator(".aa-rituals__row", { hasText: "Week plan review" });
+    // Self-healing: purge every leftover probe (active ones archived first,
+    // archived ones deleted through the section). Each step waits for its
+    // own effect; the loop re-examines after every mutation.
+    for (let guardCount = 0; guardCount < 6; guardCount += 1) {
+      const activeLeftover = page.locator(".aa-rituals__row", { hasText: "Retire probe" }).first();
+      if ((await activeLeftover.count()) > 0) {
+        await activeLeftover.getByRole("button", { name: "Archive" }).click();
+        await expect(activeLeftover).toHaveCount(0);
+        await page.waitForTimeout(500);
+        continue;
+      }
+      const section = page.locator(".aa-rituals__archived");
+      if ((await section.count()) > 0) {
+        await openArchived(page);
+      }
+      const archivedLeftover = page.locator(".aa-rituals__archived-row", { hasText: "Retire probe" }).first();
+      if ((await archivedLeftover.count()) === 0) break;
+      await archivedLeftover.getByRole("button", { name: "Delete" }).click();
+      await page.locator(".aa-confirm").getByRole("button", { name: "Delete", exact: true }).click();
+      await expect(
+        page.locator(".aa-rituals__archived-row", { hasText: "Retire probe" }),
+      ).toHaveCount(0);
+    }
+
+    await page.getByRole("button", { name: "New ritual" }).click();
+    await page.getByPlaceholder("Morning walk").fill("Retire probe");
+    await page.getByRole("button", { name: "Create ritual" }).click();
+    await page.waitForTimeout(800);
+
+    // Retire it — the row leaves the active list…
+    const row = page.locator(".aa-rituals__row", { hasText: "Retire probe" });
     await row.getByRole("button", { name: "Archive" }).click();
-    await expect(page.locator(".aa-rituals__row", { hasText: "Week plan review" })).toHaveCount(0);
+    await expect(page.locator(".aa-rituals__row", { hasText: "Retire probe" })).toHaveCount(0);
 
-    // The retired set: one quiet toggle, the row inside, muted.
+    // …and the retired set answers at the very bottom of the page.
     const section = page.locator(".aa-rituals__archived");
     await expect(section).toBeVisible();
-    await expect(section.getByText("Archived")).toBeVisible();
-    await section.locator(".aa-rituals__archived-toggle").click();
-    const archivedRow = section.locator(".aa-rituals__archived-row", { hasText: "Week plan review" });
+    await openArchived(page);
+    const archivedRow = section.locator(".aa-rituals__archived-row", { hasText: "Retire probe" });
     await expect(archivedRow).toBeVisible();
 
-    // History stays reachable on the retired row.
-    await archivedRow.getByRole("button", { name: "History" }).click();
-    await expect(archivedRow.locator(".aa-rituals__history")).toBeVisible();
+    // Delete: confirmed before it lands; Cancel keeps the row.
+    await archivedRow.getByRole("button", { name: "Delete" }).click();
+    const dialog = page.locator(".aa-confirm");
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toContainText("This cannot be undone");
+    await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(archivedRow).toBeVisible();
 
-    // Restore returns it to the active list.
+    // Restore first (proves the way back), then archive + delete for good.
     await archivedRow.getByRole("button", { name: "Restore" }).click();
-    await expect(
-      page.locator(".aa-rituals__row", { hasText: "Week plan review" }),
-    ).toBeVisible();
-    await expect(archivedRow).toHaveCount(0);
+    await expect(page.locator(".aa-rituals__row", { hasText: "Retire probe" })).toBeVisible();
+    await page.locator(".aa-rituals__row", { hasText: "Retire probe" }).getByRole("button", { name: "Archive" }).click();
+    await openArchived(page);
+    await page.locator(".aa-rituals__archived-row", { hasText: "Retire probe" }).getByRole("button", { name: "Delete" }).click();
+    await page.locator(".aa-confirm").getByRole("button", { name: "Delete", exact: true }).click();
+    await expect(page.locator(".aa-rituals__archived-row", { hasText: "Retire probe" })).toHaveCount(0);
+    await expect(page.locator(".aa-rituals__row", { hasText: "Retire probe" })).toHaveCount(0);
   });
 
   test("the empty state offers one-tap starting points that prefill the composer", async ({ page }) => {
     await loginAs(page, "rituals-empty@test.local");
     await page.goto("/rituals");
+
+    // Self-healing: this test's own creation survives re-runs — retire and
+    // delete it so the user is empty again.
+    await expect(page.locator(".aa-rituals__list, .aa-list-empty").first()).toBeVisible();
+    for (let guardCount = 0; guardCount < 4; guardCount += 1) {
+      const active = page.locator(".aa-rituals__row", { hasText: "Journaling" }).first();
+      if ((await active.count()) > 0) {
+        await active.getByRole("button", { name: "Archive" }).click();
+        await expect(active).toHaveCount(0);
+        await page.waitForTimeout(500);
+      }
+      const section = page.locator(".aa-rituals__archived");
+      if ((await section.count()) === 0) break;
+      await openArchived(page);
+      const archivedLeft = page.locator(".aa-rituals__archived-row", { hasText: "Journaling" }).first();
+      if ((await archivedLeft.count()) === 0) break;
+      await archivedLeft.getByRole("button", { name: "Delete" }).click();
+      await page.locator(".aa-confirm").getByRole("button", { name: "Delete", exact: true }).click();
+      await expect(page.locator(".aa-rituals__archived-row", { hasText: "Journaling" })).toHaveCount(0);
+    }
+
     await expect(page.getByText("No rituals yet.")).toBeVisible();
 
     await page.getByRole("button", { name: "Journaling", exact: true }).click();
@@ -241,17 +312,19 @@ test.describe("Rituals", () => {
     await loginAs(page, PRO_EMAIL);
     await page.goto("/rituals");
 
-    // "Week plan review" is seeded last; drag it onto the first row.
+    // Idempotent drag: whatever is LAST moves onto the FIRST row — any
+    // prior run's order only changes which row that is.
     const dataTransfer = await page.evaluateHandle(() => new DataTransfer());
-    const src = page.locator(".aa-rituals__row", { hasText: "Week plan review" });
-    const target = page.locator(".aa-rituals__row", { hasText: "Take vitamins" });
+    const src = page.locator(".aa-rituals__row").last();
+    const target = page.locator(".aa-rituals__row").first();
+    const draggedName = ((await src.textContent()) ?? "").trim();
     await src.dispatchEvent("dragstart", { dataTransfer });
     await target.dispatchEvent("dragover", { dataTransfer });
     await target.dispatchEvent("drop", { dataTransfer });
     await src.dispatchEvent("dragend", { dataTransfer });
     await page.waitForTimeout(900);
 
-    await expect(page.locator(".aa-rituals__row").first()).toContainText("Week plan review");
+    await expect(page.locator(".aa-rituals__row").first()).toContainText(draggedName);
   });
 
   test("FREE sees the ProGate on /rituals, a 402 on the wire, and no strip on Today", async ({ page }) => {
