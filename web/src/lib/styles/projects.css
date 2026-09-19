@@ -137,7 +137,6 @@
 .aa-create-control:focus-visible,
 .aa-btn:focus-visible,
 .aa-section-toggle:focus-visible,
-.aa-relink-opt:focus-visible,
 .aa-reorder-btn:focus-visible {
   outline: none;
   box-shadow: var(--aa-focus-ring);

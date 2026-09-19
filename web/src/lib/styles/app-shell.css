@@ -649,7 +649,7 @@
   .aa-mobile-dock__item:active {
     transform: translateY(1px) scale(0.98);
   }
-  .aa-app-capture-fab.is-hidden-while-lens-open {
+  .aa-app-capture-fab.is-hidden {
     display: none;
   }
   /* Settings + Focus: both step out of the thumb-zone chrome. Hide the bottom

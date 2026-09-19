@@ -9,11 +9,16 @@
    * stack's capture contract is text-only (no attachment upload yet).
    */
   import { capture } from "../stores/capture.svelte";
+
+  // Shell sets this while a dock menu (Lens / Plan) is open — the menus span
+  // the full width above the dock and would sit on top of the FAB.
+  let { hidden = false }: { hidden?: boolean } = $props();
 </script>
 
 <button
   type="button"
   class="aa-app-capture-fab"
+  class:is-hidden={hidden}
   title="Capture (⌘K)"
   aria-label="Capture"
   onclick={() => void capture.show()}

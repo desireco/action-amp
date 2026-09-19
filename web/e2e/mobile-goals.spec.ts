@@ -3,14 +3,20 @@ import { apiPost, loginAs, DEV_EMAIL, activeLensId } from "./helpers";
 
 /**
  * Mobile goal management (docs/specs/mobile-goal-management.md §Tests) —
- * the goals flow at phone width (375×667), driven entirely through the
- * thumb-zone chrome: dock Plan button → section menu → Goals → create →
- * detail → complete. Plus project→goal linking through the shared
- * PickerSheet, and the no-horizontal-overflow guard on every surface
- * visited. The desktop-width lifecycle is covered by goal-planning.spec.ts.
+ * the goals flow at phone width, driven entirely through the thumb-zone
+ * chrome: dock Plan button → section menu → Goals → create → detail →
+ * complete. Plus project→goal linking through the shared PickerSheet, and
+ * the no-horizontal-overflow guard on every surface visited. The desktop
+ * lifecycle is covered by goal-planning.spec.ts.
+ *
+ * 320×568 (iPhone SE) is deliberate: the shared card grid's 320px minmax
+ * track only overflows a document at genuinely narrow widths (at 360 the
+ * margin is a rounding-error 8px that Chromium can absorb), so this
+ * viewport makes the overflow guard genuinely catch a goals.css load
+ * regression.
  */
 
-test.use({ viewport: { width: 375, height: 667 } });
+test.use({ viewport: { width: 320, height: 568 } });
 
 function run(): string {
   return String(Date.now());

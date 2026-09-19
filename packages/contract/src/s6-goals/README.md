@@ -126,7 +126,7 @@ All ops start with `if (!context.user) throw new Error("Not authenticated.")`.
 
 ### e2e — `webapp/e2e/goal-planning.spec.ts` (1 chained case, 90s timeout, "goal → link projects → complete → focus advances → logbook → reopen")
 1. Create goal from `/do/goals` ("New goal" → fill placeholder "Grow audience" with "Run a 10k" → "Create goal"; waits on `/operations/create-goal`); goal name appears as a card link. (Seeded sample task cleared first via `completeTopTask`.)
-2. Create two projects via triage ("Couch to 5k", "Bridge to 10k"), then link each from the **project** detail page ("Link a goal" → `.aa-project__relink-opt` option "Run a 10k"); the link surfaces as the goal name with an "Edit goal" affordance.
+2. Create two projects via triage ("Couch to 5k", "Bridge to 10k"), then link each from the **project** detail page ("Link a goal" → `.aa-project__relink-opt` option "Run a 10k"); the link surfaces as the goal name with an "Edit goal" affordance. *(New stack: the link picker is the shared PickerSheet — pick `.aa-picker-sheet__item` "Run a 10k"; see `web/e2e/goal-planning.spec.ts`.)*
 3. Open the goal: both projects listed under `.aa-goal__projects`; `Focus:` names the first non-done project.
 4. Complete the focused project from its detail header ("Complete"); back on the goal, `Focus:` advances to the other project.
 5. Complete the goal ("Complete") → redirects to `/do/goals`; the goal link is gone from the active list.

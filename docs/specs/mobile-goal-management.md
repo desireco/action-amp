@@ -97,9 +97,11 @@ Pure client work (`web/`). No backend, contract, caps, or entitlement changes.
 
 ### Tests
 
-- A Playwright mobile-viewport (375×667) flow covers: dock → Plan menu →
-  Goals → create → open detail → link check → complete → back on /goals,
-  and asserts no horizontal overflow on the goals routes.
+- A Playwright mobile-viewport (320×568, iPhone SE — narrow enough that the
+  shared grid's 320px track overflows the document without the
+  single-column rule, so the overflow guard has teeth) flow covers: dock →
+  Plan menu → Goals → create → open detail → link check → complete → back
+  on /goals, and asserts no horizontal overflow on the goals routes.
 
 ## Non-goals
 

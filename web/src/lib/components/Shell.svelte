@@ -571,7 +571,6 @@
   <!-- Mobile thumb-zone dock (≤768px) -->
   <nav
     class="aa-mobile-dock"
-    class:is-lens-open={mobileLensOpen}
     aria-label="Mobile navigation"
   >
     {#if mobileLensOpen}
@@ -693,8 +692,10 @@
     </div>
   </nav>
 
-  <!-- Capture — lower-right floating action, pervasive across all modes. -->
-  <CaptureFab />
+  <!-- Capture — lower-right floating action, pervasive across all modes.
+      Hidden while a dock menu is open (the menus span the width above the
+      dock and would cover it). -->
+  <CaptureFab hidden={mobileLensOpen || mobilePlanOpen} />
 
   <!-- ---- Shell-scoped overlays ---- -->
   {#if feedback.open}

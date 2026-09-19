@@ -7,6 +7,7 @@
    */
   import { untrack } from "svelte";
   import "../../styles/projects.css";
+  import "../../styles/goals.css";
   import { goals } from "../../stores/goals.svelte";
   import { lenses } from "../../stores/lenses.svelte";
   import { type GateMessage } from "../../stores/projects.svelte";
