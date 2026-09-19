@@ -500,6 +500,15 @@
   color: var(--aa-teal-cta);
 }
 
+/* Quiet nudge on the suggested default (25 min) — stays subdued whether the
+   option is selected (teal) or not, so it suggests without insisting. */
+.aa-settings-choice__hint {
+  margin-left: 0.2rem;
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-regular);
+  opacity: 0.75;
+}
+
 .aa-settings-choice__option:focus-visible {
   outline: 2px solid var(--aa-teal);
   outline-offset: 2px;

@@ -194,7 +194,9 @@
           onclick={() => void commitFocusMinutes(minutes)}
           disabled={focusStatus === "saving"}
         >
-          {minutes} min
+          {minutes} min{#if minutes === FOCUS_SESSION_DEFAULT}
+            <span class="aa-settings-choice__hint">· suggested</span>
+          {/if}
         </button>
       {/each}
     </div>
