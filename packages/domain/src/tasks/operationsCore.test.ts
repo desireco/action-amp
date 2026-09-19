@@ -14,6 +14,7 @@ import {
   toggleTaskDoneCore,
   pauseTaskCore,
   completeFocusSessionCore,
+  expireAbandonedFocusSession,
   getOtherLensCountsData,
   updateTaskStatusCore,
   sweepStaleToSomedayCore,
@@ -676,6 +677,71 @@ describe("completeFocusSessionCore", () => {
         id: "task-1",
       }),
     ).resolves.toEqual({ completed: false });
+  });
+});
+
+// ----------------------------------------------------------------
+// expireAbandonedFocusSession — the Pomodoro cycle stops itself
+// ----------------------------------------------------------------
+describe("expireAbandonedFocusSession", () => {
+  const START = new Date("2026-06-20T10:00:00Z");
+
+  it("closes an abandoned session unconfirmed at its planned end and ends Now", async () => {
+    const m = mockContext();
+    m.entities.TaskSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      taskId: "task-1",
+      startedAt: START,
+      plannedMinutes: 25,
+    });
+
+    const result = await expireAbandonedFocusSession(asTaskSession(m), {
+      userId: "user-1",
+      now: new Date("2026-06-20T10:31:00Z"), // planned end + 6 min
+    });
+
+    expect(result).toEqual({ expired: true });
+    expect(m.entities.TaskSession.update).toHaveBeenCalledWith({
+      where: { id: "session-1" },
+      data: { endedAt: new Date("2026-06-20T10:25:00Z"), completed: false },
+    });
+    expect(m.entities.Task.updateMany).toHaveBeenCalledWith({
+      where: { id: "task-1", userId: "user-1", startedAt: { not: null } },
+      data: { startedAt: null },
+    });
+  });
+
+  it("leaves a session inside its planned end + break window alone", async () => {
+    const m = mockContext();
+    m.entities.TaskSession.findFirst.mockResolvedValue({
+      id: "session-1",
+      taskId: "task-1",
+      startedAt: START,
+      plannedMinutes: 25,
+    });
+
+    const result = await expireAbandonedFocusSession(asTaskSession(m), {
+      userId: "user-1",
+      now: new Date("2026-06-20T10:29:00Z"), // planned end + 4 min
+    });
+
+    expect(result).toEqual({ expired: false });
+    expect(m.entities.TaskSession.update).not.toHaveBeenCalled();
+    expect(m.entities.Task.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("is a no-op when nothing is running", async () => {
+    const m = mockContext();
+    m.entities.TaskSession.findFirst.mockResolvedValue(null);
+
+    const result = await expireAbandonedFocusSession(asTaskSession(m), {
+      userId: "user-1",
+      now: new Date("2026-06-20T18:00:00Z"),
+    });
+
+    expect(result).toEqual({ expired: false });
+    expect(m.entities.TaskSession.update).not.toHaveBeenCalled();
+    expect(m.entities.Task.updateMany).not.toHaveBeenCalled();
   });
 });
 

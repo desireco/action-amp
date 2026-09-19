@@ -152,7 +152,10 @@ commands.
   - That's it. Zoom, mode-switch, lens — all suppressed. The world is this task.
 - **Sub-states:** `working → session complete → working` for repeat focus
   sessions on the same Task; `working → paused` exits focus; Task completion is
-  a separate explicit action.
+  a separate explicit action. `working → expired` (added 2026-09-19): a session
+  nobody returns to closes at its planned end plus a 5-minute break
+  (`completed=false` — nobody confirmed the ring finishing) and the Now state
+  ends; the chooser regains the stage with the task back as a candidate.
 - **Centered focus-session ring.** The detached top-left clock and ambiguous
   completion circle are gone. One large centered ring counts down the user's
   25- or 45-minute preference and contains Pause/Resume. The ring means focus

@@ -43,6 +43,7 @@ import {
   startTaskCore,
   pauseTaskCore,
   completeFocusSessionCore,
+  expireAbandonedFocusSession,
   getAppDataCore,
   addTaskUpdateCore,
   updateTaskContentCore,
@@ -361,6 +362,9 @@ const tasksDetail = ORPC.tasks.detail.handler(async ({ context, input }) => {
 const tasksTopTask = ORPC.tasks.topTask.handler(async ({ context, input }) => {
   const user = requireUser(context);
   await assertLensAllowed(context, user.id, input.lensId);
+  // Expire an abandoned session first so the ranking (and the Do handoff
+  // that keys off the focused read) never sees a dead Now state.
+  await expireAbandonedFocusSession(context.entities, { userId: user.id });
   const { timeZone } = await prefs(context, user.id);
   const ranked = await getTopTaskData(context.entities, {
     userId: user.id,
@@ -405,6 +409,9 @@ const tasksOtherLensCounts = ORPC.tasks.otherLensCounts.handler(async ({ context
 
 const tasksFocusedTask = ORPC.tasks.focusedTask.handler(async ({ context }) => {
   const user = requireUser(context);
+  // The Pomodoro cycle stops itself: expire a session nobody returned to
+  // before deciding whether anything is running.
+  await expireAbandonedFocusSession(context.entities, { userId: user.id });
   const [row, { focusSessionMinutes }] = await Promise.all([
     getFocusedTaskData(context.db, { userId: user.id }),
     prefs(context, user.id),
@@ -491,6 +498,9 @@ const tasksByLens = ORPC.tasks.byLens.handler(async ({ context, input }) => {
 
 const tasksAppData = ORPC.tasks.appData.handler(async ({ context, input }) => {
   const user = requireUser(context);
+  // App-boot parity with the daily rollover: an abandoned focus session
+  // expires lazily on the first read.
+  await expireAbandonedFocusSession(context.entities, { userId: user.id });
   return await getAppDataCore(
     {
       Task: {

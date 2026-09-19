@@ -23,6 +23,11 @@ pauses; every exit from the focus view (Esc, ✕, `p`/Space, the ring's ❚❚, 
 Pause action) pauses and returns to the chooser. The countdown ticks live (a
 1s heartbeat feeds the ring), and a server-time-guarded session completion
 backs off ~30s between retries when the client clock reaches zero early.
+**Self-stopping cycle:** a session nobody returns to expires lazily at its
+planned end + 5-minute break (domain `expireAbandonedFocusSession`, wired
+into the focused/topTask/appData reads) — closed `completed=false` at the
+planned end, Now state ended. Returning in time is the confirmed path:
+the client records the pomodoro with `completed=true`.
 See `WORKFLOW.md` §2.3 and `INTERACTION.md` WORKING mode.
 
 **Revised 2026-08-07 (centered focus session).** The focus screen:

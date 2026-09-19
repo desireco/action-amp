@@ -20,6 +20,8 @@ export interface TemporalDurationLike {
   months?: number;
   hours?: number;
   minutes?: number;
+  /** Focus-session expiry: the break after a planned end (2026-09-19). */
+  seconds?: number;
 }
 
 export interface TemporalDuration {

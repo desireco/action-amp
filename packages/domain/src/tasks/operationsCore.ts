@@ -973,6 +973,54 @@ export async function completeFocusSessionCore(
   return { completed: true as const, endedAt: instantToDate(targetEnd) };
 }
 
+// ----------------------------------------------------------------
+// Focus-session expiry — the Pomodoro cycle stops itself
+// ----------------------------------------------------------------
+// A session left running (the user never came back) must not hold the Now
+// state forever. Once the planned end passes by more than a short break,
+// the session closes — as NOT completed: nobody was there to confirm the
+// ring finishing — and the Task leaves Now, so Do regains the chooser.
+// Returning before the planned end is the normal path: the client records
+// the pomodoro itself (completeFocusSessionCore, completed=true). Lazy by
+// design, like the daily rollover: wired into the focused/topTask/appData
+// reads, idempotent, one indexed findFirst.
+export const FOCUS_SESSION_BREAK_SECONDS = 300;
+
+export async function expireAbandonedFocusSession(
+  entities: Pick<TaskEntities, "Task" | "TaskSession">,
+  {
+    userId,
+    breakSeconds = FOCUS_SESSION_BREAK_SECONDS,
+    now,
+  }: { userId: string; breakSeconds?: number; now?: Date },
+): Promise<{ expired: boolean }> {
+  const open = await entities.TaskSession.findFirst({
+    where: { userId, endedAt: null },
+    orderBy: { startedAt: "desc" },
+    select: { id: true, taskId: true, startedAt: true, plannedMinutes: true },
+  });
+  if (!open) return { expired: false };
+  const plannedMinutes = open.plannedMinutes === 45 ? 45 : 25;
+  const nowInstant = now ? instantFrom(now) : systemClock.instant();
+  const plannedEnd = instantFrom(open.startedAt).add(
+    Temporal.Duration.from({ minutes: plannedMinutes }),
+  );
+  const hardStop = plannedEnd.add(Temporal.Duration.from({ seconds: breakSeconds }));
+  if (Temporal.Instant.compare(nowInstant, hardStop) <= 0) {
+    return { expired: false };
+  }
+  await entities.TaskSession.update({
+    where: { id: open.id },
+    data: { endedAt: instantToDate(plannedEnd), completed: false },
+  });
+  // The cycle is over — end the Now state so the chooser regains the stage.
+  await entities.Task.updateMany({
+    where: { id: open.taskId, userId, startedAt: { not: null } },
+    data: { startedAt: null },
+  });
+  return { expired: true };
+}
+
 export async function pauseTaskCore(
   entities: Pick<TaskEntities, "Task" | "TaskSession">,
   { userId, id }: { userId: string; id: string },

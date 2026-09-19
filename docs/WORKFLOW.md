@@ -183,7 +183,11 @@ Triage drains the universal Inbox across every Lens.
   is Now, the Do chooser *is* the focus view: `/` (Do) hands off to the focus
   route and returning to Do re-enters the running session's countdown
   (revised 2026-09-19). Navigating away never pauses; `Esc`/`✕`/`Pause` end
-  the session explicitly.
+  the session explicitly. **The Pomodoro cycle also stops itself** (added
+  2026-09-19): a session nobody returns to expires lazily at its planned end
+  plus a 5-minute break — the session closes **unconfirmed** (`completed=false`
+  at the planned end, unlike a client-confirmed ring finishing) and the Now
+  state ends, so a task left running never holds the stage forever.
 - **Three rationale layers on the Work surfaces, never conflated** (locked
   2026-08-10; implementation pending — see `specs/focus-goal-context.md`).
   Next and Focus already explain one question; Goal rationale and paused-work
