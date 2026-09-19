@@ -302,6 +302,14 @@
   padding: var(--aa-space-3xl) var(--aa-space-4xl);
 }
 
+/* Focus owns the viewport: the main column's padding would wrap the
+   100dvh focus view and add ~2×space-3xl of phantom height — a permanent
+   scrollbar on a screen that usually has nothing to scroll. Only real
+   content overflow (short viewports) scrolls. */
+.aa-app.is-in-focus .aa-app-main {
+  padding: 0;
+}
+
 /* Work-lens gate surface — center the ProGate panel in the main area so the
  * "this is a Pro feature" message reads as a deliberate state, not a glitch. */
 .aa-app-gate {
