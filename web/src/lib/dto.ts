@@ -97,7 +97,14 @@ export interface AppData {
     isIncluded: boolean;
     purpose: string | null;
   }[];
-  counts: { today: number; upcoming: number; someday: number };
+  counts: {
+    today: number;
+    upcoming: number;
+    someday: number;
+    projects: number;
+    goals: number;
+    rituals: number;
+  };
   todayCap: number;
   focusSessionMinutes: 25 | 45;
   timeZone: string;

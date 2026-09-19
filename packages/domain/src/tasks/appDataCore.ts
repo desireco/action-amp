@@ -5,10 +5,10 @@
  *
  * Deviations from the webapp wrapper, both surface-driven:
  * - counts carry `today` (global, accessible lenses) + `upcoming`/`someday`
- *   (active lens) via `Task.count` — the S4 screens read exactly these three
- *   (Today's hero links + Someday/Upcoming cross-links). The webapp's inbox/
- *   projects/goals badge counts belong to surfaces outside this slice and
- *   rejoin when their screens port (S2/S5/S6).
+ *   (active lens) via `Task.count`, plus the Planning-structure trio the
+ *   sidebar badges read: `projects`/`goals`/`rituals`, each scoped to the
+ *   active lens and matching the page's primary list (active projects =
+ *   not done + not archived; active goals; unarchived rituals incl. paused).
  * - the upcoming/someday rollup uses two counts instead of `groupBy` (no
  *   groupBy on the seam's Task delegate; same numbers, same scope rule).
  */
@@ -44,6 +44,19 @@ export interface AppDataEntities {
       Array<{ id: string; name: string; color: string | null; isIncluded: boolean; purpose: string | null }>
     >;
   };
+  Project: {
+    count(args: {
+      where: { userId: string; lensId: string; isDone: boolean; archivedAt: null };
+    }): Promise<number>;
+  };
+  Goal: {
+    count(args: { where: { userId: string; lensId: string; isDone: boolean } }): Promise<number>;
+  };
+  Ritual: {
+    count(args: {
+      where: { userId: string; lensId: string; includePaused: boolean };
+    }): Promise<number>;
+  };
   User: TaskExtrasEntities["User"];
 }
 
@@ -55,7 +68,14 @@ export interface AppDataResult {
     isIncluded: boolean;
     purpose: string | null;
   }>;
-  counts: { today: number; upcoming: number; someday: number };
+  counts: {
+    today: number;
+    upcoming: number;
+    someday: number;
+    projects: number;
+    goals: number;
+    rituals: number;
+  };
   todayCap: number;
   focusSessionMinutes: 25 | 45;
   timeZone: string;
@@ -144,6 +164,22 @@ export async function getAppDataCore(
       })
     : 0;
 
+  // The Planning-structure badges follow the active lens, each matching the
+  // page's primary list: Projects counts its active cards (not done, not
+  // archived — completed/archived are the page's collapsed sections), Goals
+  // its active list, Rituals its unarchived Planning list (paused included).
+  const [projectsCount, goalsCount, ritualsCount] = activeLensId
+    ? await Promise.all([
+        entities.Project.count({
+          where: { userId, lensId: activeLensId, isDone: false, archivedAt: null },
+        }),
+        entities.Goal.count({ where: { userId, lensId: activeLensId, isDone: false } }),
+        entities.Ritual.count({
+          where: { userId, lensId: activeLensId, includePaused: true },
+        }),
+      ])
+    : [0, 0, 0];
+
   if (stale) {
     // Best-effort by contract; a failure must not break an app load.
     try {
@@ -158,7 +194,14 @@ export async function getAppDataCore(
 
   return {
     lenses,
-    counts: { today: todayCount, upcoming: upcomingCount, someday: somedayCount },
+    counts: {
+      today: todayCount,
+      upcoming: upcomingCount,
+      someday: somedayCount,
+      projects: projectsCount,
+      goals: goalsCount,
+      rituals: ritualsCount,
+    },
     todayCap: userRow?.todayCap ?? 5,
     focusSessionMinutes: normalizeFocusSessionMinutes(userRow?.focusSessionMinutes),
     timeZone,

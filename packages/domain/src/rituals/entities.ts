@@ -5,7 +5,7 @@
 // create (`mintId()`), `updatedAt` re-stamped on updates, `undefined` leaves
 // a column untouched / `null` writes NULL, missing rows on update throw the
 // P2025 analogue). Tests fake these slices with vi.fn() spies.
-import { and, asc, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { goal, lens, ritual, ritualEntry } from "../db/schema/index.js";
 import { mintId } from "../db/client.js";
 import type { DomainDb } from "../db/client.js";
@@ -55,6 +55,22 @@ export function createRitualEntities(db: DomainDb): RitualEntities {
           .orderBy(desc(ritual.order))
           .limit(1);
         return rows[0]?.order ?? null;
+      },
+      count: async (args) => {
+        // The findMany conditions, as a plain count (the nav badge read).
+        const conditions = [
+          eq(ritual.userId, args.where.userId),
+          args.where.archivedOnly ? isNotNull(ritual.archivedAt) : isNull(ritual.archivedAt),
+        ];
+        if (args.where.lensId !== undefined) {
+          conditions.push(eq(ritual.lensId, args.where.lensId));
+        }
+        if (!args.where.includePaused) conditions.push(isNull(ritual.pausedAt));
+        const rows = await db
+          .select({ value: count() })
+          .from(ritual)
+          .where(and(...conditions));
+        return Number(rows[0]?.value ?? 0);
       },
       create: async (args) => {
         const now = new Date();

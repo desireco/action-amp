@@ -143,10 +143,17 @@
   const isWeekPlanning = $derived(path === "/week");
 
   // Nav counts, re-scoped to the active lens (the store re-reads appData on
-  // every switch). The contract's appData carries today/upcoming/someday only
-  // — Inbox/Projects/Goals badges land when those counts join the payload.
+  // every switch). Projects/Goals/Rituals mirror each page's primary list:
+  // active projects, active goals, unarchived rituals (paused included).
   const counts = $derived(
-    lenses.appData?.counts ?? { today: 0, upcoming: 0, someday: 0 },
+    lenses.appData?.counts ?? {
+      today: 0,
+      upcoming: 0,
+      someday: 0,
+      projects: 0,
+      goals: 0,
+      rituals: 0,
+    },
   );
 
   // ponytail: 1–2 letter initials from fullName. Good enough for an avatar.
@@ -560,9 +567,9 @@
         <div class="aa-focus-label" aria-hidden="true">Plan</div>
         <div class="aa-focus-items">
           {@render navItem({ icon: calendarIcon, label: "Upcoming", active: isActive("/upcoming"), to: "/upcoming", count: counts.upcoming })}
-          {@render navItem({ icon: projectsIcon, label: "Projects", active: isActive("/projects"), to: "/projects" })}
-          {@render navItem({ icon: goalsIcon, label: "Goals", active: isActive("/goals"), to: "/goals" })}
-          {@render navItem({ icon: ritualsIcon, label: "Rituals", active: isActive("/rituals"), to: "/rituals" })}
+          {@render navItem({ icon: projectsIcon, label: "Projects", active: isActive("/projects"), to: "/projects", count: counts.projects })}
+          {@render navItem({ icon: goalsIcon, label: "Goals", active: isActive("/goals"), to: "/goals", count: counts.goals })}
+          {@render navItem({ icon: ritualsIcon, label: "Rituals", active: isActive("/rituals"), to: "/rituals", count: counts.rituals })}
           {@render navItem({ icon: somedayIcon, label: "Someday", active: isActive("/someday"), to: "/someday", count: counts.someday })}
         </div>
       </div>
@@ -722,6 +729,9 @@
         >
           {@render projectsIcon()}
           <span>Projects</span>
+          {#if counts.projects > 0}
+            <span class="aa-mobile-plan-menu__count">{counts.projects}</span>
+          {/if}
         </a>
         <a
           class="aa-mobile-plan-menu__item"
@@ -745,6 +755,9 @@
         >
           {@render goalsIcon()}
           <span>Goals</span>
+          {#if counts.goals > 0}
+            <span class="aa-mobile-plan-menu__count">{counts.goals}</span>
+          {/if}
         </a>
         <a
           class="aa-mobile-plan-menu__item"
@@ -755,6 +768,9 @@
         >
           {@render ritualsIcon()}
           <span>Rituals</span>
+          {#if counts.rituals > 0}
+            <span class="aa-mobile-plan-menu__count">{counts.rituals}</span>
+          {/if}
         </a>
       </div>
     {/if}

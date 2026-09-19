@@ -64,6 +64,7 @@ import {
   deleteListItemCore,
   clearCompletedListItemsCore,
 } from "@actionamp/domain/simpleLists";
+import { createRitualEntities } from "@actionamp/domain/rituals";
 import {
   resolveLens,
   lensViolation,
@@ -510,6 +511,18 @@ const tasksAppData = ORPC.tasks.appData.handler(async ({ context, input }) => {
       },
       Lens: {
         findMany: (args: never) => context.entities.Lens.findMany(args),
+      },
+      Project: {
+        count: (args: Parameters<typeof context.entities.Project.count>[0]) =>
+          context.entities.Project.count(args),
+      },
+      Goal: {
+        count: (args: Parameters<typeof context.entities.Goal.count>[0]) =>
+          context.entities.Goal.count(args),
+      },
+      Ritual: {
+        count: (args: Parameters<ReturnType<typeof createRitualEntities>["Ritual"]["count"]>[0]) =>
+          createRitualEntities(context.db).Ritual.count(args),
       },
       User: extras(context).User,
     },

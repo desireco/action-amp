@@ -144,6 +144,15 @@ export interface RitualEntities {
     findMaxOrder(args: {
       where: { userId: string; lensId: string };
     }): Promise<number | null>;
+    /** Row count over the same filters as findMany (the app-shell nav count). */
+    count(args: {
+      where: {
+        userId: string;
+        lensId?: string;
+        includePaused?: boolean;
+        archivedOnly?: boolean;
+      };
+    }): Promise<number>;
     create(args: { data: RitualCreateData }): Promise<RitualRow>;
     update(args: {
       where: { id: string };
