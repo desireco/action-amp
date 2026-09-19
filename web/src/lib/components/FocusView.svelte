@@ -88,11 +88,22 @@
   const completedFocusSessions = $derived(
     Math.max(0, Math.floor(task.sessions?.filter((s) => s.completed).length ?? 0)),
 );
-  // Pomodoro dots — one per closed session on this task, oldest first: a full
-  // dot recorded a completed countdown; a crossed dot was interrupted
-  // (paused, abandoned, or the task wrapped up mid-interval). The open
-  // session gets no dot — the ring is it.
-  const closedSessions = $derived((task.sessions ?? []).filter((s) => s.endedAt !== null));
+  // Pomodoro dots — one per countable closed session on this task, oldest
+  // first: a full dot recorded a completed countdown; a crossed dot was
+  // interrupted (paused, abandoned, or the task wrapped up mid-interval).
+  // An interruption under five minutes is a blip, not a broken interval —
+  // it earns no dot at all (the row itself still counts toward worked time).
+  const FOCUS_SESSION_MIN_INTERRUPTED_MS = 5 * 60_000;
+  const closedSessions = $derived(
+    (task.sessions ?? []).filter((s) => {
+      if (s.endedAt === null) return false;
+      if (s.completed) return true;
+      return (
+        new Date(s.endedAt).getTime() - new Date(s.startedAt).getTime() >=
+        FOCUS_SESSION_MIN_INTERRUPTED_MS
+      );
+    }),
+  );
   const interruptedSessions = $derived(closedSessions.length - completedFocusSessions);
   const sessionDotsAria = $derived(
     `${completedFocusSessions} completed ${completedFocusSessions === 1 ? "pomodoro" : "pomodoros"}${

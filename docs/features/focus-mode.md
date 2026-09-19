@@ -35,7 +35,9 @@ reads as active while focus is open (Do *is* focus).
 Every closed session on the focused task reads as a dot under the countdown
 inside the ring — **full = completed Pomodoro** (countdown reached zero and
 was confirmed), **crossed = interrupted** (explicit pause, wrap-up
-mid-interval, or the unconfirmed self-stop expiry). Navigation away never
+mid-interval, or the unconfirmed self-stop expiry) — and an interruption
+under five minutes is a blip, not a broken interval: it earns no dot at all
+(the session row still counts toward worked-time aggregates). Navigation away never
 interrupts: the session is server-side, and returning within the break still
 confirms a countdown that hit zero while away. The wrap-up prompt states the
 task's completed-Pomodoro count ("3 pomodoros completed.").
