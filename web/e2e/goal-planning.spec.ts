@@ -73,7 +73,8 @@ test("goal → link projects → complete → focus advances", async ({ page }) 
       timeout: 10_000,
     });
     await page.getByRole("button", { name: /link a goal/i }).click();
-    await page.locator(".aa-project__relink-opt").filter({ hasText: goalName }).click();
+    // The picker is the shared PickerSheet (single-choice, incl. standalone).
+    await page.locator(".aa-picker-sheet__item").filter({ hasText: goalName }).click();
     // The link surfaces as the goal name (with an "Edit goal" affordance).
     await expect(page.getByText(goalName).first()).toBeVisible({ timeout: 10_000 });
   }
