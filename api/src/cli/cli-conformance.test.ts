@@ -19,7 +19,7 @@ import type { Hono } from "hono";
 import type { DomainDb, Entities } from "@actionamp/domain/db";
 import { createDb, createEntities, mintId } from "@actionamp/domain/db";
 import { and, eq } from "drizzle-orm";
-import { session as sessionTable, task as taskTable } from "@actionamp/domain/db";
+import { ritual as ritualTable, session as sessionTable, task as taskTable } from "@actionamp/domain/db";
 import { isLocalDatabaseUrl } from "../db.js";
 import { drizzleSessionIssuePort, issueSessionCore } from "../auth/issue.js";
 import { createCliRoutes } from "./routes.js";
@@ -1424,6 +1424,170 @@ d("S18 — logbook + review (§1.10)", () => {
     // lower-case cadence is accepted (case-insensitive).
     r = await req("/api/cli/review?cadence=weekly", { token: fx.pro.token });
     expect(r.status).toBe(200);
+  });
+});
+
+d("S18 — rituals (the habits layer, docs/specs/rituals.md)", () => {
+  const PROBE = "Conformance ritual probe";
+
+  it("create → 201 with the full row (guidance + benefit round-trip)", async () => {
+    // Top-up-safe: archive any previous run's probe first (archived rows
+    // never list), then create fresh.
+    const listed = await req("/api/cli/ritual/list", { token: fx.pro.token });
+    const body = listed.body as { rituals: Array<{ id: string; name: string }> };
+    for (const stale of body.rituals.filter((r) => r.name === PROBE)) {
+      await req("/api/cli/ritual/archive", {
+        method: "POST",
+        token: fx.pro.token,
+        body: { id: stale.id },
+      });
+    }
+
+    const res = await req("/api/cli/ritual/create", {
+      method: "POST",
+      token: fx.pro.token,
+      body: {
+        name: PROBE,
+        interval: "evening",
+        cadence: "daily",
+        guidance: "Ten minutes, three bullets",
+        benefit: "Clears the noise",
+      },
+    });
+    expect(res.status).toBe(201);
+    const created = (res.body as { ritual: Record<string, unknown> }).ritual;
+    expect(created.name).toBe(PROBE);
+    expect(created.interval).toBe("EVENING");
+    expect(created.guidance).toBe("Ten minutes, three bullets");
+    expect(created.benefit).toBe("Clears the noise");
+    cleanup.push(async () => {
+      await db.delete(ritualTable).where(eq(ritualTable.id, created.id as string));
+    });
+  });
+
+  it("today lists the DAILY probe with unchecked state + lens name", async () => {
+    const res = await req("/api/cli/ritual/today", { token: fx.pro.token });
+    expect(res.status).toBe(200);
+    const rows = (res.body as { rituals: Array<Record<string, unknown>> }).rituals;
+    const probe = rows.find((r) => r.name === PROBE);
+    expect(probe).toMatchObject({ checked: false, mood: null, interval: "EVENING" });
+    expect(typeof probe?.lensName).toBe("string");
+  });
+
+  it("check records today with mood + note; a repeat rewrites the reflection", async () => {
+    const id = (await req("/api/cli/ritual/today", { token: fx.pro.token }))
+      .body as unknown as { rituals: Array<{ id: string; name: string }> };
+    const probe = id.rituals.find((r) => r.name === PROBE)!;
+
+    const first = await req("/api/cli/ritual/check", {
+      method: "POST",
+      token: fx.pro.token,
+      body: { id: probe.id, mood: "good", note: "first pass" },
+    });
+    expect(first.status).toBe(200);
+    expect((first.body as { entry: { mood: string } }).entry.mood).toBe("HAPPY");
+
+    const again = await req("/api/cli/ritual/check", {
+      method: "POST",
+      token: fx.pro.token,
+      body: { id: probe.id, mood: "rough" },
+    });
+    expect((again.body as { entry: { mood: string; note: string | null } }).entry).toMatchObject({
+      mood: "NEGATIVE",
+      note: null,
+    });
+
+    const today = (await req("/api/cli/ritual/today", { token: fx.pro.token }))
+      .body as unknown as { rituals: Array<{ id: string; checked: boolean }> };
+    expect(today.rituals.find((r) => r.id === probe.id)?.checked).toBe(true);
+
+    await req("/api/cli/ritual/uncheck", {
+      method: "POST",
+      token: fx.pro.token,
+      body: { id: probe.id },
+    });
+  });
+
+  it("pause hides from today; resume restores", async () => {
+    const list = (await req("/api/cli/ritual/list", { token: fx.pro.token }))
+      .body as unknown as { rituals: Array<{ id: string; name: string }> };
+    const probe = list.rituals.find((r) => r.name === PROBE)!;
+
+    const paused = await req("/api/cli/ritual/pause", {
+      method: "POST",
+      token: fx.pro.token,
+      body: { id: probe.id },
+    });
+    expect((paused.body as { ritual: { paused: boolean } }).ritual.paused).toBe(true);
+
+    const todayPaused = (await req("/api/cli/ritual/today", { token: fx.pro.token }))
+      .body as unknown as { rituals: Array<{ name: string }> };
+    expect(todayPaused.rituals.find((r) => r.name === PROBE)).toBeUndefined();
+
+    const resumed = await req("/api/cli/ritual/resume", {
+      method: "POST",
+      token: fx.pro.token,
+      body: { id: probe.id },
+    });
+    expect((resumed.body as { ritual: { paused: boolean } }).ritual.paused).toBe(false);
+  });
+
+  it("update renames and clears benefit with null; absent fields stay", async () => {
+    const list = (await req("/api/cli/ritual/list", { token: fx.pro.token }))
+      .body as unknown as { rituals: Array<{ id: string; name: string }> };
+    const probe = list.rituals.find((r) => r.name === PROBE)!;
+
+    const res = await req("/api/cli/ritual/update", {
+      method: "POST",
+      token: fx.pro.token,
+      body: { id: probe.id, name: `${PROBE} v2`, benefit: null },
+    });
+    expect(res.status).toBe(200);
+    const ritual = (res.body as { ritual: Record<string, unknown> }).ritual;
+    expect(ritual.name).toBe(`${PROBE} v2`);
+    expect(ritual.benefit).toBeNull();
+    expect(ritual.guidance).toBe("Ten minutes, three bullets");
+  });
+
+  it("validation shapes: bad interval/mood/weekday → 400; unknown id → 404", async () => {
+    const badInterval = await req("/api/cli/ritual/create", {
+      method: "POST",
+      token: fx.pro.token,
+      body: { name: "X", interval: "night" },
+    });
+    expect(badInterval.status).toBe(400);
+
+    const badMood = await req("/api/cli/ritual/check", {
+      method: "POST",
+      token: fx.pro.token,
+      body: { id: "nope", mood: "elated" },
+    });
+    expect(badMood.status).toBe(400);
+
+    const badWeekday = await req("/api/cli/ritual/create", {
+      method: "POST",
+      token: fx.pro.token,
+      body: { name: "X", cadence: "weekly", weekday: "funday" },
+    });
+    expect(badWeekday.status).toBe(400);
+
+    const missing = await req("/api/cli/ritual/pause", {
+      method: "POST",
+      token: fx.pro.token,
+      body: { id: "ritual-that-does-not-exist" },
+    });
+    expect(missing.status).toBe(404);
+    expect((missing.body as { error: string }).error).toBe("Ritual not found.");
+  });
+
+  it("weekly without a weekday is the core's 400 (effective-combination rule)", async () => {
+    const res = await req("/api/cli/ritual/create", {
+      method: "POST",
+      token: fx.pro.token,
+      body: { name: "X", cadence: "weekly" },
+    });
+    expect(res.status).toBe(400);
+    expect((res.body as { error: string }).error).toMatch(/day of the week/);
   });
 });
 

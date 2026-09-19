@@ -46,7 +46,26 @@ import {
   type EntitlementUser,
 } from "@actionamp/domain/billing";
 import { FREE_LIMITS } from "@actionamp/domain/billing";
-import { plainDateFrom, plainDateToDb } from "@actionamp/domain/shared/time";
+import {
+  currentPlainDate,
+  plainDateFrom,
+  plainDateToDb,
+} from "@actionamp/domain/shared/time";
+import {
+  archiveRitualCore,
+  completeRitualCore,
+  createRitualCore,
+  createRitualEntities,
+  getRitualsData,
+  getTodayRitualsData,
+  setRitualPausedCore,
+  uncheckRitualCore,
+  updateRitualCore,
+  type RitualCadence as RitualCadenceValue,
+  type RitualInterval as RitualIntervalValue,
+  type RitualMood as RitualMoodValue,
+  type RitualRow,
+} from "@actionamp/domain/rituals";
 import {
   getTaskData,
   getTodayTasksData,
@@ -1395,6 +1414,379 @@ export function createCliRoutes(deps: {
     } catch (err) {
       console.error("[cli/goal/create] failed:", err);
       return c.json({ error: "Could not create goal." }, 500);
+    }
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Ritual routes — the habits layer over @actionamp/domain/rituals. The
+  // whole-feature Pro gate needs no per-route form: the CLI access gate in
+  // the middleware already 402s any non-entitled token (CLI ⊆ Pro).
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const INTervals: Record<string, RitualIntervalValue> = {
+    morning: "MORNING",
+    midday: "MIDDAY",
+    evening: "EVENING",
+  };
+  const CADENCES: Record<string, RitualCadenceValue> = {
+    daily: "DAILY",
+    weekdays: "WEEKDAYS",
+    weekly: "WEEKLY",
+    interval: "INTERVAL",
+  };
+  const MOODS: Record<string, RitualMoodValue> = {
+    good: "HAPPY",
+    okay: "NEUTRAL",
+    rough: "NEGATIVE",
+    happy: "HAPPY",
+    neutral: "NEUTRAL",
+    negative: "NEGATIVE",
+  };
+  const WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+
+  function ritualEntities() {
+    return createRitualEntities(db);
+  }
+
+  /** Ritual row → the CLI JSON shape (dates ISO, paused derived). */
+  function ritualJson(r: RitualRow) {
+    return {
+      id: r.id,
+      name: r.name,
+      lensId: r.lensId,
+      interval: r.interval,
+      cadence: r.cadence,
+      weekday: r.weekday,
+      intervalDays: r.intervalDays,
+      guidance: r.guidance,
+      benefit: r.benefit,
+      goalId: r.goalId,
+      order: r.order,
+      paused: r.pausedAt !== null,
+      createdAt: r.createdAt.toISOString(),
+      updatedAt: r.updatedAt.toISOString(),
+    };
+  }
+
+  /** Core Error → the CLI envelope: 404 unknown, 400 validation. */
+  function ritualErrorResponse(c: Context, route: string, err: unknown): Response {
+    if (err instanceof Error && /not found/i.test(err.message)) {
+      return c.json({ error: "Ritual not found." }, 404);
+    }
+    if (err instanceof Error && err.message) {
+      return c.json({ error: err.message }, 400);
+    }
+    console.error(`[cli/${route}] failed:`, err);
+    return c.json({ error: "Could not complete the ritual action." }, 500);
+  }
+
+  // GET /api/cli/ritual/list — query ?lensId (optional: absent = every lens).
+  // The planning list (unarchived; paused rows stay managed) + today's entry.
+  rest.get("/api/cli/ritual/list", async (c) => {
+    const user = requirePat(c);
+    if (user instanceof Response) return user;
+    const entUser = toEntUser(user);
+    const lensId = queryString(c.req.raw, "lensId");
+    if (lensId) {
+      const gate = await gateLens(entities, entUser, user.id, lensId);
+      const gateRes = lensGateResponse(c, gate);
+      if (gateRes) return gateRes;
+    }
+    try {
+      const timeZoneRow = await entities.User.findUnique({ where: { id: user.id } });
+      const timeZone = timeZoneRow?.timeZone ?? "UTC";
+      const rows = await getRitualsData(ritualEntities(), {
+        userId: user.id,
+        lensId:
+          lensId ??
+          (await firstAccessibleLensId(entities, entUser, user.id)) ??
+          "",
+        today: currentPlainDate(timeZone),
+      });
+      return c.json({
+        rituals: rows.map((r) => ({
+          ...ritualJson(r),
+          entryToday: r.entryToday,
+        })),
+      });
+    } catch (err) {
+      console.error("[cli/ritual/list] failed:", err);
+      return c.json({ error: "Could not load rituals." }, 500);
+    }
+  });
+
+  // GET /api/cli/ritual/today — the due set across every lens, with checked
+  // state (what `ritual check` acts on).
+  rest.get("/api/cli/ritual/today", async (c) => {
+    const user = requirePat(c);
+    if (user instanceof Response) return user;
+    try {
+      const timeZoneRow = await entities.User.findUnique({ where: { id: user.id } });
+      const timeZone = timeZoneRow?.timeZone ?? "UTC";
+      const rows = await getTodayRitualsData(ritualEntities(), {
+        userId: user.id,
+        today: currentPlainDate(timeZone),
+        timeZone,
+      });
+      return c.json({
+        rituals: rows.map((r) => ({
+          ...ritualJson(r),
+          lensName: r.lensName,
+          checked: r.checked,
+          mood: r.mood,
+          note: r.note,
+        })),
+      });
+    } catch (err) {
+      console.error("[cli/ritual/today] failed:", err);
+      return c.json({ error: "Could not load today's rituals." }, 500);
+    }
+  });
+
+  // POST /api/cli/ritual/create — body { name, lensId?, interval?, cadence?,
+  // weekday? ("mon".."sun"), intervalDays?, guidance?, benefit? }. Lens
+  // defaults to the first accessible lens (Me) — the creation default.
+  rest.post("/api/cli/ritual/create", async (c) => {
+    const user = requirePat(c);
+    if (user instanceof Response) return user;
+    const entUser = toEntUser(user);
+    const body = await parseBody(c.req.raw);
+    const name = bodyString(body, "name");
+    if (!name) {
+      return c.json({ error: "A name is required." }, 400);
+    }
+    const lensId =
+      bodyString(body, "lensId") ??
+        (await firstAccessibleLensId(entities, toEntUser(user), user.id));
+    if (!lensId) {
+      return c.json({ error: "No lens found for this account." }, 400);
+    }
+    const gate = await gateLens(entities, entUser, user.id, lensId);
+    const gateRes = lensGateResponse(c, gate);
+    if (gateRes) return gateRes;
+
+    const intervalRaw = bodyString(body, "interval")?.toLowerCase();
+    const interval = intervalRaw ? INTervals[intervalRaw] : undefined;
+    if (intervalRaw && !interval) {
+      return c.json({ error: "interval must be morning, midday, or evening." }, 400);
+    }
+    const cadenceRaw = bodyString(body, "cadence")?.toLowerCase();
+    const cadence = cadenceRaw ? CADENCES[cadenceRaw] : undefined;
+    if (cadenceRaw && !cadence) {
+      return c.json({ error: "cadence must be daily, weekdays, weekly, or interval." }, 400);
+    }
+    const weekdayRaw = bodyString(body, "weekday")?.toLowerCase();
+    let weekday: number | null | undefined;
+    if (weekdayRaw !== undefined && weekdayRaw !== null && weekdayRaw !== "") {
+      const idx = WEEKDAYS.indexOf(weekdayRaw);
+      if (idx === -1) {
+        return c.json({ error: "weekday must be mon, tue, wed, thu, fri, sat, or sun." }, 400);
+      }
+      weekday = idx;
+    }
+    const intervalDaysRaw = bodyString(body, "intervalDays");
+    let intervalDays: number | null | undefined;
+    if (intervalDaysRaw) {
+      const parsed = Number(intervalDaysRaw);
+      if (!Number.isInteger(parsed)) {
+        return c.json({ error: "intervalDays must be a whole number of days (2-365)." }, 400);
+      }
+      intervalDays = parsed;
+    }
+
+    try {
+      const ritual = await createRitualCore(ritualEntities(), {
+        userId: user.id,
+        lensId,
+        name,
+        interval,
+        cadence,
+        weekday,
+        intervalDays,
+        guidance: bodyString(body, "guidance"),
+        benefit: bodyString(body, "benefit"),
+      });
+      return c.json({ ritual: ritualJson(ritual) }, 201);
+    } catch (err) {
+      return ritualErrorResponse(c, "ritual/create", err);
+    }
+  });
+
+  // POST /api/cli/ritual/update — body { id, name?, interval?, cadence?,
+  // weekday?, intervalDays?, guidance?, benefit? }. Absent fields stay;
+  // explicit null clears (guidance/benefit).
+  rest.post("/api/cli/ritual/update", async (c) => {
+    const user = requirePat(c);
+    if (user instanceof Response) return user;
+    const body = await parseBody(c.req.raw);
+    const id = bodyString(body, "id");
+    if (!id) {
+      return c.json({ error: "An id is required." }, 400);
+    }
+    const patch: Record<string, unknown> = {};
+    const name = bodyString(body, "name");
+    if (name !== undefined && name !== null) patch.name = name;
+    const intervalRaw = bodyString(body, "interval")?.toLowerCase();
+    if (intervalRaw) {
+      const interval = INTervals[intervalRaw];
+      if (!interval) {
+        return c.json({ error: "interval must be morning, midday, or evening." }, 400);
+      }
+      patch.interval = interval;
+    }
+    const cadenceRaw = bodyString(body, "cadence")?.toLowerCase();
+    if (cadenceRaw) {
+      const cadence = CADENCES[cadenceRaw];
+      if (!cadence) {
+        return c.json({ error: "cadence must be daily, weekdays, weekly, or interval." }, 400);
+      }
+      patch.cadence = cadence;
+    }
+    const weekdayRaw = bodyString(body, "weekday")?.toLowerCase();
+    if (weekdayRaw) {
+      const idx = WEEKDAYS.indexOf(weekdayRaw);
+      if (idx === -1) {
+        return c.json({ error: "weekday must be mon, tue, wed, thu, fri, sat, or sun." }, 400);
+      }
+      patch.weekday = idx;
+    }
+    const intervalDaysRaw = bodyString(body, "intervalDays");
+    if (intervalDaysRaw) {
+      const parsed = Number(intervalDaysRaw);
+      if (!Number.isInteger(parsed)) {
+        return c.json({ error: "intervalDays must be a whole number of days (2-365)." }, 400);
+      }
+      patch.intervalDays = parsed;
+    }
+    // Definition fields: presence in the raw body matters (bodyString
+    // flattens null → undefined, and null is the CLEAR semantic).
+    if (body && "guidance" in body) {
+      patch.guidance = typeof body.guidance === "string" ? body.guidance : null;
+    }
+    if (body && "benefit" in body) {
+      patch.benefit = typeof body.benefit === "string" ? body.benefit : null;
+    }
+
+    try {
+      const ritual = await updateRitualCore(ritualEntities(), {
+        userId: user.id,
+        id,
+        ...patch,
+      });
+      return c.json({ ritual: ritualJson(ritual) });
+    } catch (err) {
+      return ritualErrorResponse(c, "ritual/update", err);
+    }
+  });
+
+  // POST /api/cli/ritual/check — body { id, mood? ("good"|"okay"|"rough"),
+  // note? }. The local day is derived server-side from the user's timeZone.
+  rest.post("/api/cli/ritual/check", async (c) => {
+    const user = requirePat(c);
+    if (user instanceof Response) return user;
+    const body = await parseBody(c.req.raw);
+    const id = bodyString(body, "id");
+    if (!id) {
+      return c.json({ error: "An id is required." }, 400);
+    }
+    const moodRaw = bodyString(body, "mood")?.toLowerCase();
+    let mood: RitualMoodValue | null = null;
+    if (moodRaw) {
+      mood = MOODS[moodRaw] ?? null;
+      if (!mood) {
+        return c.json({ error: "mood must be good, okay, or rough." }, 400);
+      }
+    }
+    const note = bodyString(body, "note");
+    try {
+      const timeZoneRow = await entities.User.findUnique({ where: { id: user.id } });
+      const timeZone = timeZoneRow?.timeZone ?? "UTC";
+      const entry = await completeRitualCore(ritualEntities(), {
+        userId: user.id,
+        ritualId: id,
+        localDate: plainDateToDb(currentPlainDate(timeZone)),
+        mood,
+        note,
+      });
+      return c.json({
+        ritual: { id: entry.ritualId },
+        entry: {
+          localDate: entry.localDate.toISOString().slice(0, 10),
+          mood: entry.mood,
+          note: entry.note,
+        },
+      });
+    } catch (err) {
+      return ritualErrorResponse(c, "ritual/check", err);
+    }
+  });
+
+  // POST /api/cli/ritual/uncheck — body { id }. Deletes today's entry,
+  // reflection included. Idempotent.
+  rest.post("/api/cli/ritual/uncheck", async (c) => {
+    const user = requirePat(c);
+    if (user instanceof Response) return user;
+    const body = await parseBody(c.req.raw);
+    const id = bodyString(body, "id");
+    if (!id) {
+      return c.json({ error: "An id is required." }, 400);
+    }
+    try {
+      const timeZoneRow = await entities.User.findUnique({ where: { id: user.id } });
+      const timeZone = timeZoneRow?.timeZone ?? "UTC";
+      await uncheckRitualCore(ritualEntities(), {
+        userId: user.id,
+        ritualId: id,
+        localDate: plainDateToDb(currentPlainDate(timeZone)),
+      });
+      return c.json({ ok: true });
+    } catch (err) {
+      return ritualErrorResponse(c, "ritual/uncheck", err);
+    }
+  });
+
+  // POST /api/cli/ritual/pause | resume | archive — body { id }.
+  for (const [action, label] of [
+    ["pause", "paused"],
+    ["resume", "resumed"],
+  ] as const) {
+    rest.post(`/api/cli/ritual/${action}`, async (c) => {
+      const user = requirePat(c);
+      if (user instanceof Response) return user;
+      const body = await parseBody(c.req.raw);
+      const id = bodyString(body, "id");
+      if (!id) {
+        return c.json({ error: "An id is required." }, 400);
+      }
+      try {
+        const ritual = await setRitualPausedCore(ritualEntities(), {
+          userId: user.id,
+          id,
+          paused: action === "pause",
+        });
+        return c.json({ ritual: ritualJson(ritual), status: label });
+      } catch (err) {
+        return ritualErrorResponse(c, `ritual/${action}`, err);
+      }
+    });
+  }
+
+  rest.post("/api/cli/ritual/archive", async (c) => {
+    const user = requirePat(c);
+    if (user instanceof Response) return user;
+    const body = await parseBody(c.req.raw);
+    const id = bodyString(body, "id");
+    if (!id) {
+      return c.json({ error: "An id is required." }, 400);
+    }
+    try {
+      const ritual = await archiveRitualCore(ritualEntities(), {
+        userId: user.id,
+        id,
+      });
+      return c.json({ ritual: ritualJson(ritual), status: "archived" });
+    } catch (err) {
+      return ritualErrorResponse(c, "ritual/archive", err);
     }
   });
 
