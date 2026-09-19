@@ -120,7 +120,7 @@ Every decision above resolves to a `--aa-*` token group in
 | Lens identity (user hues) | `--aa-lens-{slate,cyan,coral,honey,lime,magenta}*` | L63–96 |
 | Active-lens runtime | `--aa-active-lens*`, `[data-lens="…"]` blocks | L99–106, L276–334 |
 | Neutral ramp (light) | `--aa-bg*`, `--aa-surface*`, `--aa-border*`, `--aa-text*` | L120–132 |
-| Radii (4/8 grid) | `--aa-radius-*` | L135–142 |
+| Radii (4/8 grid) | `--aa-radius-*`, goal identity `--aa-radius-goal` | L135–142 |
 | Spacing (4/8 grid) | `--aa-space-*` | L145–153 |
 | Shadows (blue-tinted, layered) | `--aa-shadow-*`, `--aa-hero-shadow` | L156–161 |
 | Motion | `--aa-ease-*`, `--aa-dur-*` | L164–149 |
@@ -173,7 +173,7 @@ live — open it to see every component against the real tokens.
 - Reserve amber for genuine human emphasis (Important, "why this matters").
 - Layer two soft, blue-tinted shadows for elevation; add a 1px hairline border for definition.
 - Leave generous whitespace. If a section feels crowded, remove something.
-- Keep radii in the 4–8px range for UI; `radius-full` only for the completion circle.
+- Keep radii in the 4–8px range for UI; `radius-full` only for the completion circle. One identity exception: goal cards carry `--aa-radius-goal` (80px, ≈25% of the card's min-height — Jake, 2026-09-19); the soft-round shape is what separates goals from projects at a glance.
 - Make secondary/tertiary buttons look tappable: visible `border-strong` + subtle shadow, never a faint outline alone.
 - Lay out buttons `inline-flex` with icon *leading*, never stacked above the label.
 - Set `<html data-theme>` and `<html data-lens>` so the runtime tokens resolve.

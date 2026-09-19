@@ -179,6 +179,10 @@
   --aa-radius-lg: 12px;
   --aa-radius-xl: 18px;
   --aa-radius-2xl: 22px;
+  /* Goal identity: the planning layer's soft-round card — ≈25% of the goal
+     card's min-height. Shape separates outcomes from projects (Jake,
+     2026-09-19). Projects keep radius-2xl. */
+  --aa-radius-goal: 80px;
   --aa-radius-full: 9999px;
 
   /* ---- Spacing (4/8 grid) ---- */

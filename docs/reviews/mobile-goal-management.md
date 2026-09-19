@@ -94,3 +94,8 @@ a handful of cleanups; all fixed in the review-fix commit:
   the section gains a fifth destination. The menu hiding zero counts
   while the sidebar renders them is deliberate (calm tone; matches the
   lens menu's quieter precedent).
+- **Follow-up (Jake, same day): goal cards get their own shape.** Goals
+  are not projects — their cards now carry `--aa-radius-goal` (80px,
+  ≈25% of the card's min-height) via the goal variant of ProgressCard;
+  project cards keep `--aa-radius-2xl`. Recorded in DESIGN-SYSTEM.md's
+  radii guidance as the one deliberate exception.

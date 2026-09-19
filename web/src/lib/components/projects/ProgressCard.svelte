@@ -4,7 +4,8 @@
    * ui/ProgressCard verbatim port): meta chip → centered title → description
    * → progress bar + teal pct → Focus/Status chip (amber when a next action
    * exists). The whole card is the link. `variant="project"` applies the
-   * page-level overrides webapp ProjectsPage.css makes (`.aa-project-card`).
+   * page-level overrides webapp ProjectsPage.css makes (`.aa-project-card`);
+   * the goal variant carries the soft-round radius (shape as identity).
    */
   interface Props {
     href: string;
@@ -42,7 +43,13 @@
 </script>
 
 <!-- The whole card is the link (the crumb id IS the destination route). -->
-<a class="aa-progress-card" class:project={variant === "project"} class:muted href={href}>
+<a
+  class="aa-progress-card"
+  class:project={variant === "project"}
+  class:goal={variant === "goal"}
+  class:muted
+  href={href}
+>
   {#if meta.length > 0 || dueLabel}
     <div class="aa-progress-card__meta">
       {#each meta as fragment, i (fragment)}
@@ -111,6 +118,12 @@
   .aa-progress-card.project {
     min-height: 260px;
     padding: 30px 28px;
+  }
+
+  /* Goal identity: the soft-round card (≈25% of its min-height) — projects
+     keep the standard 2xl radius. Shape is the goal/project differentiator. */
+  .aa-progress-card.goal {
+    border-radius: var(--aa-radius-goal);
   }
 
   .aa-progress-card__title {

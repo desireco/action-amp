@@ -13,6 +13,8 @@ verified: 2026-09-18
 - **List** (`/goals`, `web/src/lib/components/goals/GoalsView.svelte`) — card
   grid; aggregate project progress, project count, current Focus project.
   Inline create; FREE cap (1 active goal per lens) renders the Pro gate.
+  Goal cards carry their own soft-round radius (`--aa-radius-goal`, ≈25% of
+  the card height) — shape as identity, separating outcomes from projects.
 - **Detail** (`/goals/:permalink`, `GoalDetailView.svelte`) — header shows
   aggregate progress and the current Focus project; lists linked Projects
   (each → project detail) with ↑/↓ sequence editing; inline edit; Complete /
