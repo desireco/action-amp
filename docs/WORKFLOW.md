@@ -472,6 +472,9 @@ Lens` while skipping the standalone lens picker by default. See
      Reason: mobile is a full client now, not a capture terminal — goals
      (and the rest of Plan) are manageable end-to-end on a phone
      (`docs/specs/mobile-goal-management.md`).
+     **Tap grammar (revised 2026-09-19):** a single tap navigates straight
+     to Upcoming — the section's default; a quick second tap opens the
+     section menu on top of it. The menu is the switcher, not the gate.
    - A future **hard focus** (each mode as a distinct full-screen layout)
      remains the north star, parked in `docs/ROADMAP.md` §Icebox.
 7. **Today rolls over daily (locked 2026-06-30).** At the start of each new

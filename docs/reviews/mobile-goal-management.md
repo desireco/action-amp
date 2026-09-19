@@ -109,3 +109,9 @@ a handful of cleanups; all fixed in the review-fix commit:
   Everything else (Do, Today, Upcoming, Week, Someday, Logbook, Inbox,
   both detail pages) measured clean; long focus-chip names now wrap
   instead of poking narrow cards.
+- **Follow-up (Jake, same day): Plan tap grammar.** Single tap on the
+  dock's Plan item now navigates straight to Upcoming (the section
+  default); a quick second tap opens the section menu on top. The first
+  tap fires immediately — no disambiguation delay on touch; tapping with
+  the menu open closes it. Recorded in WORKFLOW.md Decision 6 and the
+  spec's slice 1 (revision note).

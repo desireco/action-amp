@@ -63,11 +63,16 @@ Pure client work (`web/`). No backend, contract, caps, or entitlement changes.
 
 ### Slice 1 — Plan section menu (reachability)
 
-- Tapping the dock's Plan item opens a menu above the dock listing Upcoming
+- Tapping the dock's Plan item navigates to **Upcoming** (the section
+  default); a quick second tap opens a menu above the dock listing Upcoming
   (with count), Projects, Someday (with count), Goals — laid out so the time
   horizons (Upcoming/Someday) sit in the left column and the structure
-  destinations (Projects/Goals) in the right (Jake's arrangement, 2026-09-19);
-  tapping an entry navigates and closes the menu.
+  destinations (Projects/Goals) in the right (Jake's arrangement,
+  2026-09-19); tapping an entry navigates and closes the menu. *(Revised
+  2026-09-19: the draft had the single tap open the menu; Jake prefers
+  tap→Upcoming with the menu on double tap — the menu is the switcher, not
+  the gate. The first tap navigates immediately; the double tap lands on
+  the already-open Upcoming page.)*
 - The Plan item uses the Lens button's exact mechanics: `aria-expanded`,
   active highlight, opening one menu closes the other, Esc closes, and the
   dock keeps 5 slots.

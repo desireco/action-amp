@@ -35,9 +35,16 @@ test("mobile: Plan menu → goal create → link via sheet → complete", async 
   const suffix = run();
   await loginAs(page, DEV_EMAIL);
 
-  // ---- 1. The dock's Plan item opens the section menu; Goals is in it ----
+  // ---- 1. Plan tap grammar: single tap → Upcoming, double tap → the menu ----
   await page.goto("/");
-  await page.getByRole("button", { name: "Plan", exact: true }).click();
+  const planBtn = page.getByRole("button", { name: "Plan", exact: true });
+  await planBtn.click();
+  await expect(page).toHaveURL(/\/upcoming/, { timeout: 10_000 });
+  // Space the taps past the 300ms double-tap window: toHaveURL can resolve
+  // in ~100ms, and a dblclick landing inside the FIRST tap's window would
+  // open the menu with click #1 and toggle it closed with click #2.
+  await page.waitForTimeout(350);
+  await planBtn.dblclick();
   const planMenu = page.locator(".aa-mobile-plan-menu");
   await expect(planMenu).toBeVisible();
   await expect(planMenu.getByRole("menuitem", { name: "Upcoming" })).toBeVisible();
@@ -102,7 +109,8 @@ test("mobile: Plan and Lens dock menus are mutually exclusive", async ({ page })
   const plan = page.getByRole("button", { name: "Plan", exact: true });
   const lens = page.locator(".aa-mobile-dock__lens-btn");
 
-  await plan.click();
+  // The menu is a double tap (single tap navigates to Upcoming).
+  await plan.dblclick();
   await expect(page.locator(".aa-mobile-plan-menu")).toBeVisible();
   await expect(plan).toHaveAttribute("aria-expanded", "true");
 
@@ -112,4 +120,14 @@ test("mobile: Plan and Lens dock menus are mutually exclusive", async ({ page })
   await expect(page.locator(".aa-mobile-lens-menu")).toBeVisible();
   await lens.click();
   await expect(page.locator(".aa-mobile-lens-menu")).toHaveCount(0);
+
+  // Tapping Plan with the menu open closes it (toggle-off), and a fresh
+  // single tap still navigates to Upcoming.
+  await plan.dblclick();
+  await expect(page.locator(".aa-mobile-plan-menu")).toBeVisible();
+  await plan.click();
+  await expect(page.locator(".aa-mobile-plan-menu")).toHaveCount(0);
+  await page.goto("/goals");
+  await plan.click();
+  await expect(page).toHaveURL(/\/upcoming$/, { timeout: 10_000 });
 });

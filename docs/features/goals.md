@@ -21,9 +21,10 @@ verified: 2026-09-18
   Reopen; lossless Delete (children re-parent to standalone). Completed
   goals surface in the Logbook with Reopen.
 - **Mobile (2026-09-18)** — full lifecycle on a phone: the dock's Plan item
-  opens a section menu (Upcoming / Projects / Goals / Someday), both goals
-  surfaces are responsive, and project→goal linking uses a PickerSheet on
-  every viewport. Spec: `docs/specs/mobile-goal-management.md`.
+  taps straight to Upcoming (double tap opens the Plan section menu —
+  Upcoming / Projects / Goals / Someday), both goals surfaces are
+  responsive, and project→goal linking uses a PickerSheet on every
+  viewport. Spec: `docs/specs/mobile-goal-management.md`.
 
 **Progress roll-up formula** (list cards and detail header agree): each
 project counts as a single binary unit (done/not-done). Project-internal

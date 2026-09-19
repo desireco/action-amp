@@ -24,12 +24,14 @@
   import "../styles/app-shell.css";
   import "../styles/NavItem.css";
   import LensSwitcher from "./LensSwitcher.svelte";
+  import NowTile from "./NowTile.svelte";
   import CaptureFab from "./CaptureFab.svelte";
   import ConfirmDialog from "./ui/ConfirmDialog.svelte";
   import FeedbackDialog from "./FeedbackDialog.svelte";
   import ProGate from "./ui/ProGate.svelte";
   import { lenses } from "../stores/lenses.svelte";
   import { prefs } from "../stores/prefs.svelte";
+  import { whatNow } from "../stores/whatNow.svelte";
   import { capture } from "../stores/capture.svelte";
   import { search } from "../stores/search.svelte";
   import { feedback } from "../stores/feedback.svelte";
@@ -43,9 +45,31 @@
   // The ⌘L popover (bound into LensSwitcher) + the mobile lens menu.
   let lensOpen = $state(false);
   let mobileLensOpen = $state(false);
-  // The mobile Plan section menu (Upcoming/Projects/Goals/Someday) — the
-  // dock's Plan item opens it instead of linking straight to /projects.
+  // The mobile Plan section menu (Upcoming/Projects/Goals/Someday). The
+  // dock's Plan item taps straight to Upcoming — the section default — and
+  // a quick second tap opens the menu to switch (Jake, 2026-09-19).
   let mobilePlanOpen = $state(false);
+  let lastPlanTap = 0;
+
+  // Tap grammar: the first tap navigates IMMEDIATELY (no delay to
+  // disambiguate on touch); the double tap then opens the menu on top of
+  // the already-open Upcoming page. Tapping with the menu open closes it.
+  function onPlanTap() {
+    const now = Date.now();
+    if (mobilePlanOpen) {
+      mobilePlanOpen = false;
+      lastPlanTap = 0;
+      return;
+    }
+    if (now - lastPlanTap < 300) {
+      lastPlanTap = 0;
+      mobileLensOpen = false;
+      mobilePlanOpen = true;
+      return;
+    }
+    lastPlanTap = now;
+    void goto("/upcoming");
+  }
   let confirmLogout = $state(false);
 
   // Mount-once (webapp useEffect([]) parity): theme on app entry, the shell
@@ -74,6 +98,9 @@
         return;
       }
       await lenses.loadAppData();
+      // The Now tile + Do handoff need the running-task summary on every app
+      // entry (PWA reopen lands off-Do), not just on the Do page's loads.
+      void whatNow.syncNow();
       authChecked = true;
     })();
   });
@@ -526,30 +553,36 @@
       {/if}
     </nav>
 
-    <!-- User footer -->
-    <div class="aa-app-user">
-      <!-- Lens is persistent context, exposed through one compact trigger.
-          ⌘L toggles the popover; the wrapper anchors it under the chip. -->
-      <div class="aa-app-lens">
-        <LensSwitcher
-          bind:open={lensOpen}
-          options={lensOptions}
-          active={lenses.activeLensId ?? ""}
-          onSelect={selectLens}
-          onClose={() => {}}
-          onNewLens={entitled ? () => void goto("/settings/lenses") : undefined}
-          newLensProLocked={!entitled}
-        />
+    <!-- Bottom block — the running task (always visible, desktop sidebar;
+        the mobile footer is hidden) pinned with the user footer. The tile
+        sits above the footer's separator line. -->
+    <div class="aa-app-side-bottom">
+      <NowTile />
+      <!-- User footer -->
+      <div class="aa-app-user">
+        <!-- Lens is persistent context, exposed through one compact trigger.
+            ⌘L toggles the popover; the wrapper anchors it under the chip. -->
+        <div class="aa-app-lens">
+          <LensSwitcher
+            bind:open={lensOpen}
+            options={lensOptions}
+            active={lenses.activeLensId ?? ""}
+            onSelect={selectLens}
+            onClose={() => {}}
+            onNewLens={entitled ? () => void goto("/settings/lenses") : undefined}
+            newLensProLocked={!entitled}
+          />
+        </div>
+        <a href="/settings" class="aa-app-user-btn" class:active={inSettings} title="Settings">
+          <span class="aa-app-user-avatar" aria-hidden="true">
+            {#if initials}{initials}{:else}{@render userIcon()}{/if}
+          </span>
+          <span class="aa-app-user-name">{user?.fullName ?? ""}</span>
+        </a>
+        <button type="button" class="aa-app-logout" onclick={() => (confirmLogout = true)}>
+          Log out
+        </button>
       </div>
-      <a href="/settings" class="aa-app-user-btn" class:active={inSettings} title="Settings">
-        <span class="aa-app-user-avatar" aria-hidden="true">
-          {#if initials}{initials}{:else}{@render userIcon()}{/if}
-        </span>
-        <span class="aa-app-user-name">{user?.fullName ?? ""}</span>
-      </a>
-      <button type="button" class="aa-app-logout" onclick={() => (confirmLogout = true)}>
-        Log out
-      </button>
     </div>
   </aside>
 
@@ -665,10 +698,8 @@
         class:active={inPlan}
         aria-label="Plan"
         aria-expanded={mobilePlanOpen}
-        onclick={() => {
-          mobilePlanOpen = !mobilePlanOpen;
-          if (mobilePlanOpen) mobileLensOpen = false;
-        }}
+        aria-haspopup="menu"
+        onclick={onPlanTap}
       >
         {@render projectsIcon()}
         <span>Plan</span>
