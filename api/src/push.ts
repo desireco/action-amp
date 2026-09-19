@@ -155,13 +155,16 @@ export function createReminderDeps(db: DomainDb): ReminderDeps {
     },
     async ritualsDueToday(userId, timeZone) {
       // Due-ness is derived (isDueOn), never stored: load the user's active
-      // rituals + today's local-day entries, count the cadence matches. No
-      // entitlement read here — a FREE-equivalent account has no rituals
-      // surface in play; an empty set counts zero and the line is omitted.
+      // rituals + today's local-day entries, filter to due-and-unchecked.
+      // Names come back interval- then order-sorted (the Today section's
+      // order) so the body names the day's first awaiting ritual.
       const [rows, entries] = await Promise.all([
         db
           .select({
             id: ritual.id,
+            name: ritual.name,
+            interval: ritual.interval,
+            order: ritual.order,
             cadence: ritual.cadence,
             weekday: ritual.weekday,
             intervalDays: ritual.intervalDays,
@@ -179,11 +182,18 @@ export function createReminderDeps(db: DomainDb): ReminderDeps {
             ),
           ),
       ]);
-      if (rows.length === 0) return 0;
+      if (rows.length === 0) return { names: [], due: 0 };
       const today = currentPlainDate(timeZone);
-      // The line counts what awaits: due (cadence) and not yet checked today.
       const checked = new Set(entries.map((e) => e.ritualId));
-      return rows.filter((r) => !checked.has(r.id) && isDueOn(r, today, timeZone)).length;
+      const awaiting = rows
+        .filter((r) => !checked.has(r.id) && isDueOn(r, today, timeZone))
+        .sort((a, b) =>
+          a.interval === b.interval ? a.order - b.order : a.interval < b.interval ? -1 : 1,
+        );
+      return {
+        names: awaiting.slice(0, 3).map((r) => r.name),
+        due: awaiting.length,
+      };
     },
     async send(subscription, payload) {
       // Rejections carry web-push's `statusCode` — the prune reads it.

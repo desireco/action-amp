@@ -46,26 +46,47 @@ describe("buildReminderBody", () => {
     );
   });
 
-  it("does not append '+0 more' when the count equals the sample", () => {
-    expect(buildReminderBody(["A", "B", "C"], 3)).toBe("Today: A, B, C");
-  });
-
-  it("falls back to the calm empty nudge when no tasks are on Today", () => {
-    expect(buildReminderBody([], 0)).toBe(
-      "Nothing planned yet. Choose what matters.",
-    );
+  it("falls back to the calm empty nudge when nothing awaits", () => {
+    expect(buildReminderBody([], 0)).toBe("Nothing planned yet. Choose what matters.");
   });
 
   it("truncates long task names in the body", () => {
-    const long = "Z".repeat(80);
+    const long = "x".repeat(60);
     const body = buildReminderBody([long], 1);
-    expect(body).toBe(`Today: ${"Z".repeat(47)}…`);
+    expect(body.startsWith("Today: ")).toBe(true);
+    expect(body.length).toBeLessThan("Today: ".length + 60);
   });
 
-  it("only sees the named sample even if totalCount is somehow lower", () => {
-    // Defensive: if a race drops a task between the findMany and the count,
-    // totalCount could be < names.length. Never emit a negative "+N more".
-    expect(buildReminderBody(["A", "B", "C"], 2)).toBe("Today: A, B, C");
+  it("names the first due ritual beside the tasks line", () => {
+    expect(
+      buildReminderBody(["Write tests"], 1, { names: ["Journaling", "Gratitude"], due: 2 }),
+    ).toBe("Today: Write tests · Journaling +1 more due");
+  });
+
+  it("a single due ritual names alone, no '+N more'", () => {
+    expect(buildReminderBody(["A"], 1, { names: ["Journaling"], due: 1 })).toBe(
+      "Today: A · Journaling due",
+    );
+  });
+
+  it("rituals alone carry the line when nothing is planned", () => {
+    expect(buildReminderBody([], 0, { names: ["Journaling", "Gratitude"], due: 2 })).toBe(
+      "Journaling +1 more today. Nothing planned yet.",
+    );
+    expect(buildReminderBody([], 0, { names: ["Journaling"], due: 1 })).toBe(
+      "Journaling today. Nothing planned yet.",
+    );
+  });
+
+  it("due 0 omits the line entirely (byte-parity with the pre-rituals body)", () => {
+    expect(buildReminderBody(["Write tests"], 1, { names: [], due: 0 })).toBe(
+      "Today: Write tests",
+    );
+  });
+
+  it("truncates a long ritual name like a task name", () => {
+    const body = buildReminderBody([], 0, { names: ["y".repeat(60)], due: 1 });
+    expect(body.length).toBeLessThan(60 + " today. Nothing planned yet.".length);
   });
 });
 

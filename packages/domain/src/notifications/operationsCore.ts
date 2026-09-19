@@ -100,29 +100,42 @@ export function truncate(name: string, max = 48): string {
   return name.length > max ? `${name.slice(0, max - 1)}…` : name;
 }
 
+/** The rituals slice of the daily-reminder body: names (top 3) + the
+ *  due-and-unchecked count, mirroring todayTasks' shape. */
+export interface ReminderRituals {
+  names: string[];
+  due: number;
+}
+
 /**
  * Build the daily-reminder body string from the top Today tasks, the total
- * open-Today count, and the due-Ritual count. Shapes: tasks present (named,
+ * open-Today count, and the due-Ritual set. Shapes: tasks present (named,
  * top 3, +N more when the count exceeds the named sample) with a calm
- * rituals line appended when any are due; no tasks but rituals due (the
- * rituals carry the line); or a calm "nothing planned" nudge. The rituals
- * line only ever mentions count — never names, never pressure.
+ * rituals line appended when any await — the FIRST due ritual named, "+N
+ * more" for the rest (mirroring the tasks line's shape); no tasks but
+ * rituals awaiting (the named ritual carries the line); or a calm "nothing
+ * planned" nudge. Never counts, never pressures — a ritual is a thing, not
+ * a number.
  * Pure + exported so the contract is unit-testable without web-push.
  */
 export function buildReminderBody(
   names: string[],
   totalCount: number,
-  ritualsDue = 0,
+  rituals?: ReminderRituals,
 ): string {
-  const rituals =
-    ritualsDue > 0 ? ` · ${ritualsDue} ritual${ritualsDue === 1 ? "" : "s"} due` : "";
   const trimmed = names.map((n) => truncate(n));
   const extra = totalCount - trimmed.length;
-  if (trimmed.length > 0) {
-    return `Today: ${trimmed.join(", ")}${extra > 0 ? ` (+${extra} more)` : ""}${rituals}`;
+  if (rituals && rituals.due > 0) {
+    const first = truncate(rituals.names[0] ?? "Ritual");
+    const more = rituals.due - 1;
+    const ritPart = `${first}${more > 0 ? ` +${more} more` : ""}`;
+    if (trimmed.length > 0) {
+      return `Today: ${trimmed.join(", ")}${extra > 0 ? ` (+${extra} more)` : ""} · ${ritPart} due`;
+    }
+    return `${ritPart} today. Nothing planned yet.`;
   }
-  if (ritualsDue > 0) {
-    return `${ritualsDue} ritual${ritualsDue === 1 ? "" : "s"} due today. Nothing planned yet.`;
+  if (trimmed.length > 0) {
+    return `Today: ${trimmed.join(", ")}${extra > 0 ? ` (+${extra} more)` : ""}`;
   }
   return "Nothing planned yet. Choose what matters.";
 }
