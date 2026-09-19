@@ -683,6 +683,14 @@
   .aa-app.is-in-focus .aa-mobile-dock {
     display: none;
   }
+  /* Focus is a full-screen sanctuary on touch too: the collapsed brand bar
+     would sit above the 100dvh focus view and add ~51px of phantom height —
+     a permanent scroll into bare page background on a screen with nothing to
+     scroll. Hide it like the dock; the focus view's own ✕ (and Esc) pause +
+     exit, and feedback/settings are one tap away on every other screen. */
+  .aa-app.is-in-focus .aa-app-side {
+    display: none;
+  }
   .aa-app.is-in-settings .aa-app-capture-fab,
   .aa-app.is-in-focus .aa-app-capture-fab {
     bottom: max(var(--aa-space-xl), env(safe-area-inset-bottom));
