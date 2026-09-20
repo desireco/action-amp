@@ -372,7 +372,7 @@
 .aa-project__header {
   display: flex;
   flex-direction: column;
-  gap: var(--aa-space-sm);
+  gap: var(--aa-space-md);
 }
 
 .aa-project__rail {
@@ -414,8 +414,8 @@
 .aa-project__why {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-top: var(--aa-space-sm);
+  gap: 6px;
+  margin-top: var(--aa-space-md);
 }
 
 .aa-project__why-eyebrow {
@@ -455,6 +455,9 @@
   color: var(--aa-text-3);
   cursor: pointer;
   padding: 2px 0;
+  /* Buttons center their text and stretch in the why column — pin left. */
+  align-self: flex-start;
+  text-align: left;
 }
 
 .aa-project__why-empty {
@@ -472,7 +475,7 @@
   display: flex;
   align-items: center;
   gap: var(--aa-space-md);
-  margin-top: var(--aa-space-xs);
+  margin-top: var(--aa-space-sm);
   flex-wrap: wrap;
 }
 
@@ -515,9 +518,9 @@
 .aa-project__next {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-top: var(--aa-space-md);
-  padding: 2px 0;
+  gap: 6px;
+  margin-top: var(--aa-space-lg);
+  padding: 0;
 }
 
 .aa-project__next-eyebrow {
@@ -577,7 +580,7 @@
   display: flex;
   align-items: center;
   gap: var(--aa-space-xs);
-  margin-top: var(--aa-space-sm);
+  margin-top: var(--aa-space-md);
 }
 
 .aa-project__momentum {
@@ -696,6 +699,32 @@
   align-items: center;
   padding: var(--aa-space-xs) 0 var(--aa-space-xs) 20px;
   border-top: 1px dashed var(--aa-border);
+}
+
+/* Task sections breathe — each horizon group clears the one above it.
+   The done-group rule below overrides this with its tighter border flow. */
+.aa-project__group {
+  margin-top: var(--aa-space-xl);
+}
+
+/* Detail-page section headings read as headings, not micro-labels: the
+   active horizons (Today / Upcoming / Someday) are prominent; Done stays
+   the quiet archive tail (rule below). */
+.aa-project .aa-grouped__heading,
+.aa-goal .aa-grouped__heading {
+  margin: 0 0 var(--aa-space-sm);
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-semibold);
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--aa-text-2);
+}
+
+.aa-project__done-group .aa-grouped__heading {
+  font-size: var(--aa-text-sm);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--aa-text-3);
 }
 
 .aa-project__done-group {
