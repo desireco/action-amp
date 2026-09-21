@@ -620,10 +620,18 @@ if (servingSpa) {
   app.get("/icon-512-maskable.png", serveStatic({ root: webDist }));
   // Better Stack's frontend tag (web/static/betterstack.js → build root).
   app.get("/betterstack.js", serveStatic({ root: webDist }));
-  app.get("*", serveStatic({
-    root: webDist,
-    rewriteRequestPath: () => "/index.html",
-  }));
+  // The SPA fallback answers client-side routes with the shell. Paths that
+  // look like files (a final extension — /postgres/.env, /wp-login.php) are
+  // not routes: fall through to the 404 handler instead of serving HTML with
+  // a 200 — bot scanners probe these constantly, and a 200 mask hides real
+  // missing-asset errors too. (Client routes are dotless slugs.)
+  app.get("*", (c, next) => {
+    if (/\.[a-zA-Z0-9]+$/.test(c.req.path)) return next();
+    return serveStatic({
+      root: webDist,
+      rewriteRequestPath: () => "/index.html",
+    })(c, next);
+  });
   logEvent("info", `serving the web app from ${webDist}`);
 } else if (webDist) {
   logEvent("warn", `WEB_DIST_DIR=${webDist} does not exist — serving API only`);
