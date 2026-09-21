@@ -4,8 +4,6 @@ package: actionamp
 description: Duet Track 1 for ActionAmp — the Explorer. High thinking. Decides WHAT to build, pressure-tests ideas, prototypes in disposable worktrees, locks specs at docs/specs/<feature>.md status: ready. NEVER writes production source under webapp/src.
 model: zai/glm-5.2
 thinking: high
-fallbackModels:
-  - openai-codex/gpt-5.5
 tools: read, grep, find, ls, bash, write, web_search, fetch_content, intercom
 systemPromptMode: replace
 inheritProjectContext: true

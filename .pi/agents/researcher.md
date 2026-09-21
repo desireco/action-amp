@@ -4,8 +4,6 @@ package: actionamp
 description: Web research agent for ActionAmp using medium thinking. Searches, evaluates, and synthesizes focused briefs on libraries, Wasp behavior, Prisma patterns, UX research. Writes research.md.
 model: zai/glm-5.1
 thinking: medium
-fallbackModels:
-  - openai-codex/gpt-5.4-mini
 tools: read, write, web_search, fetch_content, get_search_content, intercom
 systemPromptMode: replace
 inheritProjectContext: true

@@ -3,53 +3,43 @@
     "agentOverrides": {
       "scout": {
         "model": "zai/glm-5-turbo",
-        "thinking": "low",
-        "fallbackModels": ["openai-codex/gpt-5.4-mini"]
+        "thinking": "low"
       },
       "researcher": {
         "model": "zai/glm-5.1",
-        "thinking": "medium",
-        "fallbackModels": ["openai-codex/gpt-5.4-mini"]
+        "thinking": "medium"
       },
       "context-builder": {
         "model": "zai/glm-5.1",
-        "thinking": "medium",
-        "fallbackModels": ["openai-codex/gpt-5.4-mini"]
+        "thinking": "medium"
       },
       "coder": {
         "model": "zai/glm-5-turbo",
-        "thinking": "low",
-        "fallbackModels": ["openai-codex/gpt-5.4-mini"]
+        "thinking": "low"
       },
       "worker": {
         "model": "zai/glm-5.1",
-        "thinking": "medium",
-        "fallbackModels": ["openai-codex/gpt-5.3-codex"]
+        "thinking": "medium"
       },
       "reviewer": {
         "model": "zai/glm-5.1",
-        "thinking": "medium",
-        "fallbackModels": ["openai-codex/gpt-5.4"]
+        "thinking": "medium"
       },
       "planner": {
         "model": "zai/glm-5.2",
-        "thinking": "high",
-        "fallbackModels": ["openai-codex/gpt-5.5"]
+        "thinking": "high"
       },
       "oracle": {
         "model": "zai/glm-5.2",
-        "thinking": "high",
-        "fallbackModels": ["openai-codex/gpt-5.5"]
+        "thinking": "high"
       },
       "duet-discover": {
         "model": "zai/glm-5.2",
-        "thinking": "high",
-        "fallbackModels": ["openai-codex/gpt-5.5"]
+        "thinking": "high"
       },
       "duet-build": {
         "model": "zai/glm-5.1",
-        "thinking": "medium",
-        "fallbackModels": ["openai-codex/gpt-5.4"]
+        "thinking": "medium"
       }
     }
   }

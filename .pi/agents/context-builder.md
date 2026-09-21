@@ -4,8 +4,6 @@ package: actionamp
 description: Context and meta-prompt builder for ActionAmp using medium thinking. Gathers requirements, Wasp/React/Prisma context, and produces handoff material. Writes context.md.
 model: zai/glm-5.1
 thinking: medium
-fallbackModels:
-  - openai-codex/gpt-5.4-mini
 tools: read, grep, find, ls, bash, write, web_search, intercom
 systemPromptMode: replace
 inheritProjectContext: true

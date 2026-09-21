@@ -4,8 +4,6 @@ package: actionamp
 description: Fast codebase recon for ActionAmp using low thinking. Maps relevant Wasp/React/Prisma code, types, and patterns for handoff. Writes context.md.
 model: zai/glm-5-turbo
 thinking: low
-fallbackModels:
-  - openai-codex/gpt-5.4-mini
 tools: read, grep, find, ls, bash, write, intercom
 systemPromptMode: replace
 inheritProjectContext: true

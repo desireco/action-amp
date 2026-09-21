@@ -4,8 +4,6 @@ package: actionamp
 description: Primary implementation agent using medium thinking. Handles complex multi-file changes, Prisma migrations, Wasp operation wiring, and features requiring deeper reasoning than coder.
 model: zai/glm-5.1
 thinking: medium
-fallbackModels:
-  - openai-codex/gpt-5.3-codex
 tools: read, grep, find, ls, bash, edit, write, contact_supervisor
 systemPromptMode: replace
 inheritProjectContext: true

@@ -4,8 +4,6 @@ package: actionamp
 description: Duet Track 1 sub-mode for ActionAmp — the Refiner. High thinking. Examines a status: draft card, grounds it in code, pressure-tests via roast, converts vibes to testable done-conditions, and decomposes (parent/children links) when too big for one Build pull. Operates ONLY on draft units; never writes production code.
 model: zai/glm-5.2
 thinking: high
-fallbackModels:
-  - openai-codex/gpt-5.5
 tools: read, grep, find, ls, bash, write, edit, web_search, fetch_content, intercom
 systemPromptMode: replace
 inheritProjectContext: true

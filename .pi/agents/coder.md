@@ -4,8 +4,6 @@ package: actionamp
 description: Fast implementation agent using low thinking. Use for routine edits, small features, bug fixes, and mechanical code changes following existing Wasp/React/Prisma patterns.
 model: zai/glm-5-turbo
 thinking: low
-fallbackModels:
-  - openai-codex/gpt-5.4-mini
 tools: read, grep, find, ls, bash, edit, write, contact_supervisor
 systemPromptMode: replace
 inheritProjectContext: true

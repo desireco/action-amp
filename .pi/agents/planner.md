@@ -4,8 +4,6 @@ package: actionamp
 description: Planning agent using high thinking. Creates concrete, dependency-ordered implementation plans for ActionAmp features with file-level specificity, grounded in Wasp/Prisma mechanics and canonical docs. Writes plan.md.
 model: zai/glm-5.2
 thinking: high
-fallbackModels:
-  - openai-codex/gpt-5.5
 tools: read, grep, find, ls, write, intercom
 systemPromptMode: replace
 inheritProjectContext: true

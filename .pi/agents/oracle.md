@@ -4,8 +4,6 @@ package: actionamp
 description: Decision-consistency oracle using high thinking. Prevents drift and catches contradictions in ActionAmp work against inherited context, canonical docs, and the locked spec.
 model: zai/glm-5.2
 thinking: high
-fallbackModels:
-  - openai-codex/gpt-5.5
 tools: read, grep, find, ls, bash, intercom
 systemPromptMode: replace
 inheritProjectContext: true

@@ -4,8 +4,6 @@ package: actionamp
 description: Project-aware code reviewer using medium thinking. Reviews diffs, plans, and codebase health with ActionAmp-specific knowledge of Wasp conventions, design tokens, doc authority, and tone.
 model: zai/glm-5.1
 thinking: medium
-fallbackModels:
-  - openai-codex/gpt-5.4
 tools: read, grep, find, ls, bash, edit, write, intercom
 systemPromptMode: replace
 inheritProjectContext: true

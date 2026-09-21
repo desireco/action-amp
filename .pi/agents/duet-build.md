@@ -4,8 +4,6 @@ package: actionamp
 description: Duet Track 2 for ActionAmp — the Builder. Medium thinking (orchestrates high-thinking children). Pulls locked specs, implements via single-writer worker, gates with cold-context reviewers + diagnostics, ships or blocks. NEVER edits spec scope or ROADMAP.md.
 model: zai/glm-5.1
 thinking: medium
-fallbackModels:
-  - openai-codex/gpt-5.4
 tools: read, grep, find, ls, bash, edit, write, intercom
 systemPromptMode: replace
 inheritProjectContext: true
