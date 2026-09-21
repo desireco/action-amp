@@ -119,7 +119,8 @@ the shape from webapp/.env.server — local DB + test-mode Stripe keys).
 - **Single source of truth:** `web/src/lib/tokens.css` owns every color, type
   size, spacing, and radius (`--aa-*`). The rules live in
   `docs/DESIGN-SYSTEM.md` + `DESIGN.md`; the visible catalog is Storybook
-  (`npm run storybook`).
+  (`npm run storybook`), and `npm run design` opens the static mockups
+  workbench (`docs/mockups/index.html`).
 - **All UI primitives** live in `web/src/lib/components/ui/` with a story —
   screens consume primitives, never hand-rolled duplicates. To add or change a
   UI element: token (if new) → primitive → story → consume.
