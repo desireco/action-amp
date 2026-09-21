@@ -13,7 +13,7 @@ The home screen isn't a list. It's a decision.
 Built for anyone overwhelmed. ADHD is the design muse, not the marketing target.
 GTD-compatible (the *workflow*) with a flavor of PARA (the *storage shape*) —
 except **Areas are replaced by Goals**, because Goals are active where Areas are
-passive.
+passive. 
 
 ---
 
