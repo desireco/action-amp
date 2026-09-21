@@ -109,10 +109,20 @@ The platform-switch rebuild lives at the root alongside the legacy folders:
 
 Root tasks (bun; npm run also executes them — but NEVER `npm install`):
 **`npm run app`** starts the whole app — API (:8080) first, web (:5174) once
-it's ready; Ctrl-C stops both. Also: `test` · `test:e2e` (servers must be
+it's ready; Ctrl-C stops both. It autodetects an already-running API and
+reuses it (leaves it running after Ctrl-C) instead of starting a second one.
+Also: `test` · `test:e2e` (servers must be
 running; env is read from api/.env + webapp/.env.server) · `lint` ·
 `typecheck` · `build`. Env for the API lives in `api/.env` (gitignored; copy
 the shape from webapp/.env.server — local DB + test-mode Stripe keys).
+
+- **Dev servers are shared — don't kill or blindly start them.** Before
+  starting anything on :8080, check if it's already up (`curl -sf
+  localhost:8080/ready`); `scripts/dev.sh` does this for you. Never kill a
+  running dev server you didn't start without asking the user first — if
+  EADDRINUSE hits, report who holds the port and ask. If you start one
+  yourself (nothing is running), say so and leave it running for the next
+  session.
 
 ### Design system (governed)
 
