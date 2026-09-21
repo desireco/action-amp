@@ -1,0 +1,7 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "deploy": {
+    "preDeployCommand": "bun /app/api/src/migrate.ts",
+    "preDeployTimeoutSeconds": 300
+  }
+}
