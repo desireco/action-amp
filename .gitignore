@@ -29,3 +29,6 @@ skills-lock.json
 # scratch / ephemeral prototyping (canonical mockups live in docs/mockups/)
 _temp/
 cli/skills/
+
+# open-design project manifests (npm run design maps web/ + docs/ into Open Design)
+.open-design/

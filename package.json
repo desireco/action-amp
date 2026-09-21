@@ -16,7 +16,7 @@
     "typecheck": "bun run --filter '*' typecheck",
     "storybook": "cd web && bun run storybook",
     "storybook:build": "cd web && bun run build-storybook",
-    "design": "bash scripts/design.sh",
+    "design": "node scripts/design.mjs",
     "site": "cd site && npm run dev"
   },
   "devDependencies": {
