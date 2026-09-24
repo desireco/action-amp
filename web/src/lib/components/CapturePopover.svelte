@@ -2,8 +2,10 @@
   /**
    * CapturePopover — the universal quick-capture input (⌘K). Ported from
    * webapp/src/components/ui/CapturePopover.tsx (S2; styles ship from
-   * ui/Overlays.css). Image intake (⌘V / drop) is S12's PWA slice — the
-   * text-only contract is the ⌘K surface's.
+   * ui/Overlays.css). Image intake rides the S12 attachment contract
+   * (createInboxItem.attachments): pick via the attach button (mobile:
+   * camera/gallery sheet), paste into the textarea (⌘V), or drop on the
+   * card — up to 4 images, ≤5 MB each, removable before submit.
    *
    *   Enter       → capture + close
    *   ⌘Enter      → capture + clear + keep open (rapid-fire, max 3 confirmations)
@@ -22,6 +24,14 @@
   import { parseCapture, type ParsedCapture } from "../capture/parse";
   import { detectMention, type MentionState } from "../capture/detectMention";
   import { getCaretCoordinates } from "../capture/caretCoords";
+  import {
+    fileToDataUrl,
+    fileToImageAttachmentInput,
+    imageFilesFromDataTransfer,
+    rawFilesFromDataTransfer,
+    MAX_CAPTURE_IMAGES,
+    MAX_IMAGE_BYTES,
+  } from "../capture/files";
   import { formatRelativeDay, formatSnoozedUntil } from "../format/dates";
 
   const MAX_HEIGHT_PX = 96;
@@ -31,6 +41,12 @@
     id: number;
     text: string;
     parsed: ParsedCapture;
+  }
+
+  /** A not-yet-saved image: the File plus its data: URL preview (CSP-safe). */
+  interface PendingImage {
+    file: File;
+    url: string;
   }
 
   interface Mention {
@@ -48,6 +64,12 @@
   let mentionPos = $state<{ top: number; left: number } | null>(null);
   let taEl: HTMLTextAreaElement | null = $state(null);
   let cardEl: HTMLDivElement | null = $state(null);
+  let fileEl: HTMLInputElement | null = $state(null);
+  let images = $state<PendingImage[]>([]);
+  let dragging = $state(false);
+  // dragenter/dragleave fire per child element — count depth so the
+  // highlight stays stable while the drag moves across the card.
+  let dragDepth = 0;
 
   const knownLensNames = $derived(capture.lenses.map((l) => l.name));
   const activeLensName = $derived(capture.lenses.find((l) => l.isIncluded)?.name ?? capture.lenses[0]?.name ?? null);
@@ -126,11 +148,83 @@
 
   function resetInput(): void {
     text = "";
+    images = [];
     caretIndex = 0;
     mentionSel = 0;
     mentionPos = null;
     if (taEl) taEl.style.height = "auto";
     void tick().then(() => taEl?.focus());
+  }
+
+  /**
+   * Validate + queue images. Client-side mirror of prepareImageAttachments
+   * (same caps, same error copy) so bad files are rejected before submit;
+   * the server still re-validates. A file already in the pending list is a
+   * silent no-op — re-adding identical bytes is never the intent. Previews
+   * are data: URLs, so there is nothing to revoke on remove/clear.
+   */
+  async function addFiles(incoming: File[]): Promise<void> {
+    error = null;
+    const imageFiles = incoming.filter((f) => f.type.startsWith("image/"));
+    if (imageFiles.length === 0) {
+      if (incoming.length > 0) error = "Only images can be attached.";
+      return;
+    }
+    const fresh = imageFiles.filter((f) => !images.some((p) => p.file === f));
+    if (fresh.length === 0) return;
+    const fitting = fresh.filter((f) => f.size <= MAX_IMAGE_BYTES);
+    let nextError: string | null =
+      fitting.length < fresh.length ? "Each image must be 5 MB or smaller." : null;
+    const room = MAX_CAPTURE_IMAGES - images.length;
+    const accepted = fitting.slice(0, Math.max(0, room));
+    if (accepted.length < fitting.length) {
+      nextError = `Attach up to ${MAX_CAPTURE_IMAGES} images at a time.`;
+    }
+    if (accepted.length > 0) {
+      const previews = await Promise.all(
+        accepted.map(async (file) => ({ file, url: await fileToDataUrl(file) })),
+      );
+      // Re-dedupe + cap against post-await state (the reads leave a window
+      // where a second addFiles could have landed).
+      images = [
+        ...images,
+        ...previews
+          .filter((p) => !images.some((q) => q.file === p.file))
+          .slice(0, Math.max(0, MAX_CAPTURE_IMAGES - images.length)),
+      ];
+    }
+    error = nextError;
+  }
+
+  function removeFile(target: PendingImage): void {
+    images = images.filter((p) => p.url !== target.url);
+  }
+
+  function handlePaste(e: ClipboardEvent): void {
+    if (submitting) return;
+    const files = imageFilesFromDataTransfer(e.clipboardData);
+    if (files.length === 0) return; // plain-text paste falls through untouched
+    e.preventDefault();
+    void addFiles(files);
+  }
+
+  function handleDragEnter(e: DragEvent): void {
+    if (!e.dataTransfer?.types.includes("Files")) return; // text drags: ignore
+    dragDepth += 1;
+    dragging = true;
+  }
+
+  function handleDragLeave(): void {
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (dragDepth === 0) dragging = false;
+  }
+
+  function handleDrop(e: DragEvent): void {
+    e.preventDefault(); // never let the browser navigate away on a miss-drop
+    dragDepth = 0;
+    dragging = false;
+    if (submitting) return;
+    void addFiles(rawFilesFromDataTransfer(e.dataTransfer));
   }
 
   function acceptMention(m: Mention): void {
@@ -155,9 +249,13 @@
     if (!trimmed || submitting) return;
     submitting = true;
     try {
-      await capture.submit(trimmed);
+      const attachments = await Promise.all(
+        images.map((p) => fileToImageAttachmentInput(p.file)),
+      );
+      await capture.submit(trimmed, attachments.length > 0 ? attachments : undefined);
       if (close) {
         text = "";
+        images = [];
         void inbox.load();
         capture.hide();
         return;
@@ -235,7 +333,15 @@
   onclick={() => capture.hide()}
 >
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-  <div class="aa-overlay-card aa-capture" bind:this={cardEl} onclick={(e) => e.stopPropagation()}>
+  <div
+    class="aa-overlay-card aa-capture{dragging ? " is-dragover" : ""}"
+    bind:this={cardEl}
+    onclick={(e) => e.stopPropagation()}
+    ondragenter={handleDragEnter}
+    ondragleave={handleDragLeave}
+    ondragover={(e) => e.preventDefault()}
+    ondrop={handleDrop}
+  >
     {#if captured.length > 0}
       <div class="aa-capture__captured" aria-live="polite">
         {#each captured as item (item.id)}
@@ -286,6 +392,7 @@
         onkeyup={(e) => syncCaret(e.currentTarget)}
         onclick={(e) => syncCaret(e.currentTarget)}
         onkeydown={handleKeydown}
+        onpaste={handlePaste}
         disabled={submitting}
         aria-label="Capture"
       ></textarea>
@@ -301,6 +408,27 @@
         </svg>
       </button>
     </div>
+
+    {#if images.length > 0}
+      <div class="aa-capture__attachments" aria-label="Images to attach">
+        {#each images as p (p.url)}
+          <span class="aa-capture__attachment">
+            <img src={p.url} alt={p.file.name} draggable={false} />
+            <button
+              type="button"
+              class="aa-overlay__close aa-capture__attachment-remove"
+              onclick={() => removeFile(p)}
+              aria-label="Remove {p.file.name}"
+              title="Remove"
+            >
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+              </svg>
+            </button>
+          </span>
+        {/each}
+      </div>
+    {/if}
 
     {#if mention && mentionMatches.length > 0 && mentionPos}
       <div
@@ -347,14 +475,45 @@
           <kbd class="aa-capture__kbd">Esc</kbd> close
         {/if}
       </span>
-      <button
-        type="button"
-        class="aa-capture__save"
-        disabled={!text.trim() || submitting}
-        onclick={() => submit(true)}
-      >
-        Save
-      </button>
+      <div class="aa-capture__actions">
+        <input
+          bind:this={fileEl}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          onchange={(e) => {
+            void addFiles(Array.from(e.currentTarget.files ?? []));
+            e.currentTarget.value = "";
+          }}
+        />
+        <button
+          type="button"
+          class="aa-capture__attach"
+          onclick={() => fileEl?.click()}
+          disabled={images.length >= MAX_CAPTURE_IMAGES || submitting}
+          aria-label="Attach images"
+          title="Attach images (up to {MAX_CAPTURE_IMAGES}, or paste)"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="aa-capture__save"
+          disabled={!text.trim() || submitting}
+          onclick={() => submit(true)}
+        >
+          Save
+        </button>
+      </div>
     </div>
   </div>
 </div>

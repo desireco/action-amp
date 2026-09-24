@@ -578,6 +578,44 @@
   box-shadow: none;
 }
 
+/* The foot's right-side action cluster: attach + Save. */
+.aa-capture__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-xs);
+  flex-shrink: 0;
+}
+
+.aa-capture__attach {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-sm);
+  background: transparent;
+  color: var(--aa-text-3);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.aa-capture__attach:hover:not(:disabled) {
+  color: var(--aa-text);
+  border-color: var(--aa-border-strong);
+}
+
+.aa-capture__attach:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+.aa-capture__attach:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 /* Live preview chips (parsed tokens) */
 .aa-capture__preview {
   display: flex;
@@ -702,6 +740,10 @@
 .aa-capture__hint {
   font-size: var(--aa-text-xs);
   color: var(--aa-text-4);
+  /* Take the leftover foot width and wrap — at 320px the hint must yield to
+     the attach + Save cluster, not collide with it. */
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .aa-capture__kbd {

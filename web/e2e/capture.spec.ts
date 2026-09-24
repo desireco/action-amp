@@ -67,3 +67,109 @@ test("⌘Enter keeps the popover open (rapid-fire); Enter commits and closes", a
   await textarea.press("Enter");
   await expect(dialog).toBeHidden({ timeout: 5_000 });
 });
+
+/** A 1×1 transparent PNG — the smallest valid image the intake accepts. */
+const PNG_1X1 = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+  "base64",
+);
+
+test("attach an image from the capture popover; it lands on the inbox row", async ({
+  page,
+}) => {
+  await loginAs(page, DEV_EMAIL);
+  await page.goto("/inbox");
+  const textarea = await openCapture(page);
+  await textarea.fill("Whiteboard sketch");
+
+  const dialog = page.getByRole("dialog", { name: /quick capture/i });
+  await dialog.locator('input[type="file"]').setInputFiles({
+    name: "sketch.png",
+    mimeType: "image/png",
+    buffer: PNG_1X1,
+  });
+  await expect(dialog.getByRole("img", { name: "sketch.png" })).toBeVisible();
+
+  await textarea.press("Enter");
+  await expect(dialog).toBeHidden({ timeout: 5_000 });
+
+  // The saved item carries the inbox row's media cover — the bytes
+  // round-tripped through the S12 attachment contract.
+  const row = page
+    .locator(".aa-inbox__item", { hasText: "Whiteboard sketch" })
+    .first();
+  await expect(row).toBeVisible({ timeout: 10_000 });
+  await expect(row.locator(".aa-attach-cover")).toBeVisible();
+});
+
+test("a staged image can be removed before saving", async ({ page }) => {
+  await loginAs(page, DEV_EMAIL);
+  await page.goto("/inbox");
+  const textarea = await openCapture(page);
+  await textarea.fill("Receipt to file");
+
+  const dialog = page.getByRole("dialog", { name: /quick capture/i });
+  await dialog.locator('input[type="file"]').setInputFiles({
+    name: "receipt.png",
+    mimeType: "image/png",
+    buffer: PNG_1X1,
+  });
+  await expect(dialog.getByRole("img", { name: "receipt.png" })).toBeVisible();
+  await dialog.getByRole("button", { name: "Remove receipt.png" }).click();
+  await expect(dialog.getByRole("img", { name: "receipt.png" })).toBeHidden();
+  await expect(dialog.getByRole("button", { name: "Attach images" })).toBeEnabled();
+
+  // The capture still saves — text-only again after the removal.
+  await textarea.press("Enter");
+  await expect(dialog).toBeHidden({ timeout: 5_000 });
+});
+
+/** Dispatch a synthetic paste carrying files (screenshots land this way). */
+async function pasteFiles(el: Element, name: string, png: Buffer) {
+  await el.evaluate(
+    (node, { name, bytes }) => {
+      const dt = new DataTransfer();
+      dt.items.add(new File([Uint8Array.from(bytes)], name, { type: "image/png" }));
+      node.dispatchEvent(
+        new ClipboardEvent("paste", {
+          clipboardData: dt,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    },
+    { name, bytes: Array.from(png) },
+  );
+}
+
+/** Dispatch a synthetic plain-text paste (no files on the payload). */
+async function pasteText(el: Element, text: string) {
+  await el.evaluate((node, text) => {
+    const dt = new DataTransfer();
+    dt.setData("text/plain", text);
+    node.dispatchEvent(
+      new ClipboardEvent("paste", {
+        clipboardData: dt,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+  }, text);
+}
+
+test("pasting an image stages it; a plain-text paste stages nothing", async ({
+  page,
+}) => {
+  await loginAs(page, DEV_EMAIL);
+  await page.goto("/inbox");
+  const textarea = await openCapture(page);
+  const dialog = page.getByRole("dialog", { name: /quick capture/i });
+
+  await pasteFiles(textarea, "pasted.png", PNG_1X1);
+  await expect(dialog.getByRole("img", { name: "pasted.png" })).toBeVisible();
+
+  // Text-only payload: the handler steps aside — no extra thumb, no error.
+  await pasteText(textarea, "just words");
+  await expect(dialog.locator(".aa-capture__attachment")).toHaveCount(1);
+  await expect(dialog.getByRole("alert")).toBeHidden();
+});

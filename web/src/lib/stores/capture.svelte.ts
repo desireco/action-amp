@@ -11,6 +11,7 @@
  */
 
 import { client } from "../api";
+import type { CaptureAttachmentInput } from "../capture/files";
 
 export interface ResolverProject {
   id: string;
@@ -59,16 +60,18 @@ class CaptureStore {
   }
 
   /**
-   * Persist a capture. Image attachments are S12 (share target) — the
-   * text-only contract is what the ⌘K surface speaks.
+   * Persist a capture. Optional images ride the S12 attachment contract
+   * (createInboxItem.attachments) — the same wire the share target and the
+   * CLI's --file speak.
    */
-  async submit(text: string): Promise<void> {
+  async submit(text: string, attachments?: CaptureAttachmentInput[]): Promise<void> {
     if (this.submitting) return;
     this.submitting = true;
     try {
       await client.inbox.create({
         text,
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        ...(attachments?.length ? { attachments } : {}),
       });
     } finally {
       this.submitting = false;
