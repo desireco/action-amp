@@ -578,12 +578,59 @@
   box-shadow: none;
 }
 
-/* The foot's right-side action cluster: attach + Save. */
+/* The foot's right-side action cluster: attach + Save. The attach source
+   menu (#13) anchors to it — bottom edge, right-aligned. */
 .aa-capture__actions {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--aa-space-xs);
   flex-shrink: 0;
+}
+
+/* Touch devices' explicit attach sources — the mention dropdown's visual
+   language, opening upward from the attach button. */
+.aa-capture__attach-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  min-width: 204px;
+  padding: 4px;
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-surface);
+  box-shadow: var(--aa-shadow-md);
+  z-index: 10;
+}
+
+.aa-capture__attach-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--aa-radius-sm);
+  background: transparent;
+  color: var(--aa-text);
+  font: inherit;
+  font-size: var(--aa-text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.aa-capture__attach-menu-item svg {
+  color: var(--aa-text-3);
+  flex-shrink: 0;
+}
+
+.aa-capture__attach-menu-item:hover {
+  background: var(--aa-surface-muted);
+}
+
+.aa-capture__attach-menu-item:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: -2px;
 }
 
 .aa-capture__attach {

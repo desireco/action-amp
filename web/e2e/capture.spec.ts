@@ -83,7 +83,7 @@ test("attach an image from the capture popover; it lands on the inbox row", asyn
   await textarea.fill("Whiteboard sketch");
 
   const dialog = page.getByRole("dialog", { name: /quick capture/i });
-  await dialog.locator('input[type="file"]').setInputFiles({
+  await dialog.locator("input.aa-capture__file--gallery").setInputFiles({
     name: "sketch.png",
     mimeType: "image/png",
     buffer: PNG_1X1,
@@ -109,7 +109,7 @@ test("a staged image can be removed before saving", async ({ page }) => {
   await textarea.fill("Receipt to file");
 
   const dialog = page.getByRole("dialog", { name: /quick capture/i });
-  await dialog.locator('input[type="file"]').setInputFiles({
+  await dialog.locator("input.aa-capture__file--gallery").setInputFiles({
     name: "receipt.png",
     mimeType: "image/png",
     buffer: PNG_1X1,
@@ -172,4 +172,60 @@ test("pasting an image stages it; a plain-text paste stages nothing", async ({
   await pasteText(textarea, "just words");
   await expect(dialog.locator(".aa-capture__attachment")).toHaveCount(1);
   await expect(dialog.getByRole("alert")).toBeHidden();
+});
+
+test.describe("touch", () => {
+  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+
+  test("the attach button offers camera and library", async ({ page }) => {
+    await loginAs(page, DEV_EMAIL);
+    await page.goto("/inbox");
+    const textarea = await openCapture(page);
+    const dialog = page.getByRole("dialog", { name: /quick capture/i });
+    const attach = dialog.getByRole("button", { name: "Attach images" });
+
+    // Coarse pointer → the explicit source menu, not the OS picker.
+    await attach.tap();
+    const menu = dialog.getByRole("menu", { name: "Attach images from" });
+    await expect(menu).toBeVisible();
+    await expect(dialog.getByRole("menuitem", { name: "Take photo" })).toBeVisible();
+    await expect(dialog.getByRole("menuitem", { name: "Choose from library" })).toBeVisible();
+
+    // "Take photo" fires the camera input — capture=environment, no multiple.
+    const chooserP = page.waitForEvent("filechooser");
+    await dialog.getByRole("menuitem", { name: "Take photo" }).tap();
+    const chooser = await chooserP;
+    expect(await chooser.element().getAttribute("capture")).toBe("environment");
+    expect(await chooser.element().getAttribute("accept")).toBe("image/*");
+    await chooser.setFiles({ name: "cam.png", mimeType: "image/png", buffer: PNG_1X1 });
+    await expect(dialog.getByRole("img", { name: "cam.png" })).toBeVisible();
+    await textarea.fill("Shot from the field");
+
+    // Esc closes the menu (reopened) without closing the popover.
+    await attach.tap();
+    await expect(menu).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(menu).toBeHidden();
+    await expect(dialog).toBeVisible();
+    await expect(attach).toBeFocused();
+  });
+});
+
+test("on desktop the attach button opens the file picker directly", async ({
+  page,
+}) => {
+  await loginAs(page, DEV_EMAIL);
+  await page.goto("/inbox");
+  await openCapture(page);
+  const dialog = page.getByRole("dialog", { name: /quick capture/i });
+
+  // Fine pointer → no menu, straight to the gallery/files input.
+  const chooserP = page.waitForEvent("filechooser");
+  await dialog.getByRole("button", { name: "Attach images" }).click();
+  const chooser = await chooserP;
+  expect(await chooser.element().getAttribute("capture")).toBeNull();
+  expect(chooser.isMultiple()).toBe(true);
+  await chooser.setFiles({ name: "picker.png", mimeType: "image/png", buffer: PNG_1X1 });
+  await expect(dialog.getByRole("img", { name: "picker.png" })).toBeVisible();
+  await expect(dialog.getByRole("menu", { name: "Attach images from" })).toBeHidden();
 });

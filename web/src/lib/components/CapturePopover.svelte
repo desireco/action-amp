@@ -65,7 +65,11 @@
   let taEl: HTMLTextAreaElement | null = $state(null);
   let cardEl: HTMLDivElement | null = $state(null);
   let fileEl: HTMLInputElement | null = $state(null);
+  let cameraEl: HTMLInputElement | null = $state(null);
+  let attachEl: HTMLButtonElement | null = $state(null);
+  let menuFirstEl: HTMLButtonElement | null = $state(null);
   let images = $state<PendingImage[]>([]);
+  let attachMenu = $state(false);
   let dragging = $state(false);
   // dragenter/dragleave fire per child element — count depth so the
   // highlight stays stable while the drag moves across the card.
@@ -227,6 +231,41 @@
     void addFiles(rawFilesFromDataTransfer(e.dataTransfer));
   }
 
+  /**
+   * The attach affordance splits by pointer type (#13): touch devices get
+   * the explicit source menu (camera vs library — Android PWA pickers skip
+   * the camera and iOS's native sheet isn't guaranteed), pointers go
+   * straight to the file system. On touch, a second tap toggles the menu
+   * closed.
+   */
+  function openAttach(): void {
+    const coarse =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(pointer: coarse)").matches;
+    if (!coarse) {
+      fileEl?.click();
+      return;
+    }
+    attachMenu = !attachMenu;
+    if (attachMenu) void tick().then(() => menuFirstEl?.focus());
+    else attachEl?.focus();
+  }
+
+  function closeAttachMenu(refocus = true): void {
+    attachMenu = false;
+    if (refocus) attachEl?.focus();
+  }
+
+  function chooseCamera(): void {
+    attachMenu = false;
+    cameraEl?.click();
+  }
+
+  function chooseGallery(): void {
+    attachMenu = false;
+    fileEl?.click();
+  }
+
   function acceptMention(m: Mention): void {
     if (!taEl || !mention) return;
     const before = text.slice(0, mention.at);
@@ -318,7 +357,12 @@
 
 <svelte:window
   onkeydown={(e) => {
-    if (e.key === "Escape" && !(mention && mentionMatches.length > 0)) {
+    if (e.key !== "Escape") return;
+    if (attachMenu) {
+      closeAttachMenu();
+      return;
+    }
+    if (!(mention && mentionMatches.length > 0)) {
       capture.hide();
     }
   }}
@@ -336,7 +380,17 @@
   <div
     class="aa-overlay-card aa-capture{dragging ? " is-dragover" : ""}"
     bind:this={cardEl}
-    onclick={(e) => e.stopPropagation()}
+    onclick={(e) => {
+      e.stopPropagation();
+      // Outside-click closes the source menu — but never the same click
+      // that opened it (the bubbling attach-button click) or one inside it.
+      if (
+        attachMenu &&
+        !(e.target instanceof Element && e.target.closest(".aa-capture__actions"))
+      ) {
+        closeAttachMenu(false);
+      }
+    }}
     ondragenter={handleDragEnter}
     ondragleave={handleDragLeave}
     ondragover={(e) => e.preventDefault()}
@@ -475,9 +529,69 @@
           <kbd class="aa-capture__kbd">Esc</kbd> close
         {/if}
       </span>
-      <div class="aa-capture__actions">
+      <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+      <div
+        class="aa-capture__actions"
+        onkeydown={(e) => {
+          // Menu-open Esc must die here: the Shell's global Escape router
+          // would otherwise close the whole popover on the same keydown.
+          if (e.key === "Escape" && attachMenu) {
+            e.stopPropagation();
+            closeAttachMenu();
+          }
+        }}
+      >
+        {#if attachMenu}
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <div
+            class="aa-capture__attach-menu"
+            role="menu"
+            aria-label="Attach images from"
+            onclick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              role="menuitem"
+              class="aa-capture__attach-menu-item"
+              bind:this={menuFirstEl}
+              onclick={chooseCamera}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="1.7" />
+              </svg>
+              Take photo
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              class="aa-capture__attach-menu-item"
+              onclick={chooseGallery}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.7" />
+                <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.7" />
+                <path
+                  d="M21 15l-5-5L5 21"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              Choose from library
+            </button>
+          </div>
+        {/if}
         <input
           bind:this={fileEl}
+          class="aa-capture__file--gallery"
           type="file"
           accept="image/*"
           multiple
@@ -487,13 +601,28 @@
             e.currentTarget.value = "";
           }}
         />
+        <input
+          bind:this={cameraEl}
+          class="aa-capture__file--camera"
+          type="file"
+          accept="image/*"
+          capture="environment"
+          hidden
+          onchange={(e) => {
+            void addFiles(Array.from(e.currentTarget.files ?? []));
+            e.currentTarget.value = "";
+          }}
+        />
         <button
           type="button"
           class="aa-capture__attach"
-          onclick={() => fileEl?.click()}
+          bind:this={attachEl}
+          onclick={openAttach}
           disabled={images.length >= MAX_CAPTURE_IMAGES || submitting}
           aria-label="Attach images"
-          title="Attach images (up to {MAX_CAPTURE_IMAGES}, or paste)"
+          aria-haspopup="menu"
+          aria-expanded={attachMenu}
+          title="Attach images (up to {MAX_CAPTURE_IMAGES}, paste, or drop)"
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path
