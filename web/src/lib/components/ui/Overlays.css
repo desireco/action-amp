@@ -633,6 +633,34 @@
   outline-offset: -2px;
 }
 
+/* The ? sheet (#8) — the token grammar + intake shortcuts, one glance. */
+.aa-capture__help {
+  display: flex;
+  flex-direction: column;
+  gap: var(--aa-space-xs);
+  margin-top: var(--aa-space-sm);
+  padding: var(--aa-space-sm);
+  border: 1px solid var(--aa-border);
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-surface-muted);
+}
+
+.aa-capture__help-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--aa-space-sm);
+  font-size: var(--aa-text-xs);
+  color: var(--aa-text-2);
+}
+
+.aa-capture__help-token {
+  min-width: 64px;
+  font-family: var(--aa-font-mono);
+  font-size: var(--aa-text-xs);
+  font-weight: var(--aa-weight-semibold);
+  color: var(--aa-text);
+}
+
 .aa-capture__attach {
   display: inline-flex;
   align-items: center;

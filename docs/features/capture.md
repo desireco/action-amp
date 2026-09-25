@@ -13,6 +13,14 @@ verified: 2026-09-24
 `⌘Enter` saves + keeps open (rapid-fire). Parsed tokens show as inline chips
 before commit. Lands in the universal Inbox (no lens until triage).
 
+**Typeahead + cheat-sheet** (2026-09-24, #8). `#`, `[[`, and `!` at a word
+start open the shared autocomplete dropdown — projects, the user's lenses,
+and the priority words, filtered as you type (↑/↓ navigate, Enter/Tab
+accept, Esc close). A `?` toggle in the foot reveals the token cheat-sheet:
+the grammar, the bang ladder, and the image-intake paths. The picks stay in
+the text grammar — the parser remains the only brain; prose exclamation
+(`Hello!`) never triggers.
+
 **Images: attach, paste, or drop** (2026-09-24, #7 + #13). The popover's attach
 button splits by pointer type: touch devices get an explicit source menu —
 "Take photo" (`capture="environment"`, the rear camera) and "Choose from
@@ -35,7 +43,7 @@ contract's `text ≥ 1`).
 |---|---|---|
 | `#` | project first, tags after | `#mvp #deep-work`; `#[Q3 Launch] #errands` |
 | `@` | schedule/snooze time | `@today @tomorrow` become calendar schedules; `@tonight` becomes an exact local-time snooze; bare forms + weekday/month forms also work |
-| `!` | priority | `!1/!2/!3`, `!low/!normal/!important/!high`, `!/!!/!!!` |
+| `!` | priority | `!1/!2/!3`, `!low/!normal/!important/!high`; the bang ladder: `!` low · `!!` normal · `!!!` important |
 | `~` | size | `~20m ~1h ~XL`; time tokens map to S/M/L/XL |
 | `[[name]]` | lens override | `[[work]] [[personal]] [[me]] [[studio]]`; resolves on `kind` (seeded) or name (custom); unknown → literal text |
 | *(free text)* | project fallback | resolver can still match project names in the active/inferred lens; whitespace/sentence-boundary, longest wins |

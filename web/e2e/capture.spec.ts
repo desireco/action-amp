@@ -229,3 +229,50 @@ test("on desktop the attach button opens the file picker directly", async ({
   await expect(dialog.getByRole("img", { name: "picker.png" })).toBeVisible();
   await expect(dialog.getByRole("menu", { name: "Attach images from" })).toBeHidden();
 });
+
+test("lens and priority tokens autocomplete like projects", async ({ page }) => {
+  await loginAs(page, DEV_EMAIL);
+  await page.goto("/inbox");
+  const textarea = await openCapture(page);
+  const dialog = page.getByRole("dialog", { name: /quick capture/i });
+
+  // `[[` opens the lens typeahead (the seed guarantees the "Me" lens);
+  // accepting writes the token back into the text.
+  await textarea.fill("Fix login [[");
+  const lensList = dialog.getByRole("listbox", { name: "Lenses" });
+  await expect(lensList).toBeVisible();
+  await expect(lensList.getByRole("option", { name: "Me" })).toBeVisible();
+  await textarea.press("Enter");
+  await expect(textarea).toHaveValue(/Fix login \[\[Me\]\] /);
+
+  // `!i` opens the priority typeahead → important (the ★ preview chip follows).
+  await textarea.pressSequentially(" !i");
+  const prioList = dialog.getByRole("listbox", { name: "Priority" });
+  await expect(prioList).toBeVisible();
+  await expect(prioList.getByRole("option", { name: "important" })).toBeVisible();
+  await textarea.press("Enter");
+  await expect(textarea).toHaveValue(/!important /);
+  await expect(dialog.getByText("★ Important")).toBeVisible();
+});
+
+test("the ? sheet shows the token cheat-sheet; Esc closes only it", async ({
+  page,
+}) => {
+  await loginAs(page, DEV_EMAIL);
+  await page.goto("/inbox");
+  const textarea = await openCapture(page);
+  const dialog = page.getByRole("dialog", { name: /quick capture/i });
+
+  await dialog.getByRole("button", { name: "Capture shortcuts" }).click();
+  const sheet = dialog.getByRole("note", { name: "Capture shortcuts" });
+  await expect(sheet).toBeVisible();
+  await expect(sheet.getByText(/! low · !! normal · !!! important/)).toBeVisible();
+  await expect(sheet.getByText(/#project/)).toBeVisible();
+
+  // Esc from the textarea closes the sheet, not the popover — the panel Esc
+  // must die before the Shell's global Escape router sees it.
+  await textarea.focus();
+  await page.keyboard.press("Escape");
+  await expect(sheet).toBeHidden();
+  await expect(dialog).toBeVisible();
+});

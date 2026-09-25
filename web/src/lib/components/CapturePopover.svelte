@@ -51,7 +51,7 @@
 
   interface Mention {
     name: string;
-    kind: "project";
+    kind: "project" | "lens" | "priority";
     lensName?: string | null;
   }
 
@@ -70,6 +70,7 @@
   let menuFirstEl: HTMLButtonElement | null = $state(null);
   let images = $state<PendingImage[]>([]);
   let attachMenu = $state(false);
+  let showHelp = $state(false);
   let dragging = $state(false);
   // dragenter/dragleave fire per child element — count depth so the
   // highlight stays stable while the drag moves across the card.
@@ -85,13 +86,29 @@
   // Detect an open `#`-mention at the caret.
   const mention: MentionState | null = $derived(detectMention(text, caretIndex));
 
-  // The autocomplete source: STANDARD projects only (lists are not capture
-  // targets), deduped by lowercased name, startsWith(query), max 8.
+  // The autocomplete source, by token kind: `#` → STANDARD projects only
+  // (lists are not capture targets), `[[` → the user's lenses, `!` → the
+  // priority words. Deduped by lowercased name, startsWith(query), max 8.
   const mentionMatches: Mention[] = $derived.by(() => {
     if (!mention) return [];
     const q = mention.query;
     const seen = new Set<string>();
     const picks: Mention[] = [];
+    if (mention.kind === "lens") {
+      for (const l of capture.lenses) {
+        const key = l.name.toLowerCase();
+        if (seen.has(key) || !key.startsWith(q)) continue;
+        seen.add(key);
+        picks.push({ name: l.name, kind: "lens" });
+      }
+      return picks.slice(0, MENTION_LIMIT);
+    }
+    if (mention.kind === "priority") {
+      for (const p of ["important", "normal", "low"]) {
+        if (p.startsWith(q)) picks.push({ name: p, kind: "priority" });
+      }
+      return picks;
+    }
     for (const p of capture.projects) {
       if (p.type === "SIMPLE_LIST") continue;
       const key = p.name.toLowerCase();
@@ -156,6 +173,7 @@
     caretIndex = 0;
     mentionSel = 0;
     mentionPos = null;
+    closePanels();
     if (taEl) taEl.style.height = "auto";
     void tick().then(() => taEl?.focus());
   }
@@ -246,6 +264,7 @@
       fileEl?.click();
       return;
     }
+    showHelp = false;
     attachMenu = !attachMenu;
     if (attachMenu) void tick().then(() => menuFirstEl?.focus());
     else attachEl?.focus();
@@ -254,6 +273,12 @@
   function closeAttachMenu(refocus = true): void {
     attachMenu = false;
     if (refocus) attachEl?.focus();
+  }
+
+  /** Close the popover's inline panels (source menu / shortcuts sheet). */
+  function closePanels(): void {
+    attachMenu = false;
+    showHelp = false;
   }
 
   function chooseCamera(): void {
@@ -266,11 +291,25 @@
     fileEl?.click();
   }
 
+  /** The ? sheet and the source menu never stack — opening one closes the other. */
+  function toggleHelp(): void {
+    showHelp = !showHelp;
+    attachMenu = false;
+  }
+
   function acceptMention(m: Mention): void {
     if (!taEl || !mention) return;
     const before = text.slice(0, mention.at);
     const after = text.slice(mention.end);
-    const inserted = /\s/.test(m.name) ? `#[${m.name}] ` : `#${m.name} `;
+    // Each family writes its own token: #project, [[lens]], !priority.
+    const inserted =
+      m.kind === "lens"
+        ? `[[${m.name}]] `
+        : m.kind === "priority"
+          ? `!${m.name} `
+          : /\s/.test(m.name)
+            ? `#[${m.name}] `
+            : `#${m.name} `;
     const next = before + inserted + after;
     const newCaret = (before + inserted).length;
     text = next;
@@ -317,6 +356,19 @@
   }
 
   function handleKeydown(e: KeyboardEvent): void {
+    // An open panel (source menu / shortcuts sheet) takes the first Esc —
+    // and it must die here, before the Shell's global Escape router closes
+    // the whole popover on the same keydown.
+    if (
+      e.key === "Escape" &&
+      (attachMenu || showHelp) &&
+      !(mention && mentionMatches.length > 0)
+    ) {
+      e.preventDefault();
+      e.stopPropagation();
+      closePanels();
+      return;
+    }
     if (mention && mentionMatches.length > 0) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -362,6 +414,10 @@
       closeAttachMenu();
       return;
     }
+    if (showHelp) {
+      showHelp = false;
+      return;
+    }
     if (!(mention && mentionMatches.length > 0)) {
       capture.hide();
     }
@@ -382,13 +438,13 @@
     bind:this={cardEl}
     onclick={(e) => {
       e.stopPropagation();
-      // Outside-click closes the source menu — but never the same click
-      // that opened it (the bubbling attach-button click) or one inside it.
+      // Outside-click closes the inline panels — but never the same click
+      // that opened them (the bubbling button clicks) or one inside them.
       if (
-        attachMenu &&
+        (attachMenu || showHelp) &&
         !(e.target instanceof Element && e.target.closest(".aa-capture__actions"))
       ) {
-        closeAttachMenu(false);
+        closePanels();
       }
     }}
     ondragenter={handleDragEnter}
@@ -489,9 +545,9 @@
         class="aa-capture__mention"
         style="top: {mentionPos.top}px; left: {mentionPos.left}px;"
         role="listbox"
-        aria-label="Projects"
+        aria-label={mention.kind === "project" ? "Projects" : mention.kind === "lens" ? "Lenses" : "Priority"}
       >
-        {#each mentionMatches as m, i (m.name)}
+        {#each mentionMatches as m, i (m.kind + m.name)}
           <button
             type="button"
             role="option"
@@ -503,9 +559,11 @@
             }}
             onmouseenter={() => (mentionSel = i)}
           >
-            <span class="aa-capture__mention-mark" aria-hidden="true">▣</span>
+            <span class="aa-capture__mention-mark" aria-hidden="true">
+              {m.kind === "project" ? "▣" : m.kind === "lens" ? "◎" : "!"}
+            </span>
             <span class="aa-capture__mention-name">{m.name}</span>
-            {#if m.lensName && m.lensName !== activeLensName}
+            {#if m.kind === "project" && m.lensName && m.lensName !== activeLensName}
               <span class="aa-capture__mention-lens">{m.lensName}</span>
             {/if}
           </button>
@@ -516,6 +574,35 @@
     {#if parsed && (parsed.parsedScheduledDate || parsed.parsedSnoozedUntil || parsed.parsedPriority || parsed.parsedSize || parsed.parsedLens || parsed.parsedProject || parsed.parsedTags.length > 0)}
       <div class="aa-capture__preview">
         {@render parsedChips(parsed, "preview")}
+      </div>
+    {/if}
+
+    {#if showHelp}
+      <div class="aa-capture__help" role="note" aria-label="Capture shortcuts">
+        <div class="aa-capture__help-row">
+          <span class="aa-capture__help-token">#project</span>
+          <span>file under a project — typeahead</span>
+        </div>
+        <div class="aa-capture__help-row">
+          <span class="aa-capture__help-token">@date</span>
+          <span>@today · @tomorrow · @friday · @oct 12</span>
+        </div>
+        <div class="aa-capture__help-row">
+          <span class="aa-capture__help-token">!priority</span>
+          <span>! low · !! normal · !!! important — typeahead</span>
+        </div>
+        <div class="aa-capture__help-row">
+          <span class="aa-capture__help-token">~size</span>
+          <span>~20m · ~1h · ~XL</span>
+        </div>
+        <div class="aa-capture__help-row">
+          <span class="aa-capture__help-token">[[lens]]</span>
+          <span>switch context — typeahead</span>
+        </div>
+        <div class="aa-capture__help-row">
+          <span class="aa-capture__help-token">images</span>
+          <span>attach (camera · library) · paste ⌘V · drop</span>
+        </div>
       </div>
     {/if}
 
@@ -533,11 +620,16 @@
       <div
         class="aa-capture__actions"
         onkeydown={(e) => {
-          // Menu-open Esc must die here: the Shell's global Escape router
+          // Panel-open Esc must die here: the Shell's global Escape router
           // would otherwise close the whole popover on the same keydown.
           if (e.key === "Escape" && attachMenu) {
             e.stopPropagation();
             closeAttachMenu();
+            return;
+          }
+          if (e.key === "Escape" && showHelp) {
+            e.stopPropagation();
+            showHelp = false;
           }
         }}
       >
@@ -613,6 +705,25 @@
             e.currentTarget.value = "";
           }}
         />
+        <button
+          type="button"
+          class="aa-capture__attach aa-capture__help-toggle"
+          onclick={toggleHelp}
+          aria-label="Capture shortcuts"
+          aria-expanded={showHelp}
+          title="Shortcuts and tokens"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="9.1" stroke="currentColor" stroke-width="1.7" />
+            <path
+              d="M9.2 9a2.9 2.9 0 0 1 5.68.9c0 1.93-2.88 2.42-2.88 4.1"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+            />
+            <path d="M11.95 17.5h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
         <button
           type="button"
           class="aa-capture__attach"
