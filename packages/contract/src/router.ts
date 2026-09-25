@@ -24,6 +24,7 @@ import { billingContract } from "./billing.js"; // S16 (temporary gate wiring)
 import { adminContract } from "./admin.js"; // S17 (temporary gate wiring)
 import { feedbackContract } from "./feedback.js"; // S-review: feedback submit
 import { ritualsContract } from "./rituals.js"; // Rituals (habits layer, docs/specs/rituals.md)
+import { tagsContract } from "./tags.js"; // #16 — tag list/link/unlink
 
 export const contractRouter = {
   tasks: tasksContract,
@@ -41,6 +42,7 @@ export const contractRouter = {
   billing: billingContract, // S16 (temporary gate wiring)
   admin: adminContract, // S17 (temporary gate wiring)
   feedback: feedbackContract, // S-review: feedback submit
-  rituals: ritualsContract, // Rituals (habits layer)
+  rituals: ritualsContract,
+  tags: tagsContract, // #16 // Rituals (habits layer)
   // Next surfaces nest here, one line each (inbox, projects, goals, …):
 };

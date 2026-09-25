@@ -594,6 +594,11 @@ export interface TaskUpdateInput {
   startedAt?: Date | null;
   scheduledDate?: Date | null;
   snoozedUntil?: Date | null;
+  /** Tag link edits (#16) — inline connect/disconnect on the update write. */
+  tags?: {
+    connect?: { id: string }[];
+    disconnect?: { id: string }[];
+  };
 }
 
 export interface TaskSessionCreateInput {
@@ -865,8 +870,21 @@ export interface TagUpsertArgs {
   select: { id: true };
 }
 
+export interface TagFindManyArgs {
+  where: { userId: string };
+  orderBy?: { name: "asc" }[];
+  select: { id: true; name: true; color: true };
+}
+
+export interface TagRow {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export interface TagDelegate {
   upsert(args: TagUpsertArgs): Promise<{ id: string }>;
+  findMany(args: TagFindManyArgs): Promise<TagRow[]>;
 }
 
 /** Project patch — `undefined` leaves a field untouched, `null` clears it. */

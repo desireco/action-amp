@@ -27,6 +27,7 @@ import { billingProcedures } from "./procedures/billing.js"; // S16 (slice wirin
 import { adminProcedures } from "./procedures/admin.js"; // S17 (slice wiring — docs/plans/slices/s17-wiring.md)
 import { feedbackProcedures } from "./procedures/feedback.js"; // S-review: feedback submit
 import { ritualsProcedures } from "./procedures/rituals.js"; // Rituals (habits layer, docs/specs/rituals.md)
+import { tagsProcedures } from "./procedures/tags.js"; // #16 — tag list/link/unlink
 import { notificationsProcedures } from "./push.js"; // S12 (slice wiring — docs/plans/slices/s12-s14-wiring.md)
 
 export type { ApiContext } from "./context.js";
@@ -53,5 +54,6 @@ export const router = {
   admin: adminProcedures, // S17 (slice wiring)
   feedback: feedbackProcedures, // S-review: feedback submit
   rituals: ritualsProcedures, // Rituals (habits layer)
+  tags: tagsProcedures, // #16
   notifications: notificationsProcedures, // S12 (slice wiring)
 };

@@ -8,6 +8,7 @@
   import { client } from "../../../lib/api";
   import ConfirmDialog from "../../../lib/components/ui/ConfirmDialog.svelte";
   import PropertyChips from "../../../lib/components/ui/PropertyChips.svelte";
+  import TagsRow from "../../../lib/components/tasks/TagsRow.svelte";
   import {
     taskPropertyFields,
     cycle,
@@ -59,6 +60,20 @@
       .catch(() => (task = null))
       .finally(() => (loading = false));
   });
+
+  /** Refetch after a tag add/remove (#16) — the cache-invalidation point. */
+  function refetchTask() {
+    void client.tasks
+      .task({ id: permalink })
+      .then((row) => {
+        task = row;
+        if (row) {
+          description = row.description;
+          content = row.content ?? "";
+        }
+      })
+      .catch(() => undefined);
+  }
 
   const canSave = $derived(
     !!task &&
@@ -303,6 +318,15 @@
           ></textarea>
         </section>
       {/if}
+
+      <section class="aa-task-edit__tags" aria-label="Task tags">
+        <TagsRow
+          taskId={task.id}
+          tags={task.tags}
+          editable={!task.isDone}
+          onChanged={() => void refetchTask()}
+        />
+      </section>
 
       {#if saveError}<p class="aa-task-edit__err">{saveError}</p>{/if}
 

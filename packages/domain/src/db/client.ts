@@ -179,6 +179,8 @@ import type {
   EnumNullableFilter,
   DateTimeNullableFilter,
   TagDelegate,
+  TagFindManyArgs,
+  TagRow,
   TagUpsertArgs,
   PushSubscriptionDelegate,
   UserCountArgs,
@@ -1235,6 +1237,22 @@ function createTaskDelegate(db: DomainDb): TaskDelegate {
       .returning();
     const row = rows[0];
     assertFound(row, "Task");
+    // #16 — tag link edits ride the same logical write (the S3 create
+    // convention): connect is idempotent (join PK), disconnect only removes
+    // the link — the Tag row itself always survives.
+    if (args.data.tags?.connect?.length) {
+      await db
+        .insert(tagToTask)
+        .values(args.data.tags.connect.map((t) => ({ a: t.id, b: row.id })))
+        .onConflictDoNothing();
+    }
+    if (args.data.tags?.disconnect?.length) {
+      for (const t of args.data.tags.disconnect) {
+        await db
+          .delete(tagToTask)
+          .where(and(eq(tagToTask.a, t.id), eq(tagToTask.b, row.id)));
+      }
+    }
     if (row !== undefined && "select" in args && args.select) {
       if ("goalId" in args.select) {
         return { id: row.id, projectId: row.projectId, goalId: row.goalId };
@@ -2501,6 +2519,13 @@ function createInboxAttachmentDelegate(db: DomainDb): InboxAttachmentDelegate {
 
 function createTagDelegate(db: DomainDb): TagDelegate {
   return {
+    findMany: async (args: TagFindManyArgs): Promise<TagRow[]> => {
+      return await db
+        .select({ id: tag.id, name: tag.name, color: tag.color })
+        .from(tag)
+        .where(eq(tag.userId, args.where.userId))
+        .orderBy(asc(tag.name));
+    },
     upsert: async (args: TagUpsertArgs): Promise<{ id: string }> => {
       const existing = await db
         .select({ id: tag.id })

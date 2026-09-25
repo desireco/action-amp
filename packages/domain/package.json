@@ -26,7 +26,8 @@
     "./shared/time": "./src/shared/time/temporal.ts",
     "./shared/permalinks": "./src/shared/permalinks.ts",
     "./shared/time/browser": "./src/shared/time/temporal.browser.ts",
-    "./shared/capture": "./src/shared/capture/parse.ts"
+    "./shared/capture": "./src/shared/capture/parse.ts",
+    "./tags": "./src/tags/index.ts"
   },
   "scripts": {
     "build": "tsc",

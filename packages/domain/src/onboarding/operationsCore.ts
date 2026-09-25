@@ -24,6 +24,7 @@
 import { uniquePermalink } from "../shared/permalinks.js";
 import type { Entities } from "../db/seam.js";
 import type { OnboardingStage } from "../db/types.js";
+import { seedReservedTagsCore } from "../tags/operationsCore.js";
 
 // Each default lens carries an identity color key (see styles/tokens.css
 // `--aa-lens-*` palette). Work and Me are ordinary Lens names. `isIncluded`
@@ -213,6 +214,11 @@ export async function ensureOnboardedCore(
       });
     }
   }
+
+  // Reserved tag names (#16, spec docs/specs/tag-management.md) — the moment
+  // matcher's vocabulary. Idempotent upserts; a user's own same-named tag
+  // keeps its color. Runs on every app load like the lens/project seeds.
+  await seedReservedTagsCore(entities, { userId });
 
   return { createdLenses: created };
 }

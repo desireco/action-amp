@@ -212,3 +212,5 @@ export type {
   RitualInterval,
   RitualMood,
 } from "./rituals.js";
+// #16 — tags fragment: additive exports of the slice's own schemas only.
+export { tagsContract } from "./tags.js";
