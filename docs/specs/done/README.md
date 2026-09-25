@@ -24,6 +24,7 @@ for "what does it do today"; the spec here is the *why and how it was decided*.
 | `goal-planning.md` | Goal/Project lifecycle + ordering | 2026-07-05 |
 | `in-app-feedback.md` | Loudspeaker → modal → admin email | 2026-06-30 |
 | `legal-pages-oauth.md` | OAuth-ready privacy/terms | 2026-06-27 |
+| `rituals.md` | Rituals — recurring rhythms + optional reflection (Pro) | 2026-09-19 |
 | `social-auth-google.md` | Google OAuth (code-side; client config pending) | 2026-06-27 |
 | `task-notes-completion-log.md` | TaskUpdate.kind (NOTE \| COMPLETED) + thread | 2026-07-05 |
 | `triage-classify-step.md` | Classify → Spec → Ready (replaces Context + Type) | 2026-07-04 |

@@ -69,4 +69,4 @@ stored — no next-occurrence column, no materialization job.
 `api/src/procedures/rituals.ts`, `api/src/cli/routes.ts` (ritual section),
 `web/src/lib/components/rituals/`, `web/src/lib/stores/rituals.svelte.ts`,
 `cli/src/commands/ritual.ts`, `web/e2e/rituals.spec.ts` +
-`api/src/seed-rituals.ts`. Spec: `docs/specs/rituals.md`.
+`api/src/seed-rituals.ts`. Spec: `docs/specs/done/rituals.md`.

@@ -267,7 +267,7 @@ Planning exists in every Lens (all Lenses are life areas).
   materialized, and no overdue state exists. Pausing hides a Ritual
   without deleting its history. Rituals are not a capture or triage
   destination — they are structure chosen deliberately. Spec:
-  `docs/specs/rituals.md`.
+  `docs/specs/done/rituals.md`.
 - **Someday** lives here (pending confirmation — §5): items with no date and no
   commitment, kept for "when I'm ready." A planning concept, not a working one.
 - Creating Projects and Goals happens here (not in triage — triage _files into_
@@ -670,8 +670,8 @@ Lens` while skipping the standalone lens picker by default. See
       Rituals — one calm line, only when at least one is due.
     - **No task-level recurrence.** Rituals are the product's one recurrence
       concept; a "Repeats" property on Task is a non-goal with a defined
-      revisit trigger (see `docs/specs/rituals.md` Non-goals).
-    Spec: `docs/specs/rituals.md`.
+      revisit trigger (see `docs/specs/done/rituals.md` Non-goals).
+    Spec: `docs/specs/done/rituals.md`.
 
 ## 6. Document cascade
 
@@ -723,7 +723,7 @@ The following were updated to match this doc (commit alongside):
   2026-08-18) — Simple lists move from Lens type to Project type
   (`LensType` removed), matching §5.13. `DATA-MODEL.md`, `TRIAGE.md`,
   `PAGES.md`, and the feature catalog follow in its cascade.
-- `docs/specs/rituals.md` + the §2.3/§2.4/§2.5/§5.14 additions (added
+- `docs/specs/done/rituals.md` + the §2.3/§2.4/§2.5/§5.14 additions (added
   2026-09-15) — the Rituals layer per §5.14. `DATA-MODEL.md`, `PAGES.md`,
   `docs/features/`, and `docs/PRICING.md` follow at build time.
 
