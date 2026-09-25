@@ -670,6 +670,15 @@
     font-weight: var(--aa-weight-semibold);
     text-align: center;
     margin: 0;
+    /* Long links wrap instead of blowing the layout out (#17) — the inbox
+       row-text's rule — and clamp so one URL can't push the ring and
+       actions off-screen; the full title lives on the task page. */
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   .aa-title.strike {
     text-decoration: line-through;
