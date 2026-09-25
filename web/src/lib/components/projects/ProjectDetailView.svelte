@@ -48,6 +48,8 @@
   let confirmComplete = $state(false);
   /** The row whose circle was clicked — completion confirms first (#12 review). */
   let confirmTaskCompleteId = $state<string | null>(null);
+  /** Optional "how did it go?" note gathered in the confirm dialog. */
+  let completionOutcome = $state("");
   let confirmArchive = $state(false);
   let confirmDelete = $state(false);
   let deleteTargetProjectId = $state("");
@@ -588,20 +590,43 @@
   {/if}
 </div>
 
-<!-- Task complete confirm (#12 review — the circle never fires blind). -->
+<!-- Task complete confirm (#12 review — the circle never fires blind;
+     the optional "how did it go?" note mirrors focus mode's composer). -->
 {#if confirmTaskCompleteId}
   {@const pending = activeTasks.find((t) => t.id === confirmTaskCompleteId) ?? (project?.tasks ?? []).find((t) => t.id === confirmTaskCompleteId)}
   <ConfirmDialog
     title="Complete this task?"
-    message={pending ? `“${pending.description}” moves to this project's Done section. You can un-complete it any time.` : "It moves to this project's Done section. You can un-complete it any time."}
     confirmLabel="Complete task"
     onConfirm={() => {
       const id = confirmTaskCompleteId;
+      const note = completionOutcome.trim();
       confirmTaskCompleteId = null;
-      if (id) void projects.toggleTaskDone(id);
+      completionOutcome = "";
+      if (id) void projects.toggleTaskDone(id, note || undefined);
     }}
-    onClose={() => (confirmTaskCompleteId = null)}
-  />
+    onClose={() => {
+      confirmTaskCompleteId = null;
+      completionOutcome = "";
+    }}
+  >
+    {#snippet message()}
+      <p class="aa-confirm__meta">
+        {pending ? `“${pending.description}” moves to this project's Done section. You can un-complete it any time.` : "It moves to this project's Done section. You can un-complete it any time."}
+      </p>
+      <label class="aa-confirm__outcome">
+        <span class="aa-confirm__outcome-label">
+          How did it go?
+          <span class="aa-confirm__outcome-hint">optional</span>
+        </span>
+        <textarea
+          class="aa-confirm__outcome-input"
+          rows={2}
+          bind:value={completionOutcome}
+          placeholder="A note for the logbook — what happened, what's next."
+        ></textarea>
+      </label>
+    {/snippet}
+  </ConfirmDialog>
 {/if}
 
 <!-- Complete confirm (lifecycle confirm copy, webapp parity). -->

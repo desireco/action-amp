@@ -333,9 +333,10 @@ class ProjectsStore {
     if (this.detail) await this.loadDetail(this.detail.permalink);
   }
 
-  /** Complete/un-complete a task inline (#12) — the detail reloads after. */
-  async toggleTaskDone(taskId: string) {
-    await tasksRpc.toggleDone({ id: taskId });
+  /** Complete/un-complete a task inline (#12) — the detail reloads after.
+   *  The optional outcome note rides the same op (review 2026-09-24). */
+  async toggleTaskDone(taskId: string, outcome?: string) {
+    await tasksRpc.toggleDone({ id: taskId, outcome });
     if (this.detail) await this.loadDetail(this.detail.permalink);
   }
 

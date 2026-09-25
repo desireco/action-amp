@@ -139,18 +139,35 @@ test("task rows complete, un-complete, and decline inline (#12)", async ({
   await page.goto(`/projects/${created.permalink}`);
   await expect(page.getByRole("heading", { name: projectName })).toBeVisible({ timeout: 10_000 });
 
+  const taskName = uniqueName("Ship the trailer");
   await page.getByRole("button", { name: /add task/i }).click();
-  await page.getByPlaceholder(/what needs doing/i).fill("Ship the trailer");
+  await page.getByPlaceholder(/what needs doing/i).fill(taskName);
   await page.getByRole("button", { name: /^create$/i }).click();
-  const row = page.locator(".aa-project__row").filter({ hasText: "Ship the trailer" });
+  const row = page.locator(".aa-project__row").filter({ hasText: taskName });
   await expect(row).toBeVisible({ timeout: 10_000 });
 
-  // The circle confirms before completing (#12 review) — never fires blind.
+  // The circle confirms before completing (#12 review) — never fires blind,
+  // and the dialog gathers an optional "how did it go?" note.
   await row.getByRole("button", { name: "Mark complete" }).click();
-  await expect(page.getByText("Complete this task?")).toBeVisible();
-  await page.getByRole("button", { name: "Complete task" }).click();
+  const confirmDialog = page.getByRole("dialog", { name: "Complete this task?" });
+  await expect(confirmDialog).toBeVisible();
+  await confirmDialog
+    .getByPlaceholder(/note for the logbook/i)
+    .fill("Went smoothly, cut approved");
+  await confirmDialog.getByRole("button", { name: "Complete task" }).click();
   await expect(row).toHaveClass(/aa-project__row--done/);
   await expect(row.getByRole("button", { name: "Completed" })).toBeVisible();
+
+  // The note rode the completion op onto the task (project → task id → detail).
+  const projectDetail = await apiPost<{
+    tasks: { id: string; description: string }[];
+  }>(page, "/rpc/projects/detail", { id: created.id });
+  const taskId = projectDetail?.tasks.find((t) => t.description === taskName)?.id;
+  expect(taskId).toBeTruthy();
+  const detail = await apiPost<{ outcome: string | null }>(page, "/rpc/tasks/task", {
+    id: taskId,
+  });
+  expect(detail?.outcome).toBe("Went smoothly, cut approved");
 
   // Un-complete is instant (safe direction) — back to open.
   await row.getByRole("button", { name: "Completed" }).click();
