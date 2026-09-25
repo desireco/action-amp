@@ -109,27 +109,49 @@
   // "logged-in but everything says not authenticated" invalid state
   // impossible.
   let authChecked = $state(false);
+  /** The boot read failed for good (after retries) — the veil offers Try
+   *  again instead of an eternal checkmark (#18). */
+  let bootError = $state(false);
 
   let booted = false;
-  $effect(() => {
-    if (booted) return;
+  async function boot(): Promise<void> {
     booted = true;
+    bootError = false;
     applyTheme(preferredTheme());
     lenses.hydrateStoredLens();
-    void (async () => {
-      const u = await fetchAuthUser();
-      user = u;
-      if (!u) {
-        void goto("/login", { replaceState: true });
-        authChecked = true;
-        return;
+    // A transient boot failure (mobile cold-start network, the API
+    // restarting mid-deploy) used to reject this body unhandled and wedge
+    // the session veil forever — reload "fixed" it. Retry the session read,
+    // then surface a retryable error state instead of an eternal checkmark.
+    let u: AuthUser | null = null;
+    for (let attempt = 0; ; attempt++) {
+      try {
+        u = await fetchAuthUser();
+        break;
+      } catch {
+        if (attempt >= 2) {
+          bootError = true;
+          return;
+        }
+        await new Promise((resolve) => setTimeout(resolve, attempt === 0 ? 600 : 1800));
       }
-      await lenses.loadAppData();
-      // The Now tile + Do handoff need the running-task summary on every app
-      // entry (PWA reopen lands off-Do), not just on the Do page's loads.
-      void whatNow.syncNow();
+    }
+    user = u;
+    if (!u) {
+      void goto("/login", { replaceState: true });
       authChecked = true;
-    })();
+      return;
+    }
+    await lenses.loadAppData();
+    // The Now tile + Do handoff need the running-task summary on every app
+    // entry (PWA reopen lands off-Do), not just on the Do page's loads.
+    void whatNow.syncNow();
+    authChecked = true;
+  }
+
+  $effect(() => {
+    if (booted) return;
+    void boot();
   });
 
   const path = $derived(page.url.pathname);
@@ -493,7 +515,21 @@
 {#if !authChecked || !user}
   <div class="auth-veil" role="status" aria-live="polite">
     <div class="auth-veil__mark" aria-hidden="true">✓</div>
-    <p class="auth-veil__text">Checking your session…</p>
+    {#if bootError}
+      <p class="auth-veil__text">Couldn't reach ActionAmp.</p>
+      <button
+        type="button"
+        class="auth-veil__retry"
+        onclick={() => {
+          authChecked = false;
+          void boot();
+        }}
+      >
+        Try again
+      </button>
+    {:else}
+      <p class="auth-veil__text">Checking your session…</p>
+    {/if}
   </div>
 {:else}
 <div class="aa-app" class:is-in-settings={inSettings} class:is-in-focus={inFocus}>

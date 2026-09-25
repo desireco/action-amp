@@ -832,6 +832,31 @@
   color: var(--aa-text);
 }
 
+/* The boot-failure escape hatch (#18): a quiet button, teal = the action. */
+.auth-veil__retry {
+  margin-top: var(--aa-space-md, 16px);
+  padding: 8px 20px;
+  border: 1px solid var(--aa-border-strong);
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-surface);
+  color: var(--aa-text);
+  font: inherit;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+  cursor: pointer;
+  transition: border-color 0.15s var(--aa-ease-out), background 0.15s var(--aa-ease-out);
+}
+
+.auth-veil__retry:hover {
+  border-color: var(--aa-teal);
+  background: var(--aa-teal-soft);
+}
+
+.auth-veil__retry:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
 @keyframes auth-veil-pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.08); }
