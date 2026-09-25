@@ -36,11 +36,11 @@ const termSkills = [
   `<span class="tt-out">  aa-capture              Capture thoughts, links, reminders, and screenshots</span>`,
   `<span class="tt-out">  aa-now                  Answer "what should I work on right now"</span>`,
   `<span class="tt-out">  aa-triage               Process inbox items into tasks, projects, or the archive</span>`,
-  `<span class="tt-out">  …                       plus aa-complete, aa-review, aa-setup, aa-hygiene</span>`,
+  `<span class="tt-out">  …                       plus aa-breakdown, aa-research, aa-complete, aa-review, aa-setup, aa-hygiene</span>`,
   `<span class="tt-gap"></span>`,
   `<span class="tt-p">$</span> <span class="tt-c">actionamp skills install</span>`,
-  `<span class="tt-out">Install 7 ActionAmp skills into Claude Code (~/.claude/skills)? [Y/n] y</span>`,
-  `<span class="tt-out">Installed 7 skill(s) into Claude Code: aa-capture, aa-complete, aa-hygiene, aa-now, aa-review, aa-setup, aa-triage, _shared</span>`,
+  `<span class="tt-out">Install 9 ActionAmp skills into Claude Code (~/.claude/skills)? [Y/n] y</span>`,
+  `<span class="tt-out">Installed 9 skill(s) into Claude Code: aa-breakdown, aa-capture, aa-complete, aa-hygiene, aa-now, aa-research, aa-review, aa-setup, aa-triage, _shared</span>`,
 ].join("\n");
 
 const groups = [
@@ -210,10 +210,11 @@ const groups = [
         <h2 id="cli-skills-title">Bring your agent along</h2>
       </div>
       <p class="aa-cli-section-lede">
-        The CLI ships with seven agent skills — short, tested instructions
+        The CLI ships with nine agent skills — short, tested instructions
         that teach an AI harness how to run the loop with you: capture a
-        thought, triage the inbox, ask what's next, close work cleanly, tidy
-        up, and review the week.
+        thought, triage the inbox, ask what's next, break a goal into
+        steps, research a task, close work cleanly, tidy up, and review
+        the week.
       </p>
       <div class="aa-cli-agents">
         <div>

@@ -11,6 +11,8 @@ to manage a user's ActionAmp todos through the `actionamp` CLI.
 | `aa-now` | "what should I work on", "plan my day", "what's next" |
 | `aa-capture` | "add …", "remind me to …", shares a link or screenshot |
 | `aa-triage` | "go through my inbox", "what's in my inbox" |
+| `aa-breakdown` | "break down this goal", "plan out \<goal\>" |
+| `aa-research` | "research this", "find resources for X" |
 | `aa-complete` | "done with X", "finished it", "that's handled" |
 | `aa-review` | "how was my week", "what did I accomplish" |
 | `aa-hygiene` | "clean up my tasks", "audit my projects" |
