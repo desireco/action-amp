@@ -145,12 +145,14 @@ test("task rows complete, un-complete, and decline inline (#12)", async ({
   const row = page.locator(".aa-project__row").filter({ hasText: "Ship the trailer" });
   await expect(row).toBeVisible({ timeout: 10_000 });
 
-  // Complete inline — the row reads done, the button flips to Completed.
+  // The circle confirms before completing (#12 review) — never fires blind.
   await row.getByRole("button", { name: "Mark complete" }).click();
+  await expect(page.getByText("Complete this task?")).toBeVisible();
+  await page.getByRole("button", { name: "Complete task" }).click();
   await expect(row).toHaveClass(/aa-project__row--done/);
   await expect(row.getByRole("button", { name: "Completed" })).toBeVisible();
 
-  // Un-complete — back to open.
+  // Un-complete is instant (safe direction) — back to open.
   await row.getByRole("button", { name: "Completed" }).click();
   await expect(row).not.toHaveClass(/aa-project__row--done/);
   await expect(row.getByRole("button", { name: "Mark complete" })).toBeVisible();

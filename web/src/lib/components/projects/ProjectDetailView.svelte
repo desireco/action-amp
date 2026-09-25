@@ -46,6 +46,8 @@
   let moveTargets = $state<{ id: string; name: string; color: string | null }[]>([]);
   let moveError: string | null = $state(null);
   let confirmComplete = $state(false);
+  /** The row whose circle was clicked — completion confirms first (#12 review). */
+  let confirmTaskCompleteId = $state<string | null>(null);
   let confirmArchive = $state(false);
   let confirmDelete = $state(false);
   let deleteTargetProjectId = $state("");
@@ -502,7 +504,10 @@
                     >
                       <CompletionCircle
                         filled={task.isDone}
-                        onclick={() => void projects.toggleTaskDone(task.id)}
+                        onclick={() =>
+                          task.isDone
+                            ? void projects.toggleTaskDone(task.id)
+                            : (confirmTaskCompleteId = task.id)}
                       />
                       <div
                         class="aa-project__row-main"
@@ -582,6 +587,22 @@
     {/if}
   {/if}
 </div>
+
+<!-- Task complete confirm (#12 review — the circle never fires blind). -->
+{#if confirmTaskCompleteId}
+  {@const pending = activeTasks.find((t) => t.id === confirmTaskCompleteId) ?? (project?.tasks ?? []).find((t) => t.id === confirmTaskCompleteId)}
+  <ConfirmDialog
+    title="Complete this task?"
+    message={pending ? `“${pending.description}” moves to this project's Done section. You can un-complete it any time.` : "It moves to this project's Done section. You can un-complete it any time."}
+    confirmLabel="Complete task"
+    onConfirm={() => {
+      const id = confirmTaskCompleteId;
+      confirmTaskCompleteId = null;
+      if (id) void projects.toggleTaskDone(id);
+    }}
+    onClose={() => (confirmTaskCompleteId = null)}
+  />
+{/if}
 
 <!-- Complete confirm (lifecycle confirm copy, webapp parity). -->
 {#if confirmComplete && project}
