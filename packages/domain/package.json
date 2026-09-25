@@ -24,7 +24,9 @@
     "./feedback": "./src/feedback/index.ts",
     "./onboarding": "./src/onboarding/index.ts",
     "./shared/time": "./src/shared/time/temporal.ts",
-    "./shared/permalinks": "./src/shared/permalinks.ts"
+    "./shared/permalinks": "./src/shared/permalinks.ts",
+    "./shared/time/browser": "./src/shared/time/temporal.browser.ts",
+    "./shared/capture": "./src/shared/capture/parse.ts"
   },
   "scripts": {
     "build": "tsc",
