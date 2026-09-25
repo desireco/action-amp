@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@actionamp/contract": "workspace:*",
+    "@actionamp/domain": "workspace:*",
     "fuse.js": "^7.5.0"
   },
   "devDependencies": {

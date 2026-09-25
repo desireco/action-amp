@@ -1,7 +1,8 @@
 /**
  * Date-format helpers — ported from webapp/src/shared/dateFormat.ts (S2/S3
- * surfaces: inbox row meta, triage chips). Runs over the local Temporal shim
- * (../capture/temporal-shim) for the calendar math.
+ * surfaces: inbox row meta, triage chips). Runs over the domain package's
+ * browser Temporal binding (@actionamp/domain/shared/time/browser) for the
+ * calendar math.
  */
 import {
   Temporal,
@@ -10,7 +11,7 @@ import {
   instantFrom,
   plainDateFromValue,
   systemTimeZone,
-} from "../capture/temporal-shim";
+} from "@actionamp/domain/shared/time/browser";
 
 /** Relative elapsed time — "just now" / "N min ago" / "N hr ago" / "N days ago". */
 export function formatAgo(date: Date | string): string {

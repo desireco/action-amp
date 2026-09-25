@@ -2,8 +2,8 @@
  * S12 — the share-target client: field composition + the IndexedDB pending
  * stash + image-file helpers. Browser-side twin of the canonical server copy
  * in api/src/share.ts (`composeShareCapture`/`composeShareText`) —
- * CLIENT COPY, keep in sync (the capture-parser precedent,
- * web/src/lib/capture/parse.ts).
+ * CLIENT COPY, keep in sync (a remaining hand-synced twin; the
+ * capture-parser copy this used to cite was deleted by #15).
  *
  * Pending-share mechanics ported from webapp/src/share/pendingShare.ts: the
  * service worker intercepts same-origin `POST /share` (the manifest's

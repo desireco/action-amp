@@ -53,10 +53,11 @@ hint; remaining `#` tokens are tags. The resolver bridges capture to lens
 through a matched project's `lensId`. `@` token precedence beats project-inferred
 lens.
 
-**Files.** `web/src/lib/components/CapturePopover.svelte`;
-`web/src/lib/capture/parse.ts`; `createInboxItem` in
-`packages/contract/src/inbox.ts`; `web/src/lib/capture/files.ts` (client
-image intake).
+**Files.** `web/src/lib/components/CapturePopover.svelte`; the parser in
+`packages/domain/src/shared/capture/parse.ts` (web consumes it via a thin
+wrapper, `web/src/lib/capture/parse.ts`, over the domain's browser Temporal
+binding — #15); `createInboxItem` in `packages/contract/src/inbox.ts`;
+`web/src/lib/capture/files.ts` (client image intake).
 
 **Done?** Shipped: thought → inbox, keyboard-only, grammar v2 parser
 (v2.1: `@` lens), resolver, `[[ ]]` alias, `InboxItem.parsedLens`, and image

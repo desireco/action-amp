@@ -115,12 +115,13 @@ Ensures the dev user's Me lens + General/Briefs (STANDARD) + Groceries
   race one database (repro: run capture+triage specs together without the
   flag). `bunx playwright test e2e/{capture,triage,triage-dispatch}.spec.ts
   --workers=1` is the verified green invocation.
-- **Client parser sync**: `apps/web/src/lib/capture/parse.ts` is a verbatim
-  client copy of the domain parser (apps/web depends only on the contract).
-  If apps/web ever gains a `@actionamp/domain` dependency, drop the copy and
-  import the domain module; `temporal-shim.ts` (a minimal Temporal for
-  browsers without the global) goes with it. The 66-case domain suite is the
-  contract both copies satisfy.
+- **Client parser sync** — **DONE 2026-09-24 (#15)**: web gained the
+  `@actionamp/domain` dependency exactly as prescribed here. The client copy
+  and `temporal-shim.ts` are gone; `lib/capture/parse.ts` is now a thin
+  wrapper that first installs the domain's browser Temporal binding
+  (`@actionamp/domain/shared/time/browser`), then re-exports the domain
+  parser. The domain suite (run against BOTH Temporal bindings by
+  `parse.test.ts` + `parse.browser.test.ts`) is the single contract.
 
 ## 6. Gates (as verified)
 
