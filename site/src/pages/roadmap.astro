@@ -12,6 +12,9 @@ import "../styles/roadmap.css";
 const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:5174";
 
 const shipped = [
+  { date: "Sep 25", trunk: "CLI orchestration skills", summary: "The agent bundle reached nine skills with its last two members. aa-breakdown turns a goal into the smallest workable structure of projects and tasks; aa-research gathers the useful web sources for a task or project and files them as resources with a why-it-matters note each. Both propose a plan and wait for approval before touching anything — the agent works the loop, you make the calls." },
+  { date: "Sep 24", trunk: "Capture grammar v2.1 + tags", summary: "@ now selects a lens at capture time (emails and boundaries respected), tags became first-class on the task detail page with reserved names seeded for new accounts, long links wrap cleanly in the focus title, and a failed session read retries instead of wedging the boot screen." },
+  { date: "Sep 19", trunk: "Rituals", summary: "The habits layer: recurring personal rhythms — daily, weekdays, weekly, or every N days — surface as a quiet section on Today grouped by interval. Checking one off invites an optional reflection: how did it go? Pro-only. No streaks, no scores, no overdue state — a rhythm is not a task." },
   { date: "Sep 15", trunk: "CLI agent skills + npm publish", summary: "The CLI now ships with seven agent skills (capture, complete, hygiene, now, review, setup, triage) plus shared guardrails. actionamp skills list shows them; actionamp skills install copies them into detected AI harnesses. Published to npm as actionamp 0.2.0 — npm install -g actionamp is the real install path." },
   { date: "Sep 15", trunk: "CLI page on the marketing site", summary: "A public /cli page explains the terminal client: the three-command start (install, browser login, now), the command reference grouped by the decision loop, --json output and agent skills for scripts, and the Pro membership note. Linked from the footer, the pricing Pro bullet, llms.txt, and the sitemap." },
   { date: "Aug 16", trunk: "Capture image intake", summary: "Paste or drop images into the capture popover (⌘V or drag-and-drop). Inbox rows show a media cover for captured images. The triage card displays images large with a swipe carousel, and clicking opens a lightbox. The CLI can download inbox images to disk." },
@@ -70,8 +73,8 @@ const shipped = [
         growing up.
       </p>
       <div class="aa-roadmap-stats">
-        <span class="aa-roadmap-stat"><strong>38</strong> features shipped</span>
-        <span class="aa-roadmap-stat"><strong>1,101</strong> commits</span>
+        <span class="aa-roadmap-stat"><strong>43</strong> features shipped</span>
+        <span class="aa-roadmap-stat"><strong>1,190</strong> commits</span>
         <span class="aa-roadmap-stat">Jun 16 → today</span>
       </div>
     </header>
@@ -125,15 +128,22 @@ const shipped = [
             <li class="aa-roadmap-item">
               <span class="aa-roadmap-dot aa-roadmap-dot--progress" />
               <span>
-                <span class="aa-roadmap-item-name">Simple-list Lenses</span><br />
-                <span class="aa-roadmap-item-note">Flat checklists that take direct entries or captured Inbox items through one-step triage, without the full project/goal machinery. In verification.</span>
+                <span class="aa-roadmap-item-name">Member onboarding + workshops</span><br />
+                <span class="aa-roadmap-item-note">Yearly Pro includes a goal-setting workshop. Founding members receive personal onboarding plus a goal-setting workshop.</span>
               </span>
             </li>
             <li class="aa-roadmap-item">
-              <span class="aa-roadmap-dot aa-roadmap-dot--progress" />
+              <span class="aa-roadmap-dot aa-roadmap-dot--done" />
               <span>
-                <span class="aa-roadmap-item-name">Member onboarding + workshops</span><br />
-                <span class="aa-roadmap-item-note">Yearly Pro includes a goal-setting workshop. Founding members receive personal onboarding plus a goal-setting workshop.</span>
+                <span class="aa-roadmap-item-name">CLI orchestration skills</span><br />
+                <span class="aa-roadmap-item-note">Nine aa-* agent skills installable into any AI harness; goal-breakdown and task-research close the set.</span>
+              </span>
+            </li>
+            <li class="aa-roadmap-item">
+              <span class="aa-roadmap-dot aa-roadmap-dot--done" />
+              <span>
+                <span class="aa-roadmap-item-name">Rituals</span><br />
+                <span class="aa-roadmap-item-note">Recurring rhythms — daily to every N days — as a quiet Today section with an optional reflection on check-off. Shipped Sep 19.</span>
               </span>
             </li>
             <li class="aa-roadmap-item">
@@ -215,8 +225,8 @@ const shipped = [
             <li class="aa-roadmap-item">
               <span class="aa-roadmap-dot aa-roadmap-dot--planned" />
               <span>
-                <span class="aa-roadmap-item-name">Habits and recurring activities</span><br />
-                <span class="aa-roadmap-item-note">Daily, weekly, and custom routines that appear when relevant and roll forward after completion, without streaks, guilt, or a pile of duplicate tasks.</span>
+                <span class="aa-roadmap-item-name">Focus engine v2</span><br />
+                <span class="aa-roadmap-item-note">Sharper selection of what's next, built on a validated task matcher. The engine decides; you stay the decider.</span>
               </span>
             </li>
             <li class="aa-roadmap-item">

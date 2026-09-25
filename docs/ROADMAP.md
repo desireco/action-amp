@@ -1,7 +1,7 @@
 # Roadmap
 
 <!-- Discover owns this file. Build reads only. -->
-<!-- Active product work, 2026-08-16: a large release bundle is complete on main and most items are shipped: guided first-run practice, Goal rationale in Next/Focus/CLI, command palette + search, weekly/monthly review rhythms (check-in/review separation), focus session recording, this Week planning, project lifecycle controls (completed/archived/move between Lenses), admin user management, welcome experience, route rename /app→/do, capture image intake (paste/drop, inbox media covers, triage gallery, lightbox, CLI download), share target polish, and Pro CLI gating. Simple lists shipped as a Project type (2026-08-18, supersedes the Lens-type design). This is not production deployment evidence. 2026-09-15: the marketing site gained a public /cli page explaining the terminal client (three-command start, command reference, --json/agent skills, Pro note), linked from the footer, pricing, llms.txt, and the sitemap. CLI 0.2.0 published to npm with bundled agent skills (seven aa-* skills + _shared guardrails; `actionamp skills list/install`); `npm install -g actionamp` is now the real install path. -->
+<!-- Active product work, 2026-08-16: a large release bundle is complete on main and most items are shipped: guided first-run practice, Goal rationale in Next/Focus/CLI, command palette + search, weekly/monthly review rhythms (check-in/review separation), focus session recording, this Week planning, project lifecycle controls (completed/archived/move between Lenses), admin user management, welcome experience, route rename /app→/do, capture image intake (paste/drop, inbox media covers, triage gallery, lightbox, CLI download), share target polish, and Pro CLI gating. Simple lists shipped as a Project type (2026-08-18, supersedes the Lens-type design). This is not production deployment evidence. 2026-09-15: the marketing site gained a public /cli page explaining the terminal client (three-command start, command reference, --json/agent skills, Pro note), linked from the footer, pricing, llms.txt, and the sitemap. CLI 0.2.0 published to npm with bundled agent skills (nine aa-* skills + _shared guardrails; `actionamp skills list/install`; breakdown + research added 2026-09-25); `npm install -g actionamp` is now the real install path. -->
 <!-- Last reviewed: 2026-08-03 (CLI/API access is now Pro-only: Free accounts cannot issue or use personal API tokens; existing tokens stop working when an account returns to Free. CLI package publishing is in progress. Resources shipped — project-owned links/notes CRUD on the Project detail page + `actionamp resource list/add/update/delete` CLI + `/api/cli/resource/*` PAT routes, all backed by a pure `resources/operationsCore.ts`. NO `TaskResource` join — references are markdown links in Task Context, per the task-fields reversal; NO delete-with-impact flow, just simple delete. Passwordless magic-link email sign-in shipped (six-digit code OR sign-in link, 10-min TTL, rate-limited, atomic consume; replaces passwords; localhost uses fixed `111111` for QA). Share target extended: structured capture props (`title`/`content`/`sourceUrl` on `InboxItem`) + up to four image attachments (≤5MB each) + CLI `capture` with `--title/--content/--source-url/--file`. Task Outcome (`Task.outcome`) shipped — task-fields now complete. WONT_DO task state shipped — non-destructive decline for post-triage tasks, surfaces in the Logbook with Restore. Earlier 07-26: CLI lens management shipped. Earlier 07-23: Admin dashboard + feedback-triage system. Earlier 07-22: ActionAmp CLI terminal client shipped.) -->
 
 ---
@@ -316,11 +316,12 @@ normal release verification and publish path.
    formerly-deferred `cli-comments-resources` (Resources are now full CLI
    CRUD). `capture` also gained shared-content + image flags
    (`--title/--content/--source-url/--file`, 2026-07-29). **Phase 2 (the
-   orchestration skills) shipped 2026-09-15** as seven bundled `aa-*` skills
+   orchestration skills) shipped 2026-09-15** as bundled `aa-*` skills
    via `actionamp skills list/install` (§Shipped
    `cli-agent-skills-npm-publish`); the `cli-skills` spec closed 2026-09-25
-   with `goal-breakdown` + `task-research` carved out as opportunistic board
-   cards. **Pro-only
+   and its two unbuilt skills — `goal-breakdown` + `task-research` — were
+   built the same day (board cards #19/#20, commit 934c936): the bundle is
+   now nine skills. **Pro-only
    access shipped 2026-08-03:** Free accounts cannot issue CLI/PAT tokens or
    use `/api/cli/*`; active Pro and Founding members can. **CLI package
    publishing is in progress**; do not publish customer install guidance until
@@ -404,9 +405,11 @@ normal release verification and publish path.
   PickerSheet on every viewport. Pure `web/` work — no backend changes.
   E2e at 375×667 in `web/e2e/mobile-goals.spec.ts`; review:
   `docs/reviews/mobile-goal-management.md`.
-- **cli-agent-skills-npm-publish** (`shipped` 2026-09-15) — the CLI now
-  bundles agent skills: seven `aa-*` skills (capture, complete, hygiene,
-  now, review, setup, triage) built from the repo-root `skills/` directory
+- **cli-agent-skills-npm-publish** (`shipped` 2026-09-15; nine skills
+  2026-09-25) — the CLI now
+  bundles agent skills: nine `aa-*` skills (capture, complete, hygiene,
+  now, review, setup, triage + goal-breakdown and task-research added
+  2026-09-25) built from the repo-root `skills/` directory
   (source of truth), copied into the npm package by `prepublishOnly` and
   surfaced through `actionamp skills list` / `actionamp skills install`,
   which copies them (never symlinks) into detected AI harnesses — pi,
@@ -615,8 +618,9 @@ normal release verification and publish path.
   publishing is in progress**; public install documentation follows the
   release, not before it. The `cli-skills` spec closed 2026-09-25 — its
   skills shipped 2026-09-15 as the bundled `aa-*` set (see
-  `cli-agent-skills-npm-publish` below), with `goal-breakdown` +
-  `task-research` filed as opportunistic board cards. Specs:
+  `cli-agent-skills-npm-publish` below), with the two unbuilt skills
+  (`goal-breakdown`, `task-research`) built the same day (934c936).
+  Specs:
   `docs/specs/cli.md` (umbrella),
   `cli-pat-plumbing.md`, `cli-package.md`, `cli-skills.md`.
 - **pwa-installable + session-resilience + web-push + version-banner**
