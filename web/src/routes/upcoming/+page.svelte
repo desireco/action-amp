@@ -1,9 +1,11 @@
 <script lang="ts">
-  // Upcoming — the lens-scoped bench: status=UPCOMING, client-side buckets
-  // in fixed order (Overdue / This week / Next week / Later / Snoozed /
-  // Unscheduled), overdue recovery banner, Today cross-link. Layout ported
-  // from webapp UpcomingPage.css: 840px column, lens-tinted hero card,
-  // groups as surface cards (mirrors Today's treatment).
+  // Upcoming — the GLOBAL bench (WORKFLOW.md §2.4/§5.1, revised 2026-09-24
+  // #10): every accessible lens's status=UPCOMING tasks in one surface, lens
+  // pills on rows, an All / per-lens filter. Client-side buckets in fixed
+  // order (Overdue / This week / Next week / Later / Snoozed / Unscheduled),
+  // overdue recovery banner, Today cross-link. Layout ported from webapp
+  // UpcomingPage.css: 840px column, lens-tinted hero card, groups as surface
+  // cards (mirrors Today's treatment).
   import TaskRow from "../../lib/components/TaskRow.svelte";
   import GroupedList from "../../lib/components/ui/GroupedList.svelte";
   import CountLinkButton from "../../lib/components/ui/CountLinkButton.svelte";
@@ -12,32 +14,43 @@
   import RowEditor from "../../lib/components/RowEditor.svelte";
   import { untrack } from "svelte";
   import { lists } from "../../lib/stores/lists.svelte";
-  import { lenses } from "../../lib/stores/lenses.svelte";
   import { calendarDayDifference, currentPlainDate, plainDateFromValue } from "../../lib/taskView";
-  import type { TaskListRowDto } from "../../lib/dto";
+  import type { TaskLensListRowDto, TaskListRowDto } from "../../lib/dto";
 
-  // The load effect tracks ONLY the shell's active lens: switching lenses in
-  // the switcher re-runs it, re-scoping the bench (lists.scopedLensId mirrors
-  // it). The loads run untracked — they read+write other store state, which
-  // must not re-trigger the effect.
+  // One load on mount — the bench is universal (#10): the shell's lens
+  // switcher no longer re-scopes this page. The load runs untracked (it
+  // reads+writes other store state, which must not re-trigger the effect).
   $effect(() => {
-    void lenses.activeLensId;
     untrack(() => {
       lists.loaded = false;
-      void lists.loadLensList("UPCOMING");
+      void lists.loadUpcomingAll();
       void lists.loadAppData();
     });
   });
 
   let activeTaskId = $state<string | null>(null);
   let isUnscheduling = $state(false);
+  /** The context filter (#10): null = All lenses. */
+  let lensFilter = $state<string | null>(null);
 
   const tasks = $derived(lists.upcoming);
+  const lensOptions = $derived(lists.appData?.lenses ?? []);
+  const filtered = $derived(
+    lensFilter ? tasks.filter((t) => t.lens?.id === lensFilter) : tasks,
+  );
+  const lensCounts = $derived.by(() => {
+    const counts = new Map<string, number>();
+    for (const t of tasks) {
+      if (!t.lens) continue;
+      counts.set(t.lens.id, (counts.get(t.lens.id) ?? 0) + 1);
+    }
+    return counts;
+  });
   const isLoading = $derived(lists.loading && !lists.loaded);
   const lensId = $derived(lists.scopedLensId);
 
   const groups = $derived.by(() => {
-    const buckets: Record<string, TaskListRowDto[]> = {
+    const buckets: Record<string, TaskLensListRowDto[]> = {
       Overdue: [],
       "This week": [],
       "Next week": [],
@@ -46,7 +59,7 @@
       Unscheduled: [],
     };
     const today = currentPlainDate();
-    for (const t of tasks) {
+    for (const t of filtered) {
       if (!t.scheduledDate) {
         if (t.snoozedUntil) {
           buckets["Snoozed"]!.push(t);
@@ -64,7 +77,7 @@
     return Object.entries(buckets).map(([label, items]) => ({ key: label, label, items }));
   });
 
-  const count = $derived(tasks.length);
+  const count = $derived(filtered.length);
   const overdueCount = $derived(groups.find((g) => g.key === "Overdue")?.items.length ?? 0);
 
   const heroSubtitle = $derived.by(() => {
@@ -75,10 +88,20 @@
   });
 
   async function unscheduleOverdue() {
-    if (!lensId || overdueCount === 0) return;
+    // The bench spans lenses (#10): clear the overdue in every lens the
+    // current filter shows.
+    const overdueLensIds = [
+      ...new Set(
+        groups
+          .find((g) => g.key === "Overdue")
+          ?.items.map((t) => t.lens?.id)
+          .filter((id): id is string => !!id) ?? [],
+      ),
+    ];
+    if (overdueLensIds.length === 0) return;
     isUnscheduling = true;
     try {
-      await lists.unscheduleOverdue();
+      await lists.unscheduleOverdue(overdueLensIds);
     } finally {
       isUnscheduling = false;
     }
@@ -94,6 +117,30 @@
     </div>
     <CountLinkButton label="Today" count={lists.appData?.counts.today} to="/today" />
   </header>
+
+  {#if !isLoading && lensOptions.length > 1}
+    <div class="aa-upcoming__filter" role="radiogroup" aria-label="Filter by lens">
+      <button
+        type="button"
+        role="radio"
+        aria-checked={lensFilter === null}
+        class="aa-filter-chip {lensFilter === null ? "active" : ""}"
+        onclick={() => (lensFilter = null)}
+      >All · {tasks.length}</button>
+      {#each lensOptions as l (l.id)}
+        {@const n = lensCounts.get(l.id) ?? 0}
+        {#if n > 0}
+          <button
+            type="button"
+            role="radio"
+            aria-checked={lensFilter === l.id}
+            class="aa-filter-chip {lensFilter === l.id ? "active" : ""}"
+            onclick={() => (lensFilter = l.id)}
+          >{l.name} · {n}</button>
+        {/if}
+      {/each}
+    </div>
+  {/if}
 
   {#if overdueCount > 0}
     <div class="aa-upcoming__overdue-recovery" role="status">
@@ -125,17 +172,18 @@
   {:else}
     <GroupedList className="aa-upcoming__list" groups={groups} headingLevel={2} groupClass={(label) => (label === "Overdue" ? "aa-grouped__group--overdue" : undefined)}>
       {#snippet renderItem(item)}
-        {@const task = item as TaskListRowDto}
+        {@const task = item as TaskLensListRowDto}
         <TaskRow
           task={task}
+          showLens={lists.showLensPill}
           expanded={activeTaskId === task.id}
           onOpen={() => (activeTaskId = activeTaskId === task.id ? null : task.id)}
         >
           {#snippet below()}
             <RowEditor
               task={task}
-              lensId={lensId}
-              onSaved={() => lists.loadLensList("UPCOMING")}
+              lensId={task.lens?.id ?? lensId}
+              onSaved={() => lists.loadUpcomingAll()}
             />
           {/snippet}
         </TaskRow>
@@ -149,6 +197,45 @@
   .aa-upcoming {
     width: min(100%, 840px);
     margin: 0 auto;
+  }
+
+  /* ---- Context filter (#10): quiet chips; teal = selection (the system
+     state color). Only lenses with bench work render. ---- */
+  .aa-upcoming__filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--aa-space-xs);
+    margin-bottom: var(--aa-space-md);
+  }
+
+  :global(.aa-filter-chip) {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    border: 1px solid var(--aa-border);
+    border-radius: var(--aa-radius-full);
+    background: var(--aa-surface);
+    color: var(--aa-text-2);
+    font: inherit;
+    font-size: var(--aa-text-sm);
+    cursor: pointer;
+    transition: border-color 0.15s var(--aa-ease-out), color 0.15s var(--aa-ease-out);
+  }
+
+  :global(.aa-filter-chip:hover) {
+    border-color: var(--aa-border-strong);
+    color: var(--aa-text);
+  }
+
+  :global(.aa-filter-chip:focus-visible) {
+    outline: 2px solid var(--aa-teal);
+    outline-offset: 2px;
+  }
+
+  :global(.aa-filter-chip.active) {
+    border-color: var(--aa-teal);
+    color: var(--aa-teal);
+    background: var(--aa-teal-soft);
   }
 
   /* ---- Bench header — a lens-tinted surface card (mirrors Today's hero). */

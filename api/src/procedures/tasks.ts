@@ -31,6 +31,7 @@ import {
   getTaskData,
   getTasksData,
   getTodayTasksData,
+  getUpcomingAllData,
   getWeekTasksData,
   getDoneTodayData,
   getTopTaskData,
@@ -450,6 +451,12 @@ const tasksTask = ORPC.tasks.task.handler(async ({ context, input }) => {
 const tasksToday = ORPC.tasks.today.handler(async ({ context }) => {
   const user = requireUser(context);
   return await getTodayTasksData(context.entities, { user, userId: user.id })
+    .then((rows) => rows.map(toLensListRowDto));
+});
+
+const tasksUpcomingAll = ORPC.tasks.upcomingAll.handler(async ({ context }) => {
+  const user = requireUser(context);
+  return await getUpcomingAllData(context.entities, { user, userId: user.id })
     .then((rows) => rows.map(toLensListRowDto));
 });
 
@@ -909,6 +916,7 @@ export const tasksProcedures = {
   // S4 — lists + writes:
   today: tasksToday,
   week: tasksWeek,
+  upcomingAll: tasksUpcomingAll,
   doneToday: tasksDoneToday,
   byLens: tasksByLens,
   appData: tasksAppData,

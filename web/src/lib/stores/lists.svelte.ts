@@ -1,10 +1,11 @@
 /**
  * Lists store — the S4 surfaces' data client (Today / Week / Done-today /
- * lens-scoped Upcoming + Someday), F9a class-singleton pattern.
+ * the global Upcoming bench + lens-scoped Someday), F9a class-singleton
+ * pattern.
  *
- * Lens scoping rides the shell's active lens (lenses.activeLensId, first lens
- * as fallback): the LensSwitcher's switch re-points the id and the /upcoming
- * + /someday screens re-run their loads off it.
+ * Upcoming is universal like Today (#10, 2026-09-24): one load across every
+ * accessible lens, filtered client-side. Someday stays lens-scoped off the
+ * shell's active lens (lenses.activeLensId, first lens as fallback).
  */
 import { client } from "../api";
 import type { TaskLensListRowDto, TaskListRowDto, AppData, TaskStatus } from "../dto";
@@ -19,8 +20,8 @@ class ListsStore {
   today = $state<TaskLensListRowDto[]>([]);
   week = $state<TaskLensListRowDto[]>([]);
   doneToday = $state<TaskLensListRowDto[]>([]);
-  /** Lens-scoped bench / parked lists, keyed by status. */
-  upcoming = $state<TaskListRowDto[]>([]);
+  /** The global bench (all accessible lenses) + the lens-scoped parked list. */
+  upcoming = $state<TaskLensListRowDto[]>([]);
   someday = $state<TaskListRowDto[]>([]);
   loading = $state(false);
   loaded = $state(false);
@@ -74,22 +75,37 @@ class ListsStore {
     }
   }
 
+  /** The global bench: every accessible lens's UPCOMING (#10). */
+  async loadUpcomingAll() {
+    this.loading = true;
+    this.error = null;
+    try {
+      if (!this.appData) await this.loadAppData();
+      this.upcoming = await client.tasks.upcomingAll();
+      this.loaded = true;
+    } catch (e) {
+      this.error = e instanceof Error ? e.message : String(e);
+    } finally {
+      this.loading = false;
+    }
+  }
+
   async loadLensList(status: "UPCOMING" | "SOMEDAY") {
+    // The bench went global (#10): route Upcoming through the global load.
+    if (status === "UPCOMING") return this.loadUpcomingAll();
     this.loading = true;
     this.error = null;
     try {
       if (!this.appData) await this.loadAppData();
       const lensId = this.scopedLensId;
       if (!lensId) {
-        if (status === "UPCOMING") this.upcoming = [];
-        else this.someday = [];
+        this.someday = [];
         return;
       }
       const rows = await client.tasks.byLens({ lensId, status, isDone: false });
       // A switch superseded this fetch: let the newer load win the write.
       if (lensId !== this.scopedLensId) return;
-      if (status === "UPCOMING") this.upcoming = rows;
-      else this.someday = rows;
+      this.someday = rows;
       this.loaded = true;
     } catch (e) {
       this.error = e instanceof Error ? e.message : String(e);
@@ -108,10 +124,12 @@ class ListsStore {
     await this.refreshAll();
   }
 
-  async unscheduleOverdue() {
-    const lensId = this.scopedLensId;
-    if (!lensId) return;
-    await client.tasks.unscheduleOverdue({ lensId });
+  /** Clear overdue scheduledDates in the given lenses (the bench spans
+   * lenses — #10; the op stays per-lens, the page batches). */
+  async unscheduleOverdue(lensIds: string[]) {
+    for (const lensId of lensIds) {
+      await client.tasks.unscheduleOverdue({ lensId });
+    }
     await this.refreshAll();
   }
 
@@ -120,7 +138,7 @@ class ListsStore {
   async refreshAll() {
     const jobs: Promise<void>[] = [this.loadAppData().then(() => undefined)];
     if (this.today.length > 0 || this.loaded) jobs.push(this.loadTodayPreserving());
-    if (this.upcoming.length > 0) jobs.push(this.loadLensList("UPCOMING"));
+    if (this.upcoming.length > 0) jobs.push(this.loadUpcomingAll());
     if (this.someday.length > 0) jobs.push(this.loadLensList("SOMEDAY"));
     await Promise.all(jobs);
   }

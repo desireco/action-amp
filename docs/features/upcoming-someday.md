@@ -13,12 +13,17 @@ verified: 2026-07-10
 forward-planning view of `status=UPCOMING` tasks. Lives under the **Plan**
 nav section (promoted 2026-07-05; same-page Today swap toggle dropped later
 that day — one surface was clearer than two; see `WORKFLOW.md` §5.1).
+**Universal since 2026-09-24 (#10):** the bench spans every accessible lens
+(WORKFLOW.md §2.4/§5.1 revised) — rows carry their lens pill, an All /
+per-lens filter chip row narrows the view, and the shell's lens switcher no
+longer re-scopes this page (Someday stays lens-scoped). The overdue
+recovery clears schedules across the lenses the current filter shows.
 Calendar-scheduled tasks are bucketed as Overdue (rose) / This week / Next
 week / Later. Exact-time deferrals appear as Snoozed; tasks with neither
 `scheduledDate` nor `snoozedUntil` appear as Unscheduled.
 When dates have gone stale, the Overdue section exposes one **Unschedule N
-overdue** recovery action. It clears schedules only from incomplete Upcoming tasks
-in the active Lens; tasks stay on the bench and land in Unscheduled. Each row
+overdue** recovery action. It clears schedules only from incomplete Upcoming
+tasks; tasks stay on the bench and land in Unscheduled. Each row
 can move to **Today** or **Someday**; Someday clears its date.
 
 **Cross-links, not a toggle.** Today's hero links to `/do/upcoming`

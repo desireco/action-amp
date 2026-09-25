@@ -339,6 +339,45 @@ export async function getTodayTasksData(
 }
 
 // ----------------------------------------------------------------
+// Read: global Upcoming bench (across all accessible lenses — #10)
+// ----------------------------------------------------------------
+// The bench is universal like Today (WORKFLOW.md §2.4/§5.1, revised
+// 2026-09-24): every accessible lens's not-yet-committed tasks in one
+// surface; the page filters by lens client-side. Same accessible-lens-set
+// entitlement as Today, same per-row lens include for the provenance pill.
+export async function getUpcomingAllData(
+  entities: TaskLensListEntities & LensListLookup,
+  {
+    user,
+    userId,
+  }: { user: Parameters<typeof resolveAccessibleLenses>[1]; userId: string },
+): Promise<TaskLensListResult> {
+  const accessible = await resolveAccessibleLenses(
+    { Lens: entities.Lens },
+    user,
+    userId,
+  );
+  const lensIds = accessible.map((l) => l.id);
+  if (lensIds.length === 0) return [];
+
+  return await entities.Task.findMany({
+    where: {
+      userId,
+      lensId: { in: lensIds },
+      status: "UPCOMING",
+      isDone: false,
+    },
+    orderBy: [{ order: "asc" }, { priority: "desc" }, { createdAt: "asc" }],
+    include: {
+      tags: true,
+      project: { select: { id: true, name: true } },
+      goal: { select: { id: true, name: true } },
+      lens: { select: { id: true, name: true, color: true } },
+    },
+  });
+}
+
+// ----------------------------------------------------------------
 // Read: global Week schedule (Monday–Sunday, across accessible lenses)
 // ----------------------------------------------------------------
 // Week is a scheduling horizon, not another status. It intentionally includes

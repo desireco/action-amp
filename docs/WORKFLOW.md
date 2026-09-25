@@ -135,14 +135,18 @@ Triage drains the universal Inbox across every Lens.
     It sits **outside
     `todayCap`** — rhythms never compete with the day's commitments — and
     renders nothing when no Ritual is due.
-- **One Upcoming surface.** `UPCOMING` is the Task status for the bench —
-  what's not yet committed to Today but still on the radar. It lives on a
-  single page, `/do/upcoming` under Planning (locked 2026-07-05; re-reversed
-  later that day to drop the same-page swap toggle that briefly coexisted
-  with it). Calendar-scheduled tasks are date-bucketed (Overdue / This week /
-  Next week / Later); exact-time deferrals appear as Snoozed; tasks with
-  neither value appear as Unscheduled. The page keeps rose-tinted overdue,
-  inline notes, and per-row promote-to-Today.
+- **One Upcoming surface — universal, like Today** (revised 2026-09-24, #10).
+  `UPCOMING` is the Task status for the bench — what's not yet committed to
+  Today but still on the radar. It lives on a single page, `/do/upcoming`
+  under Planning (locked 2026-07-05; re-reversed later that day to drop the
+  same-page swap toggle that briefly coexisted with it). **The bench spans
+  every accessible lens** (§5.11's Today rule, extended): rows carry their
+  lens pill, and an All / per-lens filter narrows the view — the shell's lens
+  switcher no longer re-scopes this page. Calendar-scheduled tasks are
+  date-bucketed (Overdue / This week / Next week / Later); exact-time
+  deferrals appear as Snoozed; tasks with neither value appear as
+  Unscheduled. The page keeps rose-tinted overdue, inline notes, and
+  per-row promote-to-Today.
   Today and Upcoming cross-link to each other from their heroes — Today's
   hero links to `/do/upcoming` (with the bench count), Upcoming's links
   back to `/do/today`. No same-page swap; one page per intent.
@@ -416,7 +420,11 @@ These were the open structural calls. All resolved:
    bench. The `/do/upcoming` page lives under Planning (date-bucketed,
    rose-tinted overdue, per-row promote-to-Today). Today and Upcoming
    cross-link from their heroes; no same-page swap. Mental model: Upcoming =
-   the bench; Today = the court. A bench task with no future due date is also
+   the bench; Today = the court. The bench is universal (2026-09-24, #10):
+   every accessible lens's `UPCOMING` tasks in one surface, lens pills on
+   rows, an All / per-lens filter — mirroring Today's rule below. Someday
+   stays lens-scoped for now (follow-up if the same itch returns). A bench
+   task with no future due date is also
    a Next candidate on Next (§5.2) — triage should put real work in front of
    you, not hide it behind a toggle.
 2. **Next's Next candidate pool = Today + Upcoming (revised 2026-06-25).**

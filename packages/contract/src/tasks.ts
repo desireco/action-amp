@@ -297,6 +297,9 @@ export const today = oc.output(z.array(TaskLensListRowSchema));
 /** Global Week horizon: TODAY + dated-by-week-end UPCOMING (overdue admitted). */
 export const week = oc.output(z.array(TaskLensListRowSchema));
 
+/** Global Upcoming bench — every accessible lens's UPCOMING (#10, mirrors today). */
+export const upcomingAll = oc.output(z.array(TaskLensListRowSchema));
+
 /** Done-today (status TODAY, completed since local midnight, newest first). */
 export const doneToday = oc
   .errors(ProGateErrorMap)
@@ -517,6 +520,7 @@ export const tasksContract = {
   // S4 — lists + writes:
   today,
   week,
+  upcomingAll,
   doneToday,
   byLens,
   appData,
