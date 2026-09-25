@@ -54,10 +54,10 @@ test("opening a project shows its tasks; add + horizon move work", async ({ page
   await page.getByRole("button", { name: /^create$/i }).click();
   await expect(page.getByText("Record episode 1")).toBeVisible({ timeout: 10_000 });
 
-  // The row has no completion circle — completing happens in focus mode, not
-  // by ticking a row.
+  // The row carries the completion circle (#12) — inline complete, no
+  // focus-mode detour needed.
   const row = page.locator(".aa-project__row").filter({ hasText: "Record episode 1" });
-  await expect(row.locator(".aa-task-row__circle")).toHaveCount(0);
+  await expect(row.getByRole("button", { name: "Mark complete" })).toBeVisible();
   await row.getByRole("button", { name: /^today$/i }).click();
 
   // Promoted onto Today. With exactly one Today task, the project surfaces it
@@ -127,4 +127,39 @@ test("declining a project task from its page removes it from the project", async
   await expect(page.getByText("The episode we cancelled")).toHaveCount(0);
   // And the project reads as empty again.
   await expect(page.getByText("No tasks yet.")).toBeVisible({ timeout: 10_000 });
+});
+
+test("task rows complete, un-complete, and decline inline (#12)", async ({
+  page,
+}) => {
+  await loginAs(page, DEV_EMAIL);
+
+  const projectName = uniqueName("Inline lifecycle");
+  const created = await createProject(page, projectName);
+  await page.goto(`/projects/${created.permalink}`);
+  await expect(page.getByRole("heading", { name: projectName })).toBeVisible({ timeout: 10_000 });
+
+  await page.getByRole("button", { name: /add task/i }).click();
+  await page.getByPlaceholder(/what needs doing/i).fill("Ship the trailer");
+  await page.getByRole("button", { name: /^create$/i }).click();
+  const row = page.locator(".aa-project__row").filter({ hasText: "Ship the trailer" });
+  await expect(row).toBeVisible({ timeout: 10_000 });
+
+  // Complete inline — the row reads done, the button flips to Completed.
+  await row.getByRole("button", { name: "Mark complete" }).click();
+  await expect(row).toHaveClass(/aa-project__row--done/);
+  await expect(row.getByRole("button", { name: "Completed" })).toBeVisible();
+
+  // Un-complete — back to open.
+  await row.getByRole("button", { name: "Completed" }).click();
+  await expect(row).not.toHaveClass(/aa-project__row--done/);
+  await expect(row.getByRole("button", { name: "Mark complete" })).toBeVisible();
+
+  // Decline from the expanded row editor — the task leaves the project's
+  // active surface (restorable from the Logbook).
+  await row.locator(".aa-project__row-main").click();
+  await row.getByRole("button", { name: "Decline" }).click();
+  await expect(
+    page.locator(".aa-project__row").filter({ hasText: "Ship the trailer" }),
+  ).toHaveCount(0, { timeout: 10_000 });
 });

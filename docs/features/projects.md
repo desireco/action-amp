@@ -21,7 +21,10 @@ verified: 2026-07-29
   project is born in the right context instead of being moved afterwards.
 - **Detail** (`/do/projects/:id`, `projects/ProjectDetailPage.tsx`) — tasks
 grouped by horizon (Today/Upcoming/Someday/Done), inline "Add task" (creates
-with the project's `lensId`), horizon move buttons, and a Resources review
+with the project's `lensId`), horizon move buttons, inline **complete /
+un-complete** on every row via the CompletionCircle (`toggleDone`, 2026-09-24,
+#12) and a quiet **Decline** in the expanded row editor (`WONT_DO` — the task
+leaves the active surface, restorable from the Logbook), and a Resources review
 section for project links and notes (open, add, edit, remove). Captured
 images carried onto the project by triage (`ProjectAttachment`, 2026-08-16)
 render as display-only thumbs under the header — same thumbs + lightbox as

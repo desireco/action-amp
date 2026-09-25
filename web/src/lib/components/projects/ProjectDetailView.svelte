@@ -19,6 +19,7 @@
   import "../ui/Overlays.css";
   import "../../styles/projects.css";
   import ConfirmDialog from "../ui/ConfirmDialog.svelte";
+  import CompletionCircle from "../ui/CompletionCircle.svelte";
   import ListEmpty from "../ui/ListEmpty.svelte";
   import PickerSheet from "../ui/PickerSheet.svelte";
   import BottomSheet from "../ui/BottomSheet.svelte";
@@ -499,6 +500,10 @@
                       class:aa-project__row--done={task.isDone}
                       class:aa-project__row--muted={!task.isDone && task.status === "SOMEDAY"}
                     >
+                      <CompletionCircle
+                        filled={task.isDone}
+                        onclick={() => void projects.toggleTaskDone(task.id)}
+                      />
                       <div
                         class="aa-project__row-main"
                         role="button"
@@ -549,6 +554,14 @@
                             onclick={() => goto(`/tasks/${task.permalink}`)}
                           >
                             Edit on task page
+                          </button>
+                          <button
+                            type="button"
+                            class="aa-btn aa-btn--ghost aa-btn--sm"
+                            title="Leaves the project; restore from the Logbook"
+                            onclick={() => setStatus(task, "WONT_DO")}
+                          >
+                            Decline
                           </button>
                         </div>
                       {/if}

@@ -64,7 +64,16 @@ interface ProjectsClientSlice {
   startTask(input: { id: string }): Promise<{ id: string; startedAt: string | null }>;
 }
 
+/** The tasks-namespace slice the detail view's inline complete needs (#12). */
+interface TasksClientSlice {
+  toggleDone(input: {
+    id: string;
+    outcome?: string;
+  }): Promise<{ id: string; isDone: boolean; completedAt: string | null }>;
+}
+
 const rpc = (client as unknown as { projects: ProjectsClientSlice }).projects;
+const tasksRpc = (client as unknown as { tasks: TasksClientSlice }).tasks;
 
 export type ProjectType = "STANDARD" | "SIMPLE_LIST";
 export type TaskStatus = "TODAY" | "UPCOMING" | "SOMEDAY" | "WONT_DO";
@@ -321,6 +330,12 @@ class ProjectsStore {
 
   async setTaskStatus(taskId: string, status: TaskStatus) {
     await rpc.setTaskStatus({ id: taskId, status });
+    if (this.detail) await this.loadDetail(this.detail.permalink);
+  }
+
+  /** Complete/un-complete a task inline (#12) — the detail reloads after. */
+  async toggleTaskDone(taskId: string) {
+    await tasksRpc.toggleDone({ id: taskId });
     if (this.detail) await this.loadDetail(this.detail.permalink);
   }
 
