@@ -876,3 +876,125 @@
     transition-duration: 0.01ms;
   }
 }
+
+/* ============================================================
+   Lens picker — the create composer's context row (#9). The
+   triage Classify pill language, composer-scaled; hidden for
+   single-lens users (the active-lens assumption is correct).
+   ============================================================ */
+.aa-composer__lens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aa-space-xs);
+}
+
+.aa-lens-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--aa-border-strong);
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-surface);
+  color: var(--aa-text-2);
+  font-family: inherit;
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+  cursor: pointer;
+  transition:
+    background var(--aa-dur-fast) var(--aa-ease-out),
+    border-color var(--aa-dur-fast) var(--aa-ease-out),
+    color var(--aa-dur-fast) var(--aa-ease-out);
+}
+
+.aa-lens-pill:hover {
+  border-color: var(--aa-text-4);
+  background: var(--aa-surface-muted);
+}
+
+.aa-lens-pill:focus-visible {
+  outline: none;
+  box-shadow: var(--aa-focus-ring);
+}
+
+.aa-lens-pill__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--aa-radius-full);
+  background: var(--aa-border-strong);
+}
+
+/* Each lens carries its own identity color; the data-lens-color attr
+   re-points the active-lens vars locally so fill + dot match (the
+   lens-switcher/triage color system). */
+.aa-lens-pill.active {
+  background: var(--aa-active-lens-soft-strong);
+  border-color: var(--aa-active-lens);
+  color: var(--aa-active-lens-text);
+}
+
+.aa-lens-pill[data-lens-color="indigo"] .aa-lens-pill__dot {
+  background: var(--aa-lens-indigo);
+}
+.aa-lens-pill[data-lens-color="emerald"] .aa-lens-pill__dot {
+  background: var(--aa-lens-emerald);
+}
+.aa-lens-pill[data-lens-color="slate"] .aa-lens-pill__dot {
+  background: var(--aa-lens-slate);
+}
+.aa-lens-pill[data-lens-color="cyan"] .aa-lens-pill__dot {
+  background: var(--aa-lens-cyan);
+}
+.aa-lens-pill[data-lens-color="coral"] .aa-lens-pill__dot {
+  background: var(--aa-lens-coral);
+}
+.aa-lens-pill[data-lens-color="honey"] .aa-lens-pill__dot {
+  background: var(--aa-lens-honey);
+}
+.aa-lens-pill[data-lens-color="lime"] .aa-lens-pill__dot {
+  background: var(--aa-lens-lime);
+}
+.aa-lens-pill[data-lens-color="magenta"] .aa-lens-pill__dot {
+  background: var(--aa-lens-magenta);
+}
+
+.aa-lens-pill[data-lens-color="indigo"].active {
+  --aa-active-lens: var(--aa-lens-indigo);
+  --aa-active-lens-text: var(--aa-lens-indigo-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-indigo-soft-strong);
+}
+.aa-lens-pill[data-lens-color="emerald"].active {
+  --aa-active-lens: var(--aa-lens-emerald);
+  --aa-active-lens-text: var(--aa-lens-emerald-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-emerald-soft-strong);
+}
+.aa-lens-pill[data-lens-color="slate"].active {
+  --aa-active-lens: var(--aa-lens-slate);
+  --aa-active-lens-text: var(--aa-lens-slate-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-slate-soft-strong);
+}
+.aa-lens-pill[data-lens-color="cyan"].active {
+  --aa-active-lens: var(--aa-lens-cyan);
+  --aa-active-lens-text: var(--aa-lens-cyan-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-cyan-soft-strong);
+}
+.aa-lens-pill[data-lens-color="coral"].active {
+  --aa-active-lens: var(--aa-lens-coral);
+  --aa-active-lens-text: var(--aa-lens-coral-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-coral-soft-strong);
+}
+.aa-lens-pill[data-lens-color="honey"].active {
+  --aa-active-lens: var(--aa-lens-honey);
+  --aa-active-lens-text: var(--aa-lens-honey-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-honey-soft-strong);
+}
+.aa-lens-pill[data-lens-color="lime"].active {
+  --aa-active-lens: var(--aa-lens-lime);
+  --aa-active-lens-text: var(--aa-lens-lime-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-lime-soft-strong);
+}
+.aa-lens-pill[data-lens-color="magenta"].active {
+  --aa-active-lens: var(--aa-lens-magenta);
+  --aa-active-lens-text: var(--aa-lens-magenta-text);
+  --aa-active-lens-soft-strong: var(--aa-lens-magenta-soft-strong);
+}

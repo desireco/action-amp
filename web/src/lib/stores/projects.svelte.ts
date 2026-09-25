@@ -244,10 +244,16 @@ class ProjectsStore {
     name: string;
     description?: string;
     type?: ProjectType;
+    /** The lens to file into (#9) — defaults to the shell's active lens. */
+    lensId?: string;
   }): Promise<{ ok: true } | { ok: false; gate: GateMessage | null; message: string }> {
     try {
-      // New projects land in the shell's active lens (server default: first).
-      await rpc.create({ ...input, lensId: lenses.activeLensId ?? undefined });
+      // New projects land in the picked lens, else the shell's active lens
+      // (server default: first).
+      await rpc.create({
+        ...input,
+        lensId: input.lensId ?? lenses.activeLensId ?? undefined,
+      });
       await this.load();
       return { ok: true };
     } catch (e) {

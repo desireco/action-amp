@@ -14,7 +14,11 @@ verified: 2026-07-29
 - **List** (`/do/projects`, `projects/ProjectsPage.tsx`) — active projects are
   grouped by Goal (or "Standalone") with progress, due date, and a next-action
   preview; completed projects remain in a separate Completed section until they
-  are archived or deleted. Inline create (`CreateInline`).
+  are archived or deleted. Inline create (`CreateInline`). The create composer
+  carries a **lens picker** (2026-09-24, #9): pill radio in the triage Classify
+  language, preselected to the active lens, rendered only when the user has
+  more than one lens — the picked lens rides `createProject.lensId` so a
+  project is born in the right context instead of being moved afterwards.
 - **Detail** (`/do/projects/:id`, `projects/ProjectDetailPage.tsx`) — tasks
 grouped by horizon (Today/Upcoming/Someday/Done), inline "Add task" (creates
 with the project's `lensId`), horizon move buttons, and a Resources review

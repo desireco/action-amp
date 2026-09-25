@@ -27,6 +27,16 @@
   let kind = $state<"project" | "list">("project");
   let showCompleted = $state(false);
   let showArchived = $state(false);
+  /** The composer's lens pick (#9) — initialized to the active lens on open. */
+  let chosenLensId = $state<string | null>(null);
+
+  const lensChoices = $derived(lenses.lenses);
+  const showLensPicker = $derived(lensChoices.length > 1);
+
+  function toggleCreate(): void {
+    creating = !creating;
+    if (creating) chosenLensId = lenses.activeLensId ?? lensChoices[0]?.id ?? null;
+  }
 
 
   /** Focus the field on mount (autofocus trips the a11y lint; this doesn't). */
@@ -86,6 +96,7 @@
       name,
       description: description || undefined,
       type: kind === "list" ? "SIMPLE_LIST" : "STANDARD",
+      lensId: chosenLensId ?? undefined,
     });
     submitting = false;
     if (!result.ok) {
@@ -123,7 +134,7 @@
         {/if}
       </p>
     </div>
-    <button type="button" class="aa-create-control" onclick={() => (creating = !creating)}>
+    <button type="button" class="aa-create-control" onclick={toggleCreate}>
       <span class="aa-create-control__mark" aria-hidden="true">
         <Icon name="projects" size={15} />
         <span class="aa-create-control__plus"></span>
@@ -163,6 +174,23 @@
           <span class="aa-kind__hint">Add items directly and check them off.</span>
         </button>
       </div>
+      {#if showLensPicker}
+        <div class="aa-composer__lens" role="radiogroup" aria-label="Lens">
+          {#each lensChoices as l (l.id)}
+            <button
+              type="button"
+              role="radio"
+              aria-checked={chosenLensId === l.id}
+              data-lens-color={l.color ?? undefined}
+              class="aa-lens-pill {chosenLensId === l.id ? "active" : ""}"
+              onclick={() => (chosenLensId = l.id)}
+            >
+              <span class="aa-lens-pill__dot" aria-hidden="true"></span>
+              {l.name}
+            </button>
+          {/each}
+        </div>
+      {/if}
       <label class="aa-field">
         Project
         <input use:focusOnMount bind:value={name} placeholder="Ship product v2" />
