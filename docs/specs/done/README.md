@@ -14,6 +14,7 @@ for "what does it do today"; the spec here is the *why and how it was decided*.
 | Spec | Feature | Shipped |
 |------|---------|---------|
 | `capture-grammar.md` | Capture grammar v2 (# projects, @ time, [[lens]]) | 2026-07-04 |
+| `cli-skills.md` | CLI orchestration skills — shipped as seven bundled `aa-*` skills via `actionamp skills install` | 2026-09-15 |
 | `custom-lenses.md` | User-defined lenses (Pro CRUD, ⌘L switcher) | 2026-07-03 |
 | `doc-reconciliation.md` | Canonical docs reconciled with shipped reality | 2026-06-27 |
 | `entitlement-enforcement.md` | Server-side Free caps + ProGate paywall | 2026-07-03 |

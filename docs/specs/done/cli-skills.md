@@ -2,7 +2,8 @@
 id: cli-skills
 kind: spec
 title: "Orchestration skills (Phase 2 of the CLI effort)"
-status: draft
+status: done
+shipped: 2026-09-15
 priority: P3
 feature: cli
 spec_owner: discover
@@ -17,6 +18,18 @@ gh_synced_at: 2026-07-07T18:16:34Z   # sync-managed (drift detection)
 ---
 
 # Spec: Orchestration skills (Phase 2)
+
+> **Closed 2026-09-25 — the skills shipped 2026-09-15 in a different, better
+> shape.** The four skills envisioned here became **seven bundled `aa-*`
+> skills** (capture, complete, hygiene, now, review, setup, triage) built from
+> the repo-root `skills/` directory and distributed inside the npm package via
+> `actionamp skills list` / `actionamp skills install` (pi, Claude Code, Codex,
+> `~/.agents`) — see ROADMAP §Shipped `cli-agent-skills-npm-publish`. That
+> replaces this spec's `.agents/skills/`-in-the-checkout distribution, which
+> only reached people with the repo. Mapping: inbox-triage → `aa-triage`;
+> today-balancer → covered by `aa-now` + `aa-hygiene`; **goal-breakdown and
+> task-research were not built** — filed as opportunistic board cards. The
+> body below is the original July 2026 plan, kept for the decision record.
 
 > **Third of three specs split out of `cli.md` 2026-07-03.** `draft` because it
 > depends on `cli-package` (the `--json` contract) and one of its four skills

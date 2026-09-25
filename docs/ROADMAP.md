@@ -315,8 +315,12 @@ normal release verification and publish path.
    list/add/update/delete` (2026-07-29) landed, the latter satisfying the
    formerly-deferred `cli-comments-resources` (Resources are now full CLI
    CRUD). `capture` also gained shared-content + image flags
-   (`--title/--content/--source-url/--file`, 2026-07-29). Only `cli-skills`
-   (Phase 2 — the four orchestration skills) remains `draft`. **Pro-only
+   (`--title/--content/--source-url/--file`, 2026-07-29). **Phase 2 (the
+   orchestration skills) shipped 2026-09-15** as seven bundled `aa-*` skills
+   via `actionamp skills list/install` (§Shipped
+   `cli-agent-skills-npm-publish`); the `cli-skills` spec closed 2026-09-25
+   with `goal-breakdown` + `task-research` carved out as opportunistic board
+   cards. **Pro-only
    access shipped 2026-08-03:** Free accounts cannot issue CLI/PAT tokens or
    use `/api/cli/*`; active Pro and Founding members can. **CLI package
    publishing is in progress**; do not publish customer install guidance until
@@ -609,8 +613,11 @@ normal release verification and publish path.
   files shared between Wasp ops and CLI routes — zero duplicated logic). The
   throwaway prototype was replaced by the real package. **CLI package
   publishing is in progress**; public install documentation follows the
-  release, not before it. Only `cli-skills` (Phase 2 — orchestration skills)
-  remains draft. Specs: `docs/specs/cli.md` (umbrella),
+  release, not before it. The `cli-skills` spec closed 2026-09-25 — its
+  skills shipped 2026-09-15 as the bundled `aa-*` set (see
+  `cli-agent-skills-npm-publish` below), with `goal-breakdown` +
+  `task-research` filed as opportunistic board cards. Specs:
+  `docs/specs/cli.md` (umbrella),
   `cli-pat-plumbing.md`, `cli-package.md`, `cli-skills.md`.
 - **pwa-installable + session-resilience + web-push + version-banner**
   (`shipped` 2026-07-21) — four small trunks landing together because they

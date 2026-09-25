@@ -3,7 +3,7 @@ id: cli
 kind: spec
 title: "ActionAmp CLI + orchestration skills (umbrella)"
 status: ready                  # the EFFORT is ready to pull, starting with cli-pat-plumbing
-sync: skip                     # Phase 0+1 shipped; Phase 2 (cli-skills) tracked on its own card. status stays ready.
+sync: skip                     # All three phases shipped (Phase 2 = bundled aa-* skills, 2026-09-15). status stays ready.
 priority: P3                   # opportunistic — not validation-critical
 feature: cli
 spec_owner: discover
@@ -47,9 +47,9 @@ re-discovered.
 
 | # | Spec | Status | What it ships |
 |---|------|--------|---------------|
-| 1 | [`cli-pat-plumbing`](./cli-pat-plumbing.md) | **`ready`** | `ApiKey` model + 3 PAT routes + Bearer middleware + Settings UI. The only backend slice. Self-contained, verifiable on its own. |
-| 2 | [`cli-package`](./cli-package.md) | `draft` | The `cli/` package — ~14 commands, `--json` output, op-refactor. **Draft because the op-refactor scope is unscoped** (its Open Question 1). |
-| 3 | [`cli-skills`](./cli-skills.md) | `draft` | Four orchestration skills (inbox-triage, goal-breakdown, today-balancer, task-research). Depends on cli-package; one skill blocked on a deferred spec. |
+| 1 | [`cli-pat-plumbing`](./cli-pat-plumbing.md) | **shipped 2026-07-22** | `ApiKey` model + 3 PAT routes + Bearer middleware + Settings UI. The only backend slice. Self-contained, verifiable on its own. |
+| 2 | [`cli-package`](./cli-package.md) | **shipped 2026-07-22** (surface grown since) | The `cli/` package — full command surface, `--json` output, op-refactor. |
+| 3 | [`cli-skills`](./done/cli-skills.md) | **shipped 2026-09-15** (superseded shape) | Four orchestration skills → shipped as seven bundled `aa-*` skills via `actionamp skills list/install`. `goal-breakdown` + `task-research` filed as opportunistic cards. |
 
 ## Decisions locked (carry across all three children)
 

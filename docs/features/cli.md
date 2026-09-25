@@ -67,7 +67,7 @@ for one `ready` unit):
 | -------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`cli-pat-plumbing`](../specs/cli-pat-plumbing.md) | **shipped 2026-07-22**                       | `ApiKey` model (SHA-256 hashed tokens) + PAT routes + Bearer middleware + `/cli/login` consent page + Settings → Access tokens UI.                      |
 | [`cli-package`](../specs/cli-package.md)           | **shipped 2026-07-22** (surface grown since) | The `cli/` package — full command surface above + `--json`, backed by pure `*Core.ts` files shared with the Wasp ops (zero duplicated logic).           |
-| [`cli-skills`](../specs/cli-skills.md)             | `draft`                                      | Four orchestration skills. Depends on `cli-package`; `task-research` was blocked on `cli-comments-resources`, now unblocked by the `resource` commands. |
+| [`cli-skills`](../specs/done/cli-skills.md)        | **shipped 2026-09-15** (superseded shape)    | The skills shipped as seven bundled `aa-*` skills + `_shared` guardrails via `actionamp skills list/install` (npm `actionamp@0.2.0`), not as repo-checkout folders. `goal-breakdown` + `task-research` were not built — filed as opportunistic board cards. |
 
 Umbrella design + cross-cutting decisions: [`docs/specs/cli.md`](../specs/cli.md).
 
