@@ -79,14 +79,14 @@ session-cookie notes in `auth/sessionCookie.ts` + `auth/sessionCookieMirror.ts`)
 The Context step pre-fills from two inference paths, neither of which silently
 files — the user still hits Continue:
 
-- **`[[lens]]` token** (explicit): `[[work]]` / `[[personal]]` / `[[me]]` /
-  `[[custom-name]]` resolves on `kind` (seeded) or name (custom); pre-fills the
-  Context radio with a "from `[[ ]]`" chip.
+- **`@lens` token** (explicit, v2.1): `@work` / `@personal` / `@me` /
+  `@custom-name` resolves on `kind` (seeded) or name (custom); pre-fills the
+  Context radio with a "from `@`" chip. `[[name]]` stays a parsed alias.
 - **Project-bridged** (explicit or inferred): the resolver matches the first
   `#project` hint or project names in the cleaned text against the inferred
   lens's projects (whitespace/sentence-boundary, longest wins). A matched
   project pre-fills both the Project row and that project's lens on the Context
-  step. `[[ ]]` precedence wins on disagreement.
+  step. `@` token precedence wins on disagreement.
 
 **Image attachments survive every dispatch decision** (2026-08-16). Items
 captured with images and triaged to a task (Today/Upcoming/Someday) carry

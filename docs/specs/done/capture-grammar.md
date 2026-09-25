@@ -269,3 +269,28 @@ ship *with* the build, not after:
 _(none — defer to Build. The resolver is well-scoped enough to implement
 directly; if Build wants a throwaway worktree to tune the boundary matcher
 against real project names, that's the right place for one.)_
+
+---
+
+## v2.1 amendment — `@` is the lens token (2026-09-24, #14)
+
+Jake's call: `@` reads as "at → context". `@` stops being the date sigil and
+becomes the lens override; dates parse bare. Ships with the `#`/`@`/`!`
+shared typeahead (#8) and the `?` cheat-sheet.
+
+- **`@name`** at a word boundary, recognized lens (seeded + custom) →
+  `parsedLens`, token stripped. First recognized token wins; unknown `@word`
+  stays literal (the `[[ ]]` policy). Boundary-only means emails
+  (`sarah@acme.com`) never match.
+- **`[[name]]` remains a parsed alias** (back-compat); `@` is the documented
+  form and the autocomplete trigger.
+- **Dates go bare:** `today` / `tomorrow` / `tonight` (20:00 snooze) / `tmrw` /
+  `tmr`, weekday names, `next week` / `next month`, `jun 30`, `6/30`. The v2
+  sigil forms (`@today` etc.) keep parsing as a legacy fallback so old muscle
+  memory doesn't strand a literal `@`.
+- **Cascade:** domain parser + suite (7 new cases: lens extract, email safety,
+  combined `@work tomorrow`, unknown-literal, custom names, alias ordering),
+  the web parser copy, `detectMention` (`@` → lens kind), preview/triage chips
+  render `@name`, the `?` cheat-sheet, `docs/features/capture.md` (grammar
+  table), `docs/features/inbox-triage.md`, `docs/DATA-MODEL.md` (v2.1 note),
+  `docs/WORKFLOW.md` (§2.1 grammar line + §5 decision update).

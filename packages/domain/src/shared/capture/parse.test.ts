@@ -3,8 +3,10 @@ import { parseCapture } from "./parse.js";
 
 // Table-driven parser tests. parseCapture is a pure function — the highest-
 // leverage test target in the codebase (every capture + every chip preview
-// runs through it). Covers grammar v2 (locked 2026-07-04, see
-// docs/specs/capture-grammar.md): #tags, @time-only, [[lens]], priority/size.
+// runs through it). Covers grammar v2 (locked 2026-07-04; v2.1 amendment
+// 2026-09-24: @ is the lens token, dates go bare — see
+// docs/specs/done/capture-grammar.md): #tags, @lens, [[lens]] alias, the
+// legacy @day fallback, priority/size.
 
 describe("parseCapture", () => {
   // Fixed "now" so relative date tests are deterministic: Wed 2026-06-24 10:00
@@ -64,9 +66,10 @@ describe("parseCapture", () => {
     });
   });
 
-  describe("@ is time-only (grammar v2)", () => {
-    it("@phone stays literal (not a tag)", () => {
+  describe("@ legacy day sigil (v2.1 fallback — @today etc. still parse as dates)", () => {
+    it("@phone stays literal (not a lens, not a tag)", () => {
       const r = parseCapture("email @phone", NOW);
+      expect(r.parsedLens).toBeNull();
       expect(r.parsedTags).toEqual([]);
       expect(r.cleanText).toBe("email @phone");
     });
@@ -100,6 +103,50 @@ describe("parseCapture", () => {
       const r = parseCapture("call @tonight", NOW);
       expect(r.parsedScheduledDate).toBeNull();
       expect(r.parsedSnoozedUntil).toEqual(new Date(2026, 5, 24, 20, 0, 0));
+    });
+  });
+
+  describe("lens override (@ — v2.1)", () => {
+    it("@work → parsedLens work, stripped from text", () => {
+      const r = parseCapture("call @work about MVP", NOW);
+      expect(r.parsedLens).toBe("work");
+      expect(r.cleanText).toBe("call about MVP");
+    });
+
+    it("@me / @personal resolve (lowercased)", () => {
+      expect(parseCapture("@Me errand", NOW).parsedLens).toBe("me");
+      expect(parseCapture("@personal errand", NOW).parsedLens).toBe("personal");
+    });
+
+    it("mid-word @ never matches — emails stay intact", () => {
+      const r = parseCapture("email sarah@acme.com", NOW);
+      expect(r.parsedLens).toBeNull();
+      expect(r.cleanText).toBe("email sarah@acme.com");
+    });
+
+    it("@work + bare tomorrow → lens AND date", () => {
+      const r = parseCapture("ship @work tomorrow", NOW);
+      expect(r.parsedLens).toBe("work");
+      expect(r.parsedScheduledDate).toEqual(scheduled("2026-06-25"));
+      expect(r.cleanText).toBe("ship");
+    });
+
+    it("unknown @word stays literal; first token decides (the [[ ]] policy)", () => {
+      const r = parseCapture("about @phone and @work", NOW);
+      expect(r.parsedLens).toBeNull();
+      expect(r.cleanText).toBe("about @phone and @work");
+    });
+
+    it("custom lens name recognized when passed via knownLensNames", () => {
+      const r = parseCapture("ship @studio", NOW, ["Studio"]);
+      expect(r.parsedLens).toBe("studio");
+      expect(r.cleanText).toBe("ship");
+    });
+
+    it("[[ ]] alias and @ coexist — the first recognized token wins", () => {
+      const r = parseCapture("[[work]] and @personal", NOW);
+      expect(r.parsedLens).toBe("work");
+      expect(r.cleanText).toBe("and @personal");
     });
   });
 

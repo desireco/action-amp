@@ -1,12 +1,13 @@
 /**
- * Natural-language capture parser (grammar v2, locked 2026-07-04).
+ * Natural-language capture parser (grammar v2, locked 2026-07-04; v2.1
+ * amendment 2026-09-24: `@` is the lens token, dates go bare — #14).
  *
  * CLIENT COPY of @actionamp/domain/src/shared/capture/parse.ts (S2) — keep
  * the two files in sync. web depends only on the contract package, so
  * the live chip preview runs this copy against the local Temporal shim
  * (./temporal-shim); the server persists with the domain port of the exact
- * same grammar. The shared test suite (domain parse.test.ts, 66 cases) is
- * the contract both copies satisfy. See docs/specs/capture-grammar.md.
+ * same grammar. The shared test suite (domain parse.test.ts) is the
+ * contract both copies satisfy. See docs/specs/done/capture-grammar.md.
  *
  * Extracts structured tokens from free-text capture and returns them along
  * with the cleaned (token-stripped) text.
@@ -14,18 +15,17 @@
  * Grammar:
  *   #mvp / #[Q3 Launch] → project hint (first # mention wins; lowercased, no prefix)
  *   #tag               → context tag (any #token after the first; lowercased)
- *   @today/@tomorrow   → date (also @tonight, @tmrw, @tmr; bare forms work too)
- *   !1  !low  !!!      → priority (1=low, 2=normal, 3=important)
+ *   @work              → lens override (v2.1: "at → context"; boundary-only so
+ *                        emails never match; [[work]] stays a parsed alias)
+ *   today / tomorrow   → date (bare words: tonight/tmrw/tmr, weekday names,
+ *                        next week/month, jun 30, 6/30; the old @today sigil
+ *                        forms still parse as a legacy fallback)
+ *   !1  !low  !!!      → priority (! low, !! normal, !!! important)
  *   ~20m  ~1h  ~XL     → size (time→S/M/L/XL: <15m=S, <1h=M, <2h=L, else XL)
- *   [[work]]           → lens override (seeded: work/personal/me; custom via
- *                        knownLensNames). First recognized token wins; unknown
- *                        tokens stay literal text.
  *
- * `@` is time-only (grammar v2). `@phone`, `@errands` etc. are NOT extracted —
- * they stay literal. Only @today/@tomorrow/@tonight (+ aliases) set the date.
- * `#` is the project sigil: the first `#token`/`#[name]` is the project hint,
- * and any further `#token`s are tags. The capture `#` autocomplete surfaces
- * project names.
+ * Unknown @words stay literal (the [[ ]] policy). Only a recognized lens
+ * (seeded work/personal/me + caller-supplied custom names) extracts; the
+ * first recognized token wins.
  *
  * Used at capture time (server) to populate InboxItem.parsed-* fields, and
  * available client-side for live preview in the capture popover.
@@ -207,10 +207,25 @@ export function parseCapture(
     return _full; // unknown → leave literal
   });
 
-  // ---- @date words: @today / @tomorrow / @tonight (also @tmrw / @tmr) ----
-  // `@` is time-only under grammar v2. A user typing @today means
-  // today-the-date. Other @words (@phone, @errands) are NOT extracted — they
-  // stay literal text. Stripped before the #tag pass so they never fall through.
+  // ---- Lens override: @name (v2.1, #14) — "at → context" ----
+  // Only a boundary @ (start of input, or preceded by whitespace) is a
+  // token, so emails (sarah@acme.com) never match. Unknown @words stay
+  // literal — except the legacy day keywords, which the @date pass below
+  // still honors so old muscle memory (@today) doesn't strand a literal @.
+  if (!lens) {
+    const atToken = text.match(/(^|\s)@([a-zA-Z0-9_-]+)/);
+    if (atToken) {
+      const lower = atToken[2].toLowerCase();
+      if (knownSet.has(lower)) {
+        lens = lower;
+        // Strip the token, keep the boundary whitespace it rode in on.
+        text = text.replace(atToken[0], atToken[1]);
+      }
+    }
+  }
+
+  // ---- @date words: the legacy @today / @tomorrow / @tonight sigil ----
+  // (v2.1 demoted `@` to lens; these forms keep parsing as a fallback.)
   if (!scheduledDate && !snoozedUntil) {
     text = text.replace(/@(tonight|today|tomorrow|tmrw|tmr)\b/gi, (_, kw: string) => {
       const target = nearDayKeyword(kw, nowInstant, timeZone);

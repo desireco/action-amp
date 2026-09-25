@@ -80,7 +80,7 @@ export function buildTriageChips(item: ParsedChipSource | null): TriageChip[] {
       label: `📅 ${formatRelativeDay(item.parsedScheduledDate)}`,
     });
   if (item.parsedSnoozedUntil) chips.push({ tone: "date", label: "Snoozed" });
-  if (item.parsedLens) chips.push({ tone: "tag", label: `[[${item.parsedLens}]]` });
+  if (item.parsedLens) chips.push({ tone: "tag", label: `@${item.parsedLens}` });
   if (item.parsedProject) chips.push({ tone: "tag", label: `▣ ${item.parsedProject}` });
   if (item.parsedPriority === "IMPORTANT") chips.push({ tone: "priority", label: "★ Important" });
   if (item.parsedPriority === "LOW") chips.push({ tone: "priority", label: "low" });

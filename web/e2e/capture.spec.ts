@@ -236,14 +236,16 @@ test("lens and priority tokens autocomplete like projects", async ({ page }) => 
   const textarea = await openCapture(page);
   const dialog = page.getByRole("dialog", { name: /quick capture/i });
 
-  // `[[` opens the lens typeahead (the seed guarantees the "Me" lens);
-  // accepting writes the token back into the text.
-  await textarea.fill("Fix login [[");
+  // `@` opens the lens typeahead (v2.1: @ is the lens sigil; the seed
+  // guarantees the "Me" lens). Accepting writes the token into the text and
+  // the chip preview renders it.
+  await textarea.fill("Fix login @");
   const lensList = dialog.getByRole("listbox", { name: "Lenses" });
   await expect(lensList).toBeVisible();
   await expect(lensList.getByRole("option", { name: "Me" })).toBeVisible();
   await textarea.press("Enter");
-  await expect(textarea).toHaveValue(/Fix login \[\[Me\]\] /);
+  await expect(textarea).toHaveValue(/Fix login @Me /);
+  await expect(dialog.getByText("@me")).toBeVisible();
 
   // `!i` opens the priority typeahead → important (the ★ preview chip follows).
   await textarea.pressSequentially(" !i");
@@ -253,6 +255,10 @@ test("lens and priority tokens autocomplete like projects", async ({ page }) => 
   await textarea.press("Enter");
   await expect(textarea).toHaveValue(/!important /);
   await expect(dialog.getByText("★ Important")).toBeVisible();
+
+  // The `[[` alias still opens the lens list.
+  await textarea.fill("Also [[");
+  await expect(lensList).toBeVisible();
 });
 
 test("the ? sheet shows the token cheat-sheet; Esc closes only it", async ({

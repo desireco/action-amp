@@ -304,7 +304,7 @@
     // Each family writes its own token: #project, [[lens]], !priority.
     const inserted =
       m.kind === "lens"
-        ? `[[${m.name}]] `
+        ? `@${m.name} `
         : m.kind === "priority"
           ? `!${m.name} `
           : /\s/.test(m.name)
@@ -585,7 +585,7 @@
         </div>
         <div class="aa-capture__help-row">
           <span class="aa-capture__help-token">@date</span>
-          <span>@today · @tomorrow · @friday · @oct 12</span>
+          <span>today · tomorrow · friday · jun 30 (bare words)</span>
         </div>
         <div class="aa-capture__help-row">
           <span class="aa-capture__help-token">!priority</span>
@@ -596,8 +596,8 @@
           <span>~20m · ~1h · ~XL</span>
         </div>
         <div class="aa-capture__help-row">
-          <span class="aa-capture__help-token">[[lens]]</span>
-          <span>switch context — typeahead</span>
+          <span class="aa-capture__help-token">@lens</span>
+          <span>switch context — typeahead ([[lens]] also works)</span>
         </div>
         <div class="aa-capture__help-row">
           <span class="aa-capture__help-token">images</span>
@@ -762,7 +762,7 @@
   {@const verbose = variant === "preview"}
   {@const tags = verbose ? parsed.parsedTags : parsed.parsedTags.slice(0, 2)}
   {#if parsed.parsedLens}
-    <Chip variant="teal" small>[[{parsed.parsedLens}]]</Chip>
+    <Chip variant="teal" small>@{parsed.parsedLens}</Chip>
   {/if}
   {#if parsed.parsedScheduledDate}
     <Chip variant="teal" small>

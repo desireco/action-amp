@@ -66,12 +66,12 @@ while empty.
   (Keymap reversed 2026-06-30 — see TRIAGE.md §7.5.)
 - Destination is the **Inbox**, which is **universal** (not scoped to a lens).
 - Natural-language parsing shows chips before Enter so you see what it
-  understood. Grammar (locked 2026-07-04, §5.9): `#` tags · `@` time only ·
-  `!`/`~` priority/size · `[[lens]]` explicit cross-life-area override. Projects
+  understood. Grammar (locked 2026-07-04, §5.9; v2.1 amendment 2026-09-24): `#` tags ·
+  `@` lens (dates go bare; `[[lens]]` alias) · `!`/`~` priority/size. Projects
   have no sigil — the resolver matches them from free text (a matched project
   carries its Project + Lens into triage Classify). See `docs/specs/done/capture-grammar.md`.
 - Capture never asks "where does this go?" — that's triage's job. But capture
-  _can_ hint: `[[work]]` / `[[personal]]` / `[[custom]]` preselects any eligible
+  _can_ hint: `@work` / `@personal` / `@custom` preselects any eligible
   Lens on triage's Classify step. A matched Project supplies its Project +
   Lens destination (Simple-list Projects are not capture targets — a list
   destination is chosen in triage or share, not capture). Capture
@@ -441,7 +441,7 @@ These were the open structural calls. All resolved:
 5. **Triage lens assignment lives in Classify (revised 2026-07-04).** Triage
    now opens on **Classify**, a combined Type + Destination step. Lens remains
    visible and reversible, but no longer gets its own standalone step. The
-   active lens is the fallback default. `[[lens]]` preselects a Lens and still
+   active lens is the fallback default. `@lens` preselects a Lens and still
    shows the lens choices. A concrete resolved Project is stronger: it supplies
    both `projectId` and `lensId`, and Classify shows `Destination: Project ·
 Lens` while skipping the standalone lens picker by default. See
@@ -530,7 +530,8 @@ Lens` while skipping the standalone lens picker by default. See
      tags. `@` is freed for its one natural job (when);
      `@today`/`@tomorrow`/`@tonight` were already special-cased and stay. See
      `docs/specs/done/capture-grammar.md`.
-   - **`[[lens]]` is the explicit lens override.** A new token for the rare
+   - **`@lens` is the explicit lens override** (v2.1, 2026-09-24, #14 — was
+     `[[lens]]`, which stays a parsed alias). The rare
      cross-lens capture (in Work, think of a personal errand). Resolves on
      `kind` for seeded lenses (`[[work]]`/`[[personal]]`/`[[me]]` survive
      renames — same property as the entitlement guard), exact name for custom.

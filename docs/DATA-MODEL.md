@@ -60,7 +60,10 @@
 > from free text by a resolver (no sigil). `InboxItem.parsedLens` stores the
 > `[[ ]]` token (null when absent or unknown). The legacy `parsedProject` field
 > stays on the model but is no longer populated by the v2 parser — the resolver
-> works off the cleaned text directly. The InboxItem remains unscoped; the lens
+> works off the cleaned text directly. v2.1 (2026-09-24, #14): `@` is the lens
+> token ("at → context", boundary-only so emails never match); dates parse
+> bare; `[[lens]]` remains a parsed alias; the `@today` sigil forms stay as a
+> legacy date fallback. The InboxItem remains unscoped; the lens
 > is confirmed at triage. See `docs/specs/done/capture-grammar.md`.
 >
 > v6 (2026-07-05): **Task lifecycle logging.** `TaskUpdate` gained a `kind`
@@ -194,7 +197,7 @@ a refinement layer we'll add later, on top of priority + size.
 - An inbox entry is an **InboxItem**: raw text + parsed metadata —
   `parsedScheduledDate` (calendar day), `parsedSnoozedUntil` (exact instant),
   `parsedPriority`, `parsedSize`, `parsedTags`, `parsedProject` (legacy, unused
-  by the server — see v5 below), `parsedLens` (the `[[lens]]` token, or null),
+  by the server — see v5 below), `parsedLens` (the `@lens` token — `[[name]]` alias — or null),
   and optional explicit `parsedProjectId` / `parsedLensId` pre-triage destination
   hints —
   - `status: unprocessed`. The InboxItem itself is still **unscoped** (no

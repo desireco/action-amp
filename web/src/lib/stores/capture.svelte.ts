@@ -35,7 +35,7 @@ class CaptureStore {
   open = $state(false);
   /** Cross-lens project tuples for the `#` autocomplete (recent-first). */
   projects = $state<ResolverProject[]>([]);
-  /** The user's lenses (custom names feed the [[ ]] preview + Classify). */
+  /** The user's lenses (custom names feed the @lens preview + Classify). */
   lenses = $state<LensInfo[]>([]);
   submitting = $state(false);
 

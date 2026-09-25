@@ -240,7 +240,7 @@
   const lensInferenceLabel = $derived.by(() => {
     if (hasExplicitProjectDestination) return `selected project ${projectBridge?.projectName}`;
     if (item?.parsedLensId && inferredLensFromToken) return `selected ${inferredLensFromToken.name}`;
-    if (inferredLensFromToken) return `from [[${item?.parsedLens}]] in your capture`;
+    if (inferredLensFromToken) return `from @${item?.parsedLens} in your capture`;
     if (projectBridge && inferredLens) return `from project ${projectBridge.projectName}`;
     return null;
   });
