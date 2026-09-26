@@ -569,11 +569,34 @@
 }
 
 .aa-project__cue {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--aa-space-xs);
   margin: var(--aa-space-md) 0 0;
   font-size: var(--aa-text-md);
   color: var(--aa-text-3);
   max-width: 52ch;
   line-height: var(--aa-leading-normal);
+}
+
+/* The empty-Today cue's action: promote the top Upcoming task. Bare teal —
+   the promote is the page's next system action (Today is a commitment, so
+   it promotes; it never starts). Long task names ellipsize. */
+.aa-project__cue-promote {
+  font-size: var(--aa-text-md);
+  font-weight: var(--aa-weight-medium);
+  color: var(--aa-teal-cta);
+  padding: 2px 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aa-project__cue-promote:hover {
+  color: var(--aa-teal-cta-hover);
+  text-decoration: underline;
 }
 
 .aa-project__actions {
@@ -643,6 +666,12 @@
 .aa-project__row-title {
   font-size: var(--aa-text-base);
   color: var(--aa-text);
+  /* Two lines max — raw pasted URLs must not stretch a row indefinitely. */
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
 .aa-project__row--done .aa-project__row-title {
@@ -731,6 +760,13 @@
   margin-top: var(--aa-space-md);
   padding-top: var(--aa-space-lg);
   border-top: 1px solid var(--aa-border);
+}
+
+/* The Done group's "Show all N" — quiet, under the collapsed rows. */
+.aa-project__done-toggle {
+  margin-top: var(--aa-space-xs);
+  font-size: var(--aa-text-sm);
+  color: var(--aa-text-3);
 }
 
 .aa-project__empty {

@@ -116,12 +116,29 @@
     }).length,
   );
 
+  /** Done collapses to its first rows once it grows; "Show all" reopens. */
+  let doneExpanded = $state(false);
+
   // Next-step hero: the first open Today task (never auto-promotes — Today is
   // a commitment). Exactly-one-Today skips the Today group below.
   const todayTasks = $derived(activeTasks.filter((t) => !t.isDone && t.status === "TODAY"));
   const nextStep = $derived(todayTasks[0] ?? null);
   const hasUpcoming = $derived(activeTasks.some((t) => !t.isDone && t.status === "UPCOMING"));
   const showNoTodayCue = $derived(!nextStep && todayTasks.length === 0 && hasUpcoming);
+  /** The candidate the empty-Today cue offers to promote (top of Upcoming). */
+  const promoteCandidate = $derived(
+    activeTasks.find((t) => !t.isDone && t.status === "UPCOMING") ?? null,
+  );
+
+  // What the list renders: the hero task already has the Next-step band, so
+  // the Today group drops it (with 2+ Today tasks it used to render twice).
+  // The group then disappears entirely when nothing remains.
+  const displayGroups = $derived.by<Group[]>(() => {
+    if (!nextStep) return groups;
+    return groups.map((g) =>
+      g.key === "TODAY" ? { ...g, items: g.items.filter((t) => t.id !== nextStep.id) } : g,
+    );
+  });
 
   async function refresh() {
     await projects.loadDetail(permalink);
@@ -374,20 +391,29 @@
           </div>
         {/if}
 
-        {#if !project.isDone && showNoTodayCue}
-          <p class="aa-project__cue">
-            Nothing queued for today. Promote one from Upcoming below.
-          </p>
+        {#if !project.isDone && showNoTodayCue && promoteCandidate}
+          <div class="aa-project__cue">
+            <span>Nothing queued for today.</span>
+            <button
+              type="button"
+              class="aa-btn aa-btn--bare aa-project__cue-promote"
+              onclick={() => setStatus(promoteCandidate, "TODAY")}
+            >
+              Promote “{promoteCandidate.description}” to Today
+            </button>
+          </div>
         {/if}
 
         <div class="aa-project__actions">
-          {#if !project.isDone && project.type !== "SIMPLE_LIST"}
+          {#if !project.isDone && project.type !== "SIMPLE_LIST" && !creating}
+            <!-- Hidden while the composer below is open — it owns its own
+                 Cancel; a teal "Cancel" here would be a second primary. -->
             <button
               type="button"
               class="aa-btn aa-btn--primary"
-              onclick={() => (creating = !creating)}
+              onclick={() => (creating = true)}
             >
-              {creating ? "Cancel" : "Add task"}
+              Add task
             </button>
           {/if}
           <button type="button" class="aa-btn aa-btn--bare" onclick={startEdit}>Edit</button>
@@ -488,95 +514,108 @@
           </div>
         </div>
 
-        {#each groups as group (group.key)}
-          {#if group.items.length > 0}
-            {#if !(group.key === "TODAY" && nextStep && group.items.every((t) => t.id === nextStep.id))}
-              <section class="aa-project__group" class:aa-project__done-group={group.key === "DONE"}>
-                <h3 class="aa-grouped__heading">
-                  {group.label}
-                  <span class="aa-grouped__count">{group.items.length}</span>
-                </h3>
-                <ul class="aa-grouped__list">
-                  {#each group.items as task (task.id)}
-                    <li
-                      class="aa-project__row"
-                      class:aa-project__row--active={activeTaskId === task.id}
-                      class:aa-project__row--done={task.isDone}
-                      class:aa-project__row--muted={!task.isDone && task.status === "SOMEDAY"}
-                    >
-                      <CompletionCircle
-                        filled={task.isDone}
+        {#snippet taskRows(items: ProjectDetailTask[])}
+          {#each items as task (task.id)}
+            <li
+              class="aa-project__row"
+              class:aa-project__row--active={activeTaskId === task.id}
+              class:aa-project__row--done={task.isDone}
+              class:aa-project__row--muted={!task.isDone && task.status === "SOMEDAY"}
+            >
+              <CompletionCircle
+                filled={task.isDone}
+                onclick={() =>
+                  task.isDone
+                    ? void projects.toggleTaskDone(task.id)
+                    : (confirmTaskCompleteId = task.id)}
+              />
+              <div
+                class="aa-project__row-main"
+                role="button"
+                tabindex="0"
+                onclick={() =>
+                  task.isDone
+                    ? goto(`/tasks/${task.permalink}`)
+                    : (activeTaskId = activeTaskId === task.id ? null : task.id)}
+                onkeydown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    if (task.isDone) goto(`/tasks/${task.permalink}`);
+                    else activeTaskId = activeTaskId === task.id ? null : task.id;
+                  }
+                }}
+              >
+                <span class="aa-project__row-title">{task.description}</span>
+                {#if !task.isDone && task.scheduledDate}
+                  <span class="aa-project__row-meta">
+                    {formatRelativeDue(task.scheduledDate)}
+                  </span>
+                {/if}
+              </div>
+              <div class="aa-project__row-ctrl">
+                {#if !task.isDone}
+                  {#each ([["TODAY", "Today"], ["UPCOMING", "Upcoming"], ["SOMEDAY", "Someday"]]) as [status, label] (status)}
+                    {#if task.status !== status}
+                      <button
+                        type="button"
+                        class="aa-horizon-btn"
                         onclick={() =>
-                          task.isDone
-                            ? void projects.toggleTaskDone(task.id)
-                            : (confirmTaskCompleteId = task.id)}
-                      />
-                      <div
-                        class="aa-project__row-main"
-                        role="button"
-                        tabindex="0"
-                        onclick={() =>
-                          task.isDone
-                            ? goto(`/tasks/${task.permalink}`)
-                            : (activeTaskId = activeTaskId === task.id ? null : task.id)}
-                        onkeydown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            if (task.isDone) goto(`/tasks/${task.permalink}`);
-                            else activeTaskId = activeTaskId === task.id ? null : task.id;
-                          }
-                        }}
+                          setStatus(task, status as ProjectDetailTask["status"])}
                       >
-                        <span class="aa-project__row-title">{task.description}</span>
-                        {#if !task.isDone && task.scheduledDate}
-                          <span class="aa-project__row-meta">
-                            {formatRelativeDue(task.scheduledDate)}
-                          </span>
-                        {/if}
-                      </div>
-                      <div class="aa-project__row-ctrl">
-                        {#if !task.isDone}
-                          {#each ([["TODAY", "Today"], ["UPCOMING", "Upcoming"], ["SOMEDAY", "Someday"]]) as [status, label] (status)}
-                            {#if task.status !== status}
-                              <button
-                                type="button"
-                                class="aa-horizon-btn"
-                                onclick={() =>
-                                  setStatus(task, status as ProjectDetailTask["status"])}
-                              >
-                                {label}
-                              </button>
-                            {/if}
-                          {/each}
-                        {/if}
-                      </div>
-                      {#if activeTaskId === task.id && !task.isDone}
-                        <div class="aa-project__row-editor">
-                          <span class="aa-project__row-meta">
-                            {SIZE_DURATION[task.size] ?? task.size}
-                          </span>
-                          <button
-                            type="button"
-                            class="aa-btn aa-btn--secondary aa-btn--sm"
-                            onclick={() => goto(`/tasks/${task.permalink}`)}
-                          >
-                            Edit on task page
-                          </button>
-                          <button
-                            type="button"
-                            class="aa-btn aa-btn--ghost aa-btn--sm"
-                            title="Leaves the project; restore from the Logbook"
-                            onclick={() => setStatus(task, "WONT_DO")}
-                          >
-                            Decline
-                          </button>
-                        </div>
-                      {/if}
-                    </li>
+                        {label}
+                      </button>
+                    {/if}
                   {/each}
-                </ul>
-              </section>
-            {/if}
+                {/if}
+              </div>
+              {#if activeTaskId === task.id && !task.isDone}
+                <div class="aa-project__row-editor">
+                  <span class="aa-project__row-meta">
+                    {SIZE_DURATION[task.size] ?? task.size}
+                  </span>
+                  <button
+                    type="button"
+                    class="aa-btn aa-btn--secondary aa-btn--sm"
+                    onclick={() => goto(`/tasks/${task.permalink}`)}
+                  >
+                    Edit on task page
+                  </button>
+                  <button
+                    type="button"
+                    class="aa-btn aa-btn--ghost aa-btn--sm"
+                    title="Leaves the project; restore from the Logbook"
+                    onclick={() => setStatus(task, "WONT_DO")}
+                  >
+                    Decline
+                  </button>
+                </div>
+              {/if}
+            </li>
+          {/each}
+        {/snippet}
+
+        {#each displayGroups as group (group.key)}
+          {#if group.items.length > 0}
+            {@const collapsedDone =
+              group.key === "DONE" && !doneExpanded && group.items.length > 2}
+            <section class="aa-project__group" class:aa-project__done-group={group.key === "DONE"}>
+              <h3 class="aa-grouped__heading">
+                {group.label}
+                <span class="aa-grouped__count">{group.items.length}</span>
+              </h3>
+              <ul class="aa-grouped__list">
+                {@render taskRows(collapsedDone ? group.items.slice(0, 2) : group.items)}
+              </ul>
+              {#if collapsedDone}
+                <button
+                  type="button"
+                  class="aa-btn aa-btn--bare aa-project__done-toggle"
+                  onclick={() => (doneExpanded = true)}
+                >
+                  Show all {group.items.length}
+                </button>
+              {/if}
+            </section>
           {/if}
         {/each}
       </div>

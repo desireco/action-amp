@@ -52,7 +52,11 @@ test("opening a project shows its tasks; add + horizon move work", async ({ page
   await page.getByRole("button", { name: /add task/i }).click();
   await page.getByPlaceholder(/what needs doing/i).fill("Record episode 1");
   await page.getByRole("button", { name: /^create$/i }).click();
-  await expect(page.getByText("Record episode 1")).toBeVisible({ timeout: 10_000 });
+  // Row-scoped (not page getByText): the empty-Today cue also names the top
+  // Upcoming task in its promote button, so loose text matches twice.
+  await expect(
+    page.locator(".aa-project__row").filter({ hasText: "Record episode 1" }),
+  ).toBeVisible({ timeout: 10_000 });
 
   // The row carries the completion circle (#12) — inline complete, no
   // focus-mode detour needed.
@@ -61,9 +65,37 @@ test("opening a project shows its tasks; add + horizon move work", async ({ page
   await row.getByRole("button", { name: /^today$/i }).click();
 
   // Promoted onto Today. With exactly one Today task, the project surfaces it
-  // as the NEXT STEP hero (a "Start" pointer into focus mode).
-  await expect(page.getByText("Record episode 1")).toBeVisible({ timeout: 10_000 });
+  // as the NEXT STEP hero (a "Start" pointer into focus mode). Assert on the
+  // hero title itself — page-wide getByText also matches the cue's promote
+  // button, which names the same task.
+  await expect(page.locator(".aa-project__next-title")).toHaveText("Record episode 1", {
+    timeout: 10_000,
+  });
   await expect(page.getByRole("button", { name: /^start/i })).toBeVisible({ timeout: 10_000 });
+});
+
+test("an empty Today offers to promote the top Upcoming task, and the cue does", async ({
+  page,
+}) => {
+  await loginAs(page, DEV_EMAIL);
+
+  const projectName = uniqueName("Cue promote project");
+  await createProject(page, projectName);
+  await page.goto("/projects");
+  await page.getByText(projectName).click();
+  await expect(page.getByRole("heading", { name: projectName })).toBeVisible({ timeout: 10_000 });
+
+  // One Upcoming task, nothing on Today: the cue names the concrete task.
+  await page.getByRole("button", { name: /add task/i }).click();
+  await page.getByPlaceholder(/what needs doing/i).fill("Water the plants");
+  await page.getByRole("button", { name: /^create$/i }).click();
+  const cue = page.getByRole("button", { name: /promote .+water the plants.+ today/i });
+  await expect(cue).toBeVisible({ timeout: 10_000 });
+
+  // Taking the cue promotes onto Today — the hero takes over, cue retires.
+  await cue.click();
+  await expect(page.getByRole("button", { name: /^start/i })).toBeVisible({ timeout: 10_000 });
+  await expect(cue).toHaveCount(0);
 });
 
 test("lifecycle actions sit behind ⋯; Edit and Add task stay visible (desktop)", async ({
@@ -106,12 +138,19 @@ test("declining a project task from its page removes it from the project", async
   await page.getByRole("button", { name: /add task/i }).click();
   await page.getByPlaceholder(/what needs doing/i).fill("The episode we cancelled");
   await page.getByRole("button", { name: /^create$/i }).click();
-  await expect(page.getByText("The episode we cancelled")).toBeVisible({ timeout: 10_000 });
+  // Row-scoped: the cue's promote button also names this task (see above).
+  await expect(
+    page.locator(".aa-project__row").filter({ hasText: "The episode we cancelled" }),
+  ).toBeVisible({ timeout: 10_000 });
 
   // Open the task page: row click opens the inline editor, whose "Edit on
   // task page" button is the re-file surface (webapp went via the row editor
-  // too).
-  await page.getByText("The episode we cancelled").click();
+  // too). Row-scoped — the cue's promote button names the same task.
+  await page
+    .locator(".aa-project__row")
+    .filter({ hasText: "The episode we cancelled" })
+    .locator(".aa-project__row-main")
+    .click();
   await page.getByRole("button", { name: /edit on task page/i }).click();
   await expect(page).toHaveURL(/\/tasks\//, { timeout: 10_000 });
 
