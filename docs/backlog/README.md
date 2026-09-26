@@ -34,6 +34,7 @@
 | `lens-integration-test-gaps` | LensesPage test, migration effect, assertLensAllowed e2e, at-cap | reviews/custom-lenses.md | draft |
 | `anti-slop-cleanup` | Anti-slop Oxlint cleanup: 690 findings in 10 batches (B1–B10) | anti-slop-cleanup.md | draft |
 | `design-token-lint-sweep` | 55 remaining token-gate violations (lossless 35 landed 2026-09-26; rest need DESIGN-SYSTEM bucket decisions) | docs/DESIGN-SYSTEM.md | draft |
+| `e2e-shared-user-race` | Per-spec seeded users to retire the shared-dev-user race class (workers:1 landed as mitigation 2026-09-26) | e2e-shared-user-race.md | draft |
 
 ### Infrastructure / decisions (Build-owned)
 

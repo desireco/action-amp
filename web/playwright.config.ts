@@ -36,6 +36,13 @@ const BASE = process.env.E2E_BASE_URL ?? "http://localhost:5174";
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
+  // One worker: the specs share the dev database and, for several surfaces,
+  // the same seeded user (dev@local.test, s4-next@test.local, …). Parallel
+  // FILES raced each other's state — two specs draining/triaging the same
+  // inbox queue 400 with "Inbox item not found", smoke's seeded-task
+  // assertions lost tasks other specs completed. Per-spec users are the
+  // real fix (docs/backlog/e2e-shared-user-race.md); until then, serialize.
+  workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: "list",

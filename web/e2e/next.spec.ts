@@ -107,6 +107,8 @@ test.describe("What Now home", () => {
     await page.getByRole("button", { name: /mark complete/i }).click();
 
     await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?$/);
-    await expect(page.getByText("Deep work task")).toHaveCount(0);
+    // Scoped to main: getByText also matches the document <title>, which can
+    // carry the task name for the transition frame before the stage reloads.
+    await expect(page.getByRole("main")).not.toContainText("Deep work task");
   });
 });

@@ -41,11 +41,18 @@ test("the composer assigns the lens you pick, not just the active one", async ({
     timeout: 10_000,
   });
 
-  // The project landed in the PICKED lens (the wire view).
-  const inTarget = await apiPost<{ id: string; name: string }[]>(
-    page,
-    "/rpc/projects/list",
-    { lensId: target!.id },
-  );
-  expect(inTarget.map((p) => p.name)).toContain(projectName);
+  // The project landed in the PICKED lens (the wire view). Polled: the read
+  // can race the create's commit visibility by a few ms right after the
+  // composer's close (a real lens-assignment regression never appears here
+  // and still fails the poll).
+  await expect
+    .poll(async () => {
+      const inTarget = await apiPost<{ id: string; name: string }[]>(
+        page,
+        "/rpc/projects/list",
+        { lensId: target!.id },
+      );
+      return inTarget.map((p) => p.name);
+    })
+    .toContain(projectName);
 });

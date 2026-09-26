@@ -37,13 +37,19 @@ test("task detail: add a reserved tag from suggestions, remove it, re-add", asyn
   await expect(editor).toBeVisible();
   await page.getByRole("button", { name: "low-energy", exact: true }).click();
 
-  // The chip lands, muted (reserved). The wire agrees.
+  // The chip lands, muted (reserved). The wire agrees — polled, because the
+  // chip locator can match the just-clicked suggestion while the link RPC is
+  // still in flight.
   const chip = page.locator(".aa-tags-row").getByText("low-energy", { exact: true });
   await expect(chip).toBeVisible();
-  const detail = await apiPost<{ tags: { name: string }[] }>(page, "/rpc/tasks/task", {
-    id: task.id,
-  });
-  expect(detail.tags.map((t) => t.name)).toContain("low-energy");
+  await expect
+    .poll(async () => {
+      const detail = await apiPost<{ tags: { name: string }[] }>(page, "/rpc/tasks/task", {
+        id: task.id,
+      });
+      return detail.tags.map((t) => t.name);
+    })
+    .toContain("low-energy");
 
   // Remove — the link goes; the Tag row survives (re-add is instant).
   await page

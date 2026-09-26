@@ -206,6 +206,10 @@ class WhatNowStore {
     await client.tasks.complete(outcome ? { taskId: id, outcome } : { taskId: id });
     this.focused = null;
     this.nowTask = null;
+    // topTask too: it feeds the tab title (pageTitle) and the stage card, and
+    // a completed task must not name either during the frame before "/"'s
+    // fresh load lands.
+    this.topTask = null;
   }
 
   async completeSession(id: string) {

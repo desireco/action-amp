@@ -43,4 +43,9 @@ test("a long link in focus wraps and clamps — no horizontal overflow at 320px"
 
   // The actions stayed on-screen under the clamped title.
   await expect(page.getByRole("button", { name: /wrap up/i })).toBeVisible();
+
+  // Cleanup: the started session must not outlive the test — a leftover Now
+  // task hands every later Do tap off to /focus (the WhatNow handoff), which
+  // broke the mobile dock specs.
+  await apiPost(page, "/rpc/tasks/pause", { id: task.id });
 });

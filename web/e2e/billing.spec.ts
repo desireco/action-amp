@@ -336,14 +336,27 @@ test.describe("Stripe webhook — HTTP level with signed test payloads", () => {
     };
     const payload = JSON.stringify(event);
 
+    // Probe the API's webhook rail once (unsigned — both branches answer
+    // before any verification, so the probe never mutates anything).
+    const probe = await page.request.post(`${API_ORIGIN}/webhooks/stripe`, {
+      data: payload,
+      headers: { "content-type": "application/json" },
+    });
+
     if (!SECRET) {
-      // No whsec on the API process: the guard rail is the contract.
-      const res = await page.request.post(`${API_ORIGIN}/webhooks/stripe`, {
-        data: payload,
-        headers: { "content-type": "application/json" },
-      });
-      expect(res.status()).toBe(500);
-      expect(await res.text()).toBe("Webhook secret not configured.");
+      // Which rail is the API on? Probe it with the same unsigned POST: an
+      // unconfigured API answers 500 before signature checks; a configured
+      // one 400s on the missing header. (The signing secret only exists in
+      // this process when the shell exports it — s16-wiring.md — so a
+      // configured API without an exported secret skips, it cannot sign.)
+      if (probe.status() === 400) {
+        test.skip(
+          true,
+          "The running API has STRIPE_WEBHOOK_SECRET set but this shell doesn't — export it to run the signed webhook flow.",
+        );
+      }
+      expect(probe.status()).toBe(500);
+      expect(await probe.text()).toBe("Webhook secret not configured.");
       return;
     }
 
