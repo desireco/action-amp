@@ -372,22 +372,20 @@
               </span>
             {/if}
           </div>
-          <div class="aa-focus-timer__dial">
-            <time class="aa-focus-timer__time" aria-live="off">
-              {formatCountdown(remainingMs)}
-            </time>
-            <button
-              type="button"
-              class="aa-focus-timer__control"
-              aria-label={sessionComplete ? "Start another focus session" : "Pause focus session"}
-              onclick={() => {
-                if (sessionComplete) void whatNow.startSession(task.id);
-                else void exitFocus();
-              }}
-            >
-              {sessionComplete ? "▶" : "❚❚"}
-            </button>
-          </div>
+          <time class="aa-focus-timer__time" aria-live="off">
+            {formatCountdown(remainingMs)}
+          </time>
+          <button
+            type="button"
+            class="aa-focus-timer__control"
+            aria-label={sessionComplete ? "Start another focus session" : "Pause focus session"}
+            onclick={() => {
+              if (sessionComplete) void whatNow.startSession(task.id);
+              else void exitFocus();
+            }}
+          >
+            {sessionComplete ? "▶" : "❚❚"}
+          </button>
         </div>
       </div>
     </section>
@@ -613,11 +611,32 @@
   .aa-focus-timer--faded {
     opacity: 0.45;
   }
+  .aa-focus-timer__ring {
+    position: relative;
+    width: min(16rem, 70vw);
+    margin: 0 auto;
+  }
+  .aa-focus-timer__svg {
+    display: block;
+    width: 100%;
+  }
+  /* The clock sits at the circle's exact center; the interval label and the
+     pause control hang at mirrored rem offsets around it — flex centering
+     would let the label's height nudge the clock off-center. */
+  .aa-focus-timer__center {
+    position: absolute;
+    inset: 0;
+  }
   .aa-focus-timer__meta {
+    position: absolute;
+    left: 50%;
+    bottom: calc(50% + 1.8rem);
+    transform: translateX(-50%);
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.3rem;
+    max-width: 80%;
   }
   .aa-focus-timer__ring {
     position: relative;
@@ -628,28 +647,15 @@
     display: block;
     width: 100%;
   }
-  /* Interval info hugs the top of the circle; the clock centers in the space
-     left below it (padding % resolves against the ring's width). */
-  .aa-focus-timer__center {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 14% 12% 10%;
-  }
-  .aa-focus-timer__dial {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-  }
   .aa-focus-timer__time {
-    font-size: var(--aa-text-2xl);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: var(--aa-text-3xl);
     font-weight: var(--aa-weight-semibold);
     font-variant-numeric: tabular-nums;
+    line-height: 1;
     color: var(--aa-text);
   }
   .aa-focus-timer__label {
@@ -673,7 +679,10 @@
     color: var(--aa-text-muted, oklch(0.5 0.01 240));
   }
   .aa-focus-timer__control {
-    margin-top: 0.4rem;
+    position: absolute;
+    left: 50%;
+    top: calc(50% + 1.8rem);
+    transform: translateX(-50%);
     width: 2.6rem;
     height: 2.6rem;
     border-radius: var(--aa-radius-full);

@@ -25,6 +25,7 @@
   --aa-text-lg: 1.1rem;     /* card titles, hero subtitles */
   --aa-text-xl: 1.5rem;     /* page titles */
   --aa-text-2xl: 2rem;      /* hero, detail-page title */
+  --aa-text-3xl: 2.4rem;    /* display numbers — the focus clock */
 
   --aa-weight-regular: 400;
   --aa-weight-medium: 500;
