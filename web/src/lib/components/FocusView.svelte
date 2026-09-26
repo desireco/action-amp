@@ -6,6 +6,7 @@
   // composer is open. Do hands off here while a task is Now, so every exit
   // from this view is a pause — navigation away (sidebar) never is.
   import SnoozeSheet from "./SnoozeSheet.svelte";
+  import Icon from "./ui/Icon.svelte";
   import { formatDuration } from "../taskView";
   import { goto } from "$app/navigation";
   import { whatNow } from "../stores/whatNow.svelte";
@@ -375,17 +376,40 @@
           <time class="aa-focus-timer__time" aria-live="off">
             {formatCountdown(remainingMs)}
           </time>
-          <button
-            type="button"
-            class="aa-focus-timer__control"
-            aria-label={sessionComplete ? "Start another focus session" : "Pause focus session"}
-            onclick={() => {
-              if (sessionComplete) void whatNow.startSession(task.id);
-              else void exitFocus();
-            }}
-          >
-            {sessionComplete ? "▶" : "❚❚"}
-          </button>
+          <div class="aa-focus-timer__actions">
+            <button
+              type="button"
+              class="aa-focus-timer__action"
+              aria-label="Add note"
+              title="Add note (n)"
+              onclick={() => (composerMode = composerMode === "note" ? null : "note")}
+            >
+              <Icon name="note" size={15} />
+            </button>
+            <button
+              type="button"
+              class="aa-focus-timer__action"
+              aria-label={sessionComplete ? "Start another focus session" : "Pause focus session"}
+              title={sessionComplete ? "Start another session" : "Pause (p)"}
+              onclick={() => {
+                if (sessionComplete) void whatNow.startSession(task.id);
+                else void exitFocus();
+              }}
+            >
+              {sessionComplete ? "▶" : "❚❚"}
+            </button>
+            <button
+              type="button"
+              class="aa-focus-timer__action aa-focus-timer__action--complete"
+              aria-label="Complete task"
+              title="Wrap up (d)"
+              aria-expanded={task.isOnboardingSample ? undefined : composerMode === "completion"}
+              aria-controls={task.isOnboardingSample ? undefined : "aa-focus-completion-composer"}
+              onclick={openCompletionComposer}
+            >
+              <Icon name="check" size={15} />
+            </button>
+          </div>
         </div>
       </div>
     </section>
@@ -444,26 +468,6 @@
         </button>
       {/if}
     </section>
-
-    {#if !composerMode}
-      <div class="aa-focus__primary-actions" aria-label="Task actions">
-        <button type="button" class="aa-focus-action aa-focus-action--note" onclick={() => (composerMode = "note")}>
-          ✎ <span>Add note</span>
-        </button>
-        <button type="button" class="aa-focus-action aa-focus-action--pause" onclick={() => void exitFocus()}>
-          ❚❚ <span>Pause</span>
-        </button>
-        <button
-          type="button"
-          class="aa-focus-action aa-focus-action--complete"
-          aria-expanded={task.isOnboardingSample ? undefined : composerMode === "completion"}
-          aria-controls={task.isOnboardingSample ? undefined : "aa-focus-completion-composer"}
-          onclick={openCompletionComposer}
-        >
-          Wrap up
-        </button>
-      </div>
-    {/if}
 
     {#if composerMode}
       <section
@@ -678,19 +682,34 @@
   .aa-focus-timer__dot--crossed {
     color: var(--aa-text-muted, oklch(0.5 0.01 240));
   }
-  .aa-focus-timer__control {
+  /* The three actions — note, pause, finish — sit in a row below the clock,
+     inside the circle. Fixed rem offsets keep the clock centered; the row
+     must stay narrow enough to clear the ring's chord at its depth. */
+  .aa-focus-timer__actions {
     position: absolute;
     left: 50%;
-    top: calc(50% + 1.8rem);
+    top: calc(50% + 2.4rem);
     transform: translateX(-50%);
-    width: 2.6rem;
-    height: 2.6rem;
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+  }
+  .aa-focus-timer__action {
+    width: 2.4rem;
+    height: 2.4rem;
     border-radius: var(--aa-radius-full);
     border: 1px solid var(--aa-border-strong, oklch(0.85 0.006 240));
     background: var(--aa-surface, white);
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
     font-size: var(--aa-text-xs);
     color: var(--aa-text);
+  }
+  .aa-focus-timer__action--complete {
+    color: var(--aa-teal-cta);
   }
   .aa-title {
     font-size: var(--aa-text-xl);
@@ -758,33 +777,6 @@
     gap: 0.5rem;
     justify-content: center;
     margin-top: 0.5rem;
-  }
-  .aa-focus__primary-actions {
-    display: flex;
-    gap: 0.6rem;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  .aa-focus-action {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    border-radius: var(--aa-radius-md);
-    padding: 0.5rem 0.95rem;
-    font-size: var(--aa-text-md);
-    cursor: pointer;
-    border: 1px solid var(--aa-border-strong, oklch(0.85 0.006 240));
-    background: transparent;
-    color: var(--aa-text);
-  }
-  .aa-focus-action--complete {
-    background: var(--aa-primary);
-    border-color: transparent;
-    color: white;
-    padding: 0.5rem 1.3rem;
-  }
-  .aa-focus-action--complete:hover {
-    background: var(--aa-primary-hover);
   }
   .aa-focus-composer {
     border: 1px solid var(--aa-border, oklch(0.9 0.005 240));
@@ -929,7 +921,10 @@
       gap: 0.7rem;
     }
     .aa-focus-timer {
-      width: min(13rem, 70vw, 30vh);
+      /* 12rem floor: below it the fixed-rem action row and clock stop fitting
+         the ring's chord — the body scrolls instead of the circle shrinking
+         past usability. */
+      width: clamp(12rem, min(70vw, 30vh), 13rem);
       /* A width-set flex child aligns cross-start; center it like the
          stretched base case so the ring shares the title's axis. */
       margin: 0 auto;
@@ -939,6 +934,14 @@
          auto margins resolve to 0 on overflow, dropping it off-axis. */
       width: 100%;
       height: 100%;
+    }
+    .aa-focus-timer__actions {
+      top: calc(50% + 1.8rem);
+      gap: 0.5rem;
+    }
+    .aa-focus-timer__action {
+      width: 1.9rem;
+      height: 1.9rem;
     }
   }
 </style>
