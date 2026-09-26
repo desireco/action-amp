@@ -61,8 +61,20 @@ test.describe("Rituals", () => {
     for (let guardCount = 0; guardCount < 5; guardCount += 1) {
       const leftover = page.locator(".aa-rituals__row", { hasText: "Read 10 pages" }).first();
       if ((await leftover.count()) === 0) break;
+      const before = await page
+        .locator(".aa-rituals__row", { hasText: "Read 10 pages" })
+        .count();
       await leftover.getByRole("button", { name: "Archive" }).click();
-      await page.waitForTimeout(400);
+      // The archive refreshes the list — wait for the count to actually drop
+      // before the next pass. A fixed short wait could fire the next click
+      // mid-refresh, onto a node whose handlers are already torn down (the
+      // click then no-ops: the store swallows archive errors quietly).
+      await expect(async () => {
+        const now = await page
+          .locator(".aa-rituals__row", { hasText: "Read 10 pages" })
+          .count();
+        expect(now).toBeLessThan(before);
+      }).toPass({ timeout: 5_000 });
     }
     await expect(page.locator(".aa-rituals__row", { hasText: "Read 10 pages" })).toHaveCount(0);
 

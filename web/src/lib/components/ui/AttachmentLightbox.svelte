@@ -27,6 +27,9 @@
     onClose: () => void;
   } = $props();
 
+  // The lightbox mounts fresh per open (both call sites render it under
+  // {#if}), so `index` is read once, as the opening frame.
+  // svelte-ignore state_referenced_locally
   let current = $state(index);
   let rootEl: HTMLDivElement | null = $state(null);
   let opener: HTMLElement | null = $state(null);

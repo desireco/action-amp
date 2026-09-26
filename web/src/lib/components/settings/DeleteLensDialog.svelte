@@ -32,7 +32,11 @@
       : "completed work or history",
   );
 
+  // Draft seed: the dialog mounts fresh per open (each render hosts its own
+  // {#if}), so hasContent/targets are read once, at the moment of opening.
+  // svelte-ignore state_referenced_locally
   let mode = $state<"reassign" | "delete">(hasContent ? "reassign" : "delete");
+  // svelte-ignore state_referenced_locally
   let targetId = $state(targets[0]?.id ?? "");
   let deleting = $state(false);
   let error = $state<string | null>(null);

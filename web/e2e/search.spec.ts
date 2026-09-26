@@ -125,6 +125,12 @@ test("Command stays suppressed while Working and Capture keeps Cmd+K", async ({
   await expect(
     page.getByRole("dialog", { name: /quick capture/i }),
   ).toBeVisible();
+
+  // Cleanup: the card's Start starts the ranked #1 — which may be a seeded
+  // row, not the task this test created — and a running Now hands every
+  // later "/" visit off to /focus (this broke smoke). Pause whatever ran.
+  const focused = await apiPost<{ id: string } | null>(page, "/rpc/tasks/focusedTask");
+  if (focused?.id) await apiPost(page, "/rpc/tasks/pause", { id: focused.id });
 });
 
 // S9 addition — the Resources section on the project page (the surface S5

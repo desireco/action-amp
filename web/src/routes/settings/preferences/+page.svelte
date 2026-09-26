@@ -63,6 +63,9 @@
   }
 
   // ---- Today cap (stepper, dirty-only Save) ----
+  // Draft seed: the page mounts once per visit, so storedCap is read once as
+  // the starting point; `capDirty` below tracks drift from the live value.
+  // svelte-ignore state_referenced_locally
   let draftCap = $state(storedCap);
   let capStatus = $state<"idle" | "saving" | "error">("idle");
   let capError = $state<string | null>(null);

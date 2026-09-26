@@ -40,8 +40,13 @@
     onDone: () => Promise<void>;
   } = $props();
 
+  // Draft seed: the form mounts fresh per edit/create (each list row hosts
+  // its own {#if editingId === lens.id} instance), so `initial` is read once.
+  // svelte-ignore state_referenced_locally
   let name = $state(initial.name);
+  // svelte-ignore state_referenced_locally
   let purpose = $state(initial.purpose);
+  // svelte-ignore state_referenced_locally
   let color = $state(initial.color);
   let saving = $state(false);
   let error = $state<string | null>(null);
