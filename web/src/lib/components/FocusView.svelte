@@ -428,46 +428,44 @@
       </section>
     {/if}
 
-    <section class="aa-focus__clarification" aria-label="Task details">
-      {#if editingContent}
-        <div class="aa-focus__notes-editor">
-          <textarea
-            class="aa-focus__content-editor"
-            aria-label="Task details"
-            bind:value={contentDraft}
-            rows="5"
-            disabled={savingContent}
-          ></textarea>
-          <div class="aa-focus__notes-actions">
-            <button type="button" class="aa-btn aa-btn--primary" onclick={() => void saveContent()} disabled={savingContent}>
-              Save details
-            </button>
-            <button
-              type="button"
-              class="aa-btn aa-btn--secondary"
-              onclick={() => {
-                contentDraft = content;
-                editingContent = false;
-              }}
+    {#if content || editingContent}
+      <section class="aa-focus__clarification" aria-label="Task details">
+        {#if editingContent}
+          <div class="aa-focus__notes-editor">
+            <textarea
+              class="aa-focus__content-editor"
+              aria-label="Task details"
+              bind:value={contentDraft}
+              rows="5"
               disabled={savingContent}
-            >
-              Cancel
+            ></textarea>
+            <div class="aa-focus__notes-actions">
+              <button type="button" class="aa-btn aa-btn--primary" onclick={() => void saveContent()} disabled={savingContent}>
+                Save details
+              </button>
+              <button
+                type="button"
+                class="aa-btn aa-btn--secondary"
+                onclick={() => {
+                  contentDraft = content;
+                  editingContent = false;
+                }}
+                disabled={savingContent}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        {:else}
+          <div class="aa-focus__content">
+            <p class="aa-focus__content-text">{content}</p>
+            <button type="button" class="aa-focus__details-edit" onclick={() => (editingContent = true)}>
+              Edit details
             </button>
           </div>
-        </div>
-      {:else if content}
-        <div class="aa-focus__content">
-          <p class="aa-focus__content-text">{content}</p>
-          <button type="button" class="aa-focus__details-edit" onclick={() => (editingContent = true)}>
-            Edit details
-          </button>
-        </div>
-      {:else}
-        <button type="button" class="aa-focus__details-empty" onclick={() => (editingContent = true)}>
-          Add task details to clarify what done looks like.
-        </button>
-      {/if}
-    </section>
+        {/if}
+      </section>
+    {/if}
 
     {#if composerMode}
       <section
@@ -755,8 +753,7 @@
     margin: 0 0 0.3rem;
     color: var(--aa-text);
   }
-  .aa-focus__details-edit,
-  .aa-focus__details-empty {
+  .aa-focus__details-edit {
     background: none;
     border: none;
     color: var(--aa-text-muted, oklch(0.5 0.01 240));
