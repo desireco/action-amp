@@ -346,44 +346,48 @@
           />
         </svg>
         <div class="aa-focus-timer__center">
-          <time class="aa-focus-timer__time" aria-live="off">
-            {formatCountdown(remainingMs)}
-          </time>
-          <span class="aa-focus-timer__label">
-            {sessionComplete ? "session complete" : `${task.focusSessionMinutes} min focus`}
-          </span>
-          {#if closedSessions.length > 0}
-            <span class="aa-focus-timer__dots" aria-label={sessionDotsAria}>
-              {#each closedSessions as session}
-                <svg
-                  viewBox="0 0 8 8"
-                  class="aa-focus-timer__dot{session.completed ? "" : " aa-focus-timer__dot--crossed"}"
-                  aria-hidden="true"
-                >
-                  {#if session.completed}
-                    <circle cx="4" cy="4" r="3" fill="currentColor" />
-                  {:else}
-                    <circle cx="4" cy="4" r="2.5" fill="none" stroke="currentColor" stroke-width="1.1" />
-                    <line
-                      x1="1.7" y1="6.3" x2="6.3" y2="1.7"
-                      stroke="currentColor" stroke-width="1.1" stroke-linecap="round"
-                    />
-                  {/if}
-                </svg>
-              {/each}
+          <div class="aa-focus-timer__meta">
+            <span class="aa-focus-timer__label">
+              {sessionComplete ? "session complete" : `${task.focusSessionMinutes} min focus`}
             </span>
-          {/if}
-          <button
-            type="button"
-            class="aa-focus-timer__control"
-            aria-label={sessionComplete ? "Start another focus session" : "Pause focus session"}
-            onclick={() => {
-              if (sessionComplete) void whatNow.startSession(task.id);
-              else void exitFocus();
-            }}
-          >
-            {sessionComplete ? "▶" : "❚❚"}
-          </button>
+            {#if closedSessions.length > 0}
+              <span class="aa-focus-timer__dots" aria-label={sessionDotsAria}>
+                {#each closedSessions as session}
+                  <svg
+                    viewBox="0 0 8 8"
+                    class="aa-focus-timer__dot{session.completed ? "" : " aa-focus-timer__dot--crossed"}"
+                    aria-hidden="true"
+                  >
+                    {#if session.completed}
+                      <circle cx="4" cy="4" r="3" fill="currentColor" />
+                    {:else}
+                      <circle cx="4" cy="4" r="2.5" fill="none" stroke="currentColor" stroke-width="1.1" />
+                      <line
+                        x1="1.7" y1="6.3" x2="6.3" y2="1.7"
+                        stroke="currentColor" stroke-width="1.1" stroke-linecap="round"
+                      />
+                    {/if}
+                  </svg>
+                {/each}
+              </span>
+            {/if}
+          </div>
+          <div class="aa-focus-timer__dial">
+            <time class="aa-focus-timer__time" aria-live="off">
+              {formatCountdown(remainingMs)}
+            </time>
+            <button
+              type="button"
+              class="aa-focus-timer__control"
+              aria-label={sessionComplete ? "Start another focus session" : "Pause focus session"}
+              onclick={() => {
+                if (sessionComplete) void whatNow.startSession(task.id);
+                else void exitFocus();
+              }}
+            >
+              {sessionComplete ? "▶" : "❚❚"}
+            </button>
+          </div>
         </div>
       </div>
     </section>
@@ -609,6 +613,12 @@
   .aa-focus-timer--faded {
     opacity: 0.45;
   }
+  .aa-focus-timer__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+  }
   .aa-focus-timer__ring {
     position: relative;
     width: min(16rem, 70vw);
@@ -618,17 +628,26 @@
     display: block;
     width: 100%;
   }
+  /* Interval info hugs the top of the circle; the clock centers in the space
+     left below it (padding % resolves against the ring's width). */
   .aa-focus-timer__center {
     position: absolute;
     inset: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding: 14% 12% 10%;
+  }
+  .aa-focus-timer__dial {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
-    gap: 0.2rem;
+    gap: 0.35rem;
   }
   .aa-focus-timer__time {
-    font-size: 2.2rem;
+    font-size: var(--aa-text-2xl);
     font-weight: var(--aa-weight-semibold);
     font-variant-numeric: tabular-nums;
     color: var(--aa-text);
@@ -643,7 +662,6 @@
     justify-content: center;
     gap: 0.35rem;
     max-width: 9rem;
-    margin-top: 0.15rem;
     color: var(--aa-teal-cta);
   }
   .aa-focus-timer__dot {
@@ -662,7 +680,7 @@
     border: 1px solid var(--aa-border-strong, oklch(0.85 0.006 240));
     background: var(--aa-surface, white);
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: var(--aa-text-xs);
     color: var(--aa-text);
   }
   .aa-title {
