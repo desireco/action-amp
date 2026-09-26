@@ -33,6 +33,7 @@
 | `lens-free-gate-loading-edge-cases` | FREE-gate transient bypass + self-heal reset (low-sev) | reviews/custom-lenses.md | draft |
 | `lens-integration-test-gaps` | LensesPage test, migration effect, assertLensAllowed e2e, at-cap | reviews/custom-lenses.md | draft |
 | `anti-slop-cleanup` | Anti-slop Oxlint cleanup: 690 findings in 10 batches (B1–B10) | anti-slop-cleanup.md | draft |
+| `design-token-lint-sweep` | 55 remaining token-gate violations (lossless 35 landed 2026-09-26; rest need DESIGN-SYSTEM bucket decisions) | docs/DESIGN-SYSTEM.md | draft |
 
 ### Infrastructure / decisions (Build-owned)
 

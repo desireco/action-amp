@@ -69,7 +69,7 @@
       Color carries meaning, never decoration. Teal = system/state; amber =
       rare human emphasis. Violet marks projects/goals, rose errors/overdue.
       Everything else is a cool-tinted neutral ramp (hue 230 in OKLCH); pure
-      #000/#fff are banned. No streaks, badges, or guilt-trip color anywhere.
+      black / white are banned. No streaks, badges, or guilt-trip color anywhere.
     </p>
     <div class="accents">
       {#each accents as a (a.name)}

@@ -120,7 +120,7 @@
     align-items: center;
     gap: 0.65rem;
     padding: 0.6rem 0.35rem;
-    border-radius: 8px;
+    border-radius: var(--aa-radius-md);
   }
   .aa-task-row--clickable {
     cursor: pointer;
@@ -149,7 +149,7 @@
   .aa-task-row__dot {
     width: 9px;
     height: 9px;
-    border-radius: 999px;
+    border-radius: var(--aa-radius-full);
     flex: none;
     display: inline-flex;
     align-items: center;
@@ -185,7 +185,7 @@
   .aa-task-row__lens-dot {
     width: 7px;
     height: 7px;
-    border-radius: 999px;
+    border-radius: var(--aa-radius-full);
     background: var(--aa-accent, var(--aa-teal));
     box-shadow: var(--aa-ring-halo);
   }

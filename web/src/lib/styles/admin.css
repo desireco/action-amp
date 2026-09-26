@@ -206,7 +206,7 @@ a.aa-admin-tile__label:hover { text-decoration: underline; }
 .aa-admin-feedback-route__lens-dot {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
+  border-radius: var(--aa-radius-full);
   flex-shrink: 0;
 }
 

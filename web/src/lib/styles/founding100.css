@@ -18,7 +18,7 @@
 
 .aa-founding-sub {
   color: var(--aa-text-3);
-  font-size: 1.1rem;
+  font-size: var(--aa-text-lg);
   margin-bottom: 2.25rem;
 }
 
@@ -60,7 +60,7 @@
 
 .aa-founding-price strong {
   color: var(--aa-text-2);
-  font-size: 1rem;
+  font-size: var(--aa-text-md);
 }
 
 .aa-founding-price-note,
@@ -80,7 +80,7 @@
 
 .aa-founding-free {
   color: var(--aa-text-3);
-  font-size: 0.9rem;
+  font-size: var(--aa-text-base);
   margin: 1rem auto 0;
 }
 
@@ -89,7 +89,7 @@
 }
 
 .aa-founding-error {
-  color: var(--aa-rose, #c0524b);
+  color: var(--aa-rose);
   font-size: 0.95rem;
   margin-bottom: 1rem;
 }

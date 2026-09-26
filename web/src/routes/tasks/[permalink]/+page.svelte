@@ -503,11 +503,11 @@
   .aa-task-edit__wont-do {
     width: 1.8rem;
     height: 1.8rem;
-    border-radius: 999px;
+    border-radius: var(--aa-radius-full);
     border: 1px solid var(--aa-border-strong, oklch(0.85 0.006 240));
     background: transparent;
     color: var(--aa-rose-text);
-    font-size: 1rem;
+    font-size: var(--aa-text-md);
     cursor: pointer;
   }
   .aa-task-edit__actions-main {
@@ -522,7 +522,7 @@
     text-align: right;
   }
   .aa-btn {
-    border-radius: 8px;
+    border-radius: var(--aa-radius-md);
     padding: 0.45rem 0.9rem;
     font-size: var(--aa-text-sm);
     cursor: pointer;

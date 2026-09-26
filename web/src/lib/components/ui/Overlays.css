@@ -768,7 +768,7 @@
   max-width: 280px;
   margin-top: 2px;
   border: 1px solid var(--aa-border);
-  border-radius: 8px;
+  border-radius: var(--aa-radius-md);
   background: var(--aa-surface);
   box-shadow: var(--aa-shadow-md);
   overflow: hidden;
@@ -783,7 +783,7 @@
   background: transparent;
   border: none;
   padding: 6px 8px;
-  border-radius: 6px;
+  border-radius: var(--aa-radius-sm);
   cursor: pointer;
   font: inherit;
   font-size: var(--aa-text-sm);

@@ -264,13 +264,13 @@
   .aa-simple-list__add input {
     flex: 1;
     border: 1px solid var(--aa-border-strong, oklch(0.85 0.006 240));
-    border-radius: 8px;
+    border-radius: var(--aa-radius-md);
     padding: 0.5rem 0.7rem;
     font: inherit;
   }
   .aa-simple-list__add button {
     border: none;
-    border-radius: 8px;
+    border-radius: var(--aa-radius-md);
     background: var(--aa-primary);
     color: white;
     padding: 0.5rem 0.9rem;
@@ -293,7 +293,7 @@
   }
   .aa-simple-list__loading span {
     height: 0.9rem;
-    border-radius: 6px;
+    border-radius: var(--aa-radius-sm);
     background: var(--aa-surface-muted, oklch(0.96 0.005 240));
   }
   .aa-simple-list__empty {
@@ -328,7 +328,7 @@
     align-items: flex-start;
     gap: 0.6rem;
     padding: 0.45rem 0.4rem;
-    border-radius: 8px;
+    border-radius: var(--aa-radius-md);
   }
   .aa-simple-list__section li.selected {
     background: var(--aa-surface-muted, oklch(0.97 0.004 240));
@@ -360,7 +360,7 @@
     flex: 1;
     font: inherit;
     border: 1px solid var(--aa-teal);
-    border-radius: 6px;
+    border-radius: var(--aa-radius-sm);
     padding: 0.25rem 0.45rem;
   }
   .aa-simple-list__remove {
@@ -378,7 +378,7 @@
     align-self: flex-start;
     background: none;
     border: 1px solid var(--aa-border-strong, oklch(0.85 0.006 240));
-    border-radius: 8px;
+    border-radius: var(--aa-radius-md);
     padding: 0.35rem 0.75rem;
     cursor: pointer;
     color: var(--aa-rose-text);

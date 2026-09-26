@@ -589,10 +589,10 @@
     right: 1rem;
     width: 2rem;
     height: 2rem;
-    border-radius: 999px;
+    border-radius: var(--aa-radius-full);
     border: 1px solid var(--aa-border, oklch(0.9 0.005 240));
     background: transparent;
-    font-size: 1.1rem;
+    font-size: var(--aa-text-lg);
     color: var(--aa-text-muted, oklch(0.5 0.01 240));
     cursor: pointer;
   }
@@ -658,7 +658,7 @@
     margin-top: 0.4rem;
     width: 2.6rem;
     height: 2.6rem;
-    border-radius: 999px;
+    border-radius: var(--aa-radius-full);
     border: 1px solid var(--aa-border-strong, oklch(0.85 0.006 240));
     background: var(--aa-surface, white);
     cursor: pointer;
@@ -722,7 +722,7 @@
   .aa-focus__content-editor {
     width: 100%;
     border: 1px solid var(--aa-border, oklch(0.9 0.005 240));
-    border-radius: 8px;
+    border-radius: var(--aa-radius-md);
     padding: 0.5rem;
     font: inherit;
   }
@@ -742,7 +742,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    border-radius: 8px;
+    border-radius: var(--aa-radius-md);
     padding: 0.5rem 0.95rem;
     font-size: var(--aa-text-md);
     cursor: pointer;
@@ -761,7 +761,7 @@
   }
   .aa-focus-composer {
     border: 1px solid var(--aa-border, oklch(0.9 0.005 240));
-    border-radius: 12px;
+    border-radius: var(--aa-radius-lg);
     padding: 0.85rem;
     display: flex;
     flex-direction: column;
@@ -787,7 +787,7 @@
   .aa-focus-composer__dismiss {
     background: none;
     border: 1px solid var(--aa-border, oklch(0.9 0.005 240));
-    border-radius: 6px;
+    border-radius: var(--aa-radius-sm);
     font-family: var(--aa-font-mono);
     font-size: var(--aa-text-xs);
     color: var(--aa-text-muted, oklch(0.5 0.01 240));
@@ -797,7 +797,7 @@
   .aa-focus-composer__text {
     width: 100%;
     border: 1px solid var(--aa-border, oklch(0.9 0.005 240));
-    border-radius: 8px;
+    border-radius: var(--aa-radius-md);
     padding: 0.5rem;
     font: inherit;
     resize: vertical;
@@ -823,7 +823,7 @@
     gap: 0.5rem;
   }
   .aa-btn {
-    border-radius: 8px;
+    border-radius: var(--aa-radius-md);
     padding: 0.4rem 0.85rem;
     font-size: var(--aa-text-sm);
     cursor: pointer;
@@ -873,7 +873,7 @@
   .aa-thread__event-dot {
     width: 7px;
     height: 7px;
-    border-radius: 999px;
+    border-radius: var(--aa-radius-full);
     background: var(--aa-teal);
   }
   .aa-focus__not-now {

@@ -668,7 +668,7 @@
   }
 
   .aa-share__error {
-    color: var(--aa-rose, #b3455a);
+    color: var(--aa-rose);
     font-size: var(--aa-text-sm);
     margin: var(--aa-space-sm) 0 0;
   }

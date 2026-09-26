@@ -81,7 +81,7 @@
     font-size: var(--aa-text-md);
     color: var(--aa-text);
     cursor: pointer;
-    border-radius: 8px;
+    border-radius: var(--aa-radius-md);
   }
   .aa-snooze__option:hover:not(:disabled) {
     background: var(--aa-surface-muted, oklch(0.97 0.004 240));

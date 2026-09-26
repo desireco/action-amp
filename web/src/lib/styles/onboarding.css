@@ -232,7 +232,7 @@
   border-radius: var(--aa-radius-lg);
 }
 .aa-ob-triage-text {
-  font-size: 0.9rem;
+  font-size: var(--aa-text-base);
   font-weight: 500;
   color: var(--aa-text);
 }
@@ -281,7 +281,7 @@
 /* Inline error when completeOnboarding fails — calm, not a guilt-trip red. */
 .aa-ob-error {
   margin: 0 0 var(--aa-space-md);
-  font-size: 0.9rem;
+  font-size: var(--aa-text-base);
   color: var(--aa-amber);
 }
 

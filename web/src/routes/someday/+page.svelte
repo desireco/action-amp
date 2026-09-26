@@ -117,7 +117,7 @@
     gap: 0.25rem;
   }
   .aa-skeleton {
-    border-radius: 8px;
+    border-radius: var(--aa-radius-md);
     background: var(--aa-surface-muted, oklch(0.96 0.005 240));
   }
   .aa-skeleton--heading {

@@ -120,7 +120,7 @@
     font-size: var(--aa-text-sm);
   }
   .aa-skeleton {
-    border-radius: 8px;
+    border-radius: var(--aa-radius-md);
     background: var(--aa-surface-muted, oklch(0.96 0.005 240));
   }
   .aa-skeleton--heading {
@@ -132,7 +132,7 @@
     margin-top: 0.5rem;
   }
   .aa-btn {
-    border-radius: 8px;
+    border-radius: var(--aa-radius-md);
     padding: 0.35rem 0.8rem;
     font-size: var(--aa-text-sm);
     cursor: pointer;

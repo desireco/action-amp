@@ -198,7 +198,7 @@
 
 /* The shell's secondary button (webapp ui/Button secondary sm parity). */
 .aa-settings-btn {
-  border-radius: 8px;
+  border-radius: var(--aa-radius-md);
   padding: 0.35rem 0.8rem;
   font-size: var(--aa-text-sm);
   font: inherit;
