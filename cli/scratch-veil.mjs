@@ -1,0 +1,11 @@
+import { chromium } from "@playwright/test";
+const browser = await chromium.launch();
+const page = await (await browser.newContext({ viewport: { width: 390, height: 700 } })).newPage();
+await page.request.post("http://localhost:5174/api/dev/login?email=dev@local.test");
+await page.route("**/api/auth/me", (route) => route.abort("connectionrefused"));
+await page.goto("http://localhost:5174/");
+await page.getByText("Couldn't reach ActionAmp.").waitFor({ timeout: 15_000 });
+await page.waitForTimeout(250);
+await page.screenshot({ path: "/tmp/veil-error.png" });
+await browser.close();
+console.log("veil shot written");
