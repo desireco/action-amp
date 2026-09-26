@@ -342,6 +342,23 @@
   color: var(--aa-rose-text);
 }
 
+/* Loading skeleton — same language as the someday/today/week loading states
+   (those carry scoped copies; this is the project/goal detail pages' copy). */
+.aa-skeleton {
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-surface-muted, oklch(0.96 0.005 240));
+}
+
+.aa-skeleton--heading {
+  height: 0.7rem;
+  width: 8rem;
+}
+
+.aa-skeleton--row {
+  height: 2.2rem;
+  margin-top: 0.5rem;
+}
+
 .aa-grouped__heading {
   margin: 0 0 var(--aa-space-sm);
   font-size: var(--aa-text-sm);

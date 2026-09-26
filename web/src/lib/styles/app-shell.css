@@ -819,7 +819,7 @@
   height: 40px;
   border-radius: var(--aa-radius-md, 10px);
   background: var(--aa-primary);
-  color: var(--aa-primary-contrast, #fff);
+  color: var(--aa-primary-contrast);
   display: grid;
   place-items: center;
   font-weight: 700;

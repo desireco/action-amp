@@ -94,6 +94,9 @@
             : someday;
       bucket.push(t);
     }
+    // Done reads newest-first — the archive tail leads with what just landed.
+    // (The payload orders by priority/createdAt-asc, i.e. oldest first.)
+    done.sort((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? ""));
     return [
       { key: "TODAY", label: "Today", items: today },
       { key: "UPCOMING", label: "Upcoming", items: upcoming },
@@ -267,7 +270,12 @@
 
 <div class="aa-detail aa-project">
   {#if projects.busy && !project}
-    <p class="aa-state">Loading…</p>
+    <div aria-label="Loading project">
+      <div class="aa-skeleton aa-skeleton--heading"></div>
+      <div class="aa-skeleton aa-skeleton--row"></div>
+      <div class="aa-skeleton aa-skeleton--row"></div>
+      <div class="aa-skeleton aa-skeleton--row"></div>
+    </div>
   {:else if projects.error && !project}
     <div class="aa-state aa-state--error" role="alert">{projects.error}</div>
   {:else if !project}

@@ -12,6 +12,8 @@ TOKENS="web/src/lib/tokens.css"
 violations=0
 
 # 1. Raw color literals (hex / rgb / hsl) anywhere except the tokens file.
+#    Carve-out: <meta name="theme-color"> — a platform attribute in the HTML
+#    head; CSS vars cannot reach it, so its brand literal stays inline.
 while IFS= read -r hit; do
   [ -z "$hit" ] && continue
   f="${hit%%:*}"
@@ -19,7 +21,8 @@ while IFS= read -r hit; do
   echo "raw color: $hit"
   violations=$((violations + 1))
 done < <(grep -rnE '#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(' "$SRC" \
-  --include='*.svelte' --include='*.css' --include='*.ts' | grep -v 'tokens.css')
+  --include='*.svelte' --include='*.css' --include='*.ts' \
+  | grep -v 'tokens.css' | grep -v 'name="theme-color"')
 
 # 2. Raw font sizes — must be var(--aa-text-*) / var(--aa-font-*) (em/rem
 #    relative to a token parent is fine; bare px/rem is not).

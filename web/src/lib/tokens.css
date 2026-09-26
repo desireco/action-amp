@@ -53,6 +53,9 @@
      over --aa-teal-* directly when the intent is "primary" or "focus accent". */
   --aa-primary: var(--aa-teal-cta);
   --aa-primary-hover: var(--aa-teal-cta-hover);
+  /* Text/icons on a --aa-primary surface — a constant (never flips in dark
+     mode; the accent stays dark enough to carry white in both themes). */
+  --aa-primary-contrast: oklch(1 0 0);
   --aa-accent: var(--aa-teal);        /* selection / focus accent (the bright end) */
   --aa-accent-soft: var(--aa-teal-soft);
 

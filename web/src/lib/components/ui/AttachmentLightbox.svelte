@@ -94,7 +94,7 @@
 <svelte:window onkeydowncapture={onKey} />
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-<div bind:this={rootEl} class="aa-lightbox" role="dialog" aria-modal="true" aria-label="Attached image" onclick={onClose}>
+<div bind:this={rootEl} class="aa-lightbox" role="dialog" aria-modal="true" aria-label="Attached image" tabindex="-1" onclick={onClose}>
   <!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -->
   <div class="aa-lightbox__stage" onclick={(e) => e.stopPropagation()}>
     <img

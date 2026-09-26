@@ -34,8 +34,11 @@
 </script>
 
 {#if loading}
-  <div class="aa-detail aa-project">
-    <p class="aa-state">Loading…</p>
+  <div class="aa-detail aa-project" aria-label="Loading project">
+    <div class="aa-skeleton aa-skeleton--heading"></div>
+    <div class="aa-skeleton aa-skeleton--row"></div>
+    <div class="aa-skeleton aa-skeleton--row"></div>
+    <div class="aa-skeleton aa-skeleton--row"></div>
   </div>
 {:else if !project}
   <div class="aa-detail aa-project">
@@ -54,3 +57,19 @@
   <!-- STANDARD — the full S5 work surface (loads its own detail by permalink). -->
   <ProjectDetailView />
 {/if}
+
+<style>
+  /* Same skeleton language as the Someday/Today/Week loading states. */
+  .aa-skeleton {
+    border-radius: var(--aa-radius-md);
+    background: var(--aa-surface-muted, oklch(0.96 0.005 240));
+  }
+  .aa-skeleton--heading {
+    height: 0.7rem;
+    width: 8rem;
+  }
+  .aa-skeleton--row {
+    height: 2.2rem;
+    margin-top: 0.5rem;
+  }
+</style>
