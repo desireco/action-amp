@@ -670,15 +670,17 @@
     justify-content: center;
     gap: 0.4rem;
     max-width: 12rem;
-    color: var(--aa-teal-cta);
   }
+  /* Color-coded per cycle: solid teal = a completed countdown (the ring's
+     own blue), amber crossed = an interrupted one — partial, not failed. */
   .aa-focus-timer__dot {
     display: block;
     width: 1.1rem;
     height: 1.1rem;
+    color: var(--aa-teal);
   }
   .aa-focus-timer__dot--crossed {
-    color: var(--aa-text-muted, oklch(0.5 0.01 240));
+    color: var(--aa-amber-text);
   }
   /* The three actions — note, pause, finish — sit in a row below the clock,
      inside the circle. Fixed rem offsets keep the clock centered; the row
