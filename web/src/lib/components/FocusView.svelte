@@ -632,7 +632,7 @@
   .aa-focus-timer__meta {
     position: absolute;
     left: 50%;
-    bottom: calc(50% + 1.8rem);
+    bottom: calc(50% + 2rem);
     transform: translateX(-50%);
     display: flex;
     flex-direction: column;
@@ -642,7 +642,7 @@
   }
   .aa-focus-timer__ring {
     position: relative;
-    width: min(16rem, 70vw);
+    width: min(20rem, 70vw);
     margin: 0 auto;
   }
   .aa-focus-timer__svg {
@@ -668,14 +668,14 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 0.35rem;
-    max-width: 9rem;
+    gap: 0.4rem;
+    max-width: 12rem;
     color: var(--aa-teal-cta);
   }
   .aa-focus-timer__dot {
     display: block;
-    width: 0.45rem;
-    height: 0.45rem;
+    width: 1.1rem;
+    height: 1.1rem;
   }
   .aa-focus-timer__dot--crossed {
     color: var(--aa-text-muted, oklch(0.5 0.01 240));
@@ -686,11 +686,11 @@
   .aa-focus-timer__actions {
     position: absolute;
     left: 50%;
-    top: calc(50% + 2.4rem);
+    top: calc(50% + 2.5rem);
     transform: translateX(-50%);
     display: flex;
     align-items: center;
-    gap: 1.1rem;
+    gap: 0.7rem;
   }
   .aa-focus-timer__action {
     width: 2.4rem;
@@ -918,10 +918,10 @@
       gap: 0.7rem;
     }
     .aa-focus-timer {
-      /* 12rem floor: below it the fixed-rem action row and clock stop fitting
+      /* 15rem floor: below it the fixed-rem action row and clock stop fitting
          the ring's chord — the body scrolls instead of the circle shrinking
          past usability. */
-      width: clamp(12rem, min(70vw, 30vh), 13rem);
+      width: clamp(15rem, min(70vw, 37.5vh), 16.25rem);
       /* A width-set flex child aligns cross-start; center it like the
          stretched base case so the ring shares the title's axis. */
       margin: 0 auto;
@@ -933,8 +933,8 @@
       height: 100%;
     }
     .aa-focus-timer__actions {
-      top: calc(50% + 1.8rem);
-      gap: 0.5rem;
+      top: calc(50% + 2.2rem);
+      gap: 0.35rem;
     }
     .aa-focus-timer__action {
       width: 1.9rem;
