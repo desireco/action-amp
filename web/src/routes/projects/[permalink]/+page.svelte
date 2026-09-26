@@ -8,6 +8,7 @@
   import SimpleListChecklist from "../../../lib/components/SimpleListChecklist.svelte";
   import ProjectDetailView from "../../../lib/components/projects/ProjectDetailView.svelte";
   import type { ListProjectDto } from "../../../lib/dto";
+  import { pageTitle } from "../../../lib/stores/pageTitle.svelte";
 
   const permalink = $derived($page.params.permalink ?? "");
 
@@ -21,6 +22,14 @@
       .then((row) => (project = row))
       .catch(() => (project = null))
       .finally(() => (loading = false));
+  });
+
+  // The host fetch lives in local state — publish the name for the tab title
+  // (the STANDARD branch's store-backed detail takes precedence in the layout,
+  // so this override only matters while it's the honest source).
+  $effect(() => {
+    if (project) pageTitle.set("/projects/[permalink]", permalink, project.name);
+    return () => pageTitle.clearIf("/projects/[permalink]", permalink);
   });
 </script>
 

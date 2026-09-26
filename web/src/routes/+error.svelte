@@ -36,9 +36,9 @@
   const primaryLabel = $derived(signedIn ? "Go to your tasks" : "Sign in");
 </script>
 
-<svelte:head>
-  <title>{notFound ? "Page not found" : "Something went wrong"} · ActionAmp</title>
-</svelte:head>
+<!-- The tab title ("Page not found · ActionAmp" / "Something went wrong ·
+     ActionAmp") is set by the root layout's single title writer, which reads
+     page.error/page.status — no svelte:head here. -->
 
 <div class="aa-auth">
   <div class="aa-auth-card">

@@ -26,6 +26,13 @@
   // Better Stack error tracking — app surface only; the flow/marketing pages
   // stay out of telemetry (lib/telemetry.ts, /betterstack.js tag).
   import { initBetterStackErrorTracking } from "../lib/telemetry";
+  // Context-aware tab titles — this layout hosts the single document.title
+  // writer (lib/stores/pageTitle.svelte.ts); entity names come from the
+  // stores the title derives from.
+  import { computeTitle, pageTitle } from "../lib/stores/pageTitle.svelte";
+  import { whatNow } from "../lib/stores/whatNow.svelte";
+  import { projects } from "../lib/stores/projects.svelte";
+  import { goals } from "../lib/stores/goals.svelte";
   let { children }: { children: Snippet } = $props();
 
   // The app shell's territory: "/" + every app section (/today, /inbox,
@@ -58,6 +65,29 @@
   // Stack tag once (idempotent); a direct hit on a flow page never loads it.
   $effect(() => {
     if (inApp) initBetterStackErrorTracking();
+  });
+
+  // The tab title follows the app's context: section name per route, the
+  // entity's name on task/project/goal detail, the running task on /focus.
+  // SvelteKit types `page` as the superset of what computeTitle reads.
+  $effect(() => {
+    document.title = computeTitle(
+      {
+        pathname: page.url.pathname,
+        routeId: page.route?.id ?? null,
+        params: page.params,
+        error: page.error,
+        status: page.status,
+      },
+      pageTitle.override,
+      {
+        topTask: whatNow.topTask,
+        picked: whatNow.picked,
+        focused: whatNow.focused,
+        projectDetail: projects.detail,
+        goalDetail: goals.detail,
+      },
+    );
   });
 </script>
 

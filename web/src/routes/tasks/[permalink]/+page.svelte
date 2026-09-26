@@ -17,6 +17,7 @@
     WHEN_ORDER,
   } from "../../../lib/taskView";
   import type { TaskFull } from "../../../lib/dto";
+  import { pageTitle } from "../../../lib/stores/pageTitle.svelte";
 
   /** The `tasks.task` detail shape: scalars + tags/thread/refs. */
   type TaskDetailDto = TaskFull & {
@@ -59,6 +60,14 @@
       })
       .catch(() => (task = null))
       .finally(() => (loading = false));
+  });
+
+  // The task lives in local state — publish its name for the tab title;
+  // the layout consumes the override only while this exact route + permalink
+  // is live, so a stale entry can never title the wrong page.
+  $effect(() => {
+    if (task) pageTitle.set("/tasks/[permalink]", permalink, task.description);
+    return () => pageTitle.clearIf("/tasks/[permalink]", permalink);
   });
 
   /** Refetch after a tag add/remove (#16) — the cache-invalidation point. */
