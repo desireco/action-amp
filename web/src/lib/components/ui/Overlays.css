@@ -730,15 +730,15 @@
 }
 
 /* Remove × — the shared close control shrunk onto the thumb, on a scrim
-   so it reads over any image. No token exists for scrims; this is the
-   one place a raw color is allowed to appear. */
+   so it reads over any image. White comes from --aa-text-on-scrim: the
+   scrim is dark in both themes, so the constant never flips. */
 .aa-capture__attachment-remove {
   position: absolute;
   top: 1px;
   right: 1px;
   width: 18px;
   height: 18px;
-  color: #fff;
+  color: var(--aa-text-on-scrim);
   background: oklch(0.2 0.02 230 / 0.7);
 }
 
@@ -748,7 +748,7 @@
 }
 
 .aa-capture__attachment-remove:hover {
-  color: #fff;
+  color: var(--aa-text-on-scrim);
   background: oklch(0.2 0.02 230 / 0.9);
 }
 

@@ -434,7 +434,7 @@
     font-size: var(--aa-text-xl);
     font-weight: var(--aa-weight-semibold);
     border: 1px solid var(--aa-border-strong, oklch(0.85 0.006 240));
-    border-radius: 10px;
+    border-radius: var(--aa-radius-md);
     padding: 0.5rem 0.7rem;
     font-family: inherit;
   }
@@ -454,7 +454,7 @@
   .aa-task-textarea {
     width: 100%;
     border: 1px solid var(--aa-border-strong, oklch(0.85 0.006 240));
-    border-radius: 10px;
+    border-radius: var(--aa-radius-md);
     padding: 0.55rem 0.7rem;
     font: inherit;
     min-height: 7rem;

@@ -24,8 +24,9 @@ done < <(grep -rnE '#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(' "$SRC" \
   --include='*.svelte' --include='*.css' --include='*.ts' \
   | grep -v 'tokens.css' | grep -v 'name="theme-color"')
 
-# 2. Raw font sizes — must be var(--aa-text-*) / var(--aa-font-*) (em/rem
-#    relative to a token parent is fine; bare px/rem is not).
+# 2. Raw font sizes — must be var(--aa-text-*) / var(--aa-font-*). em sizes
+#    are relative to the token-sized parent and are fine; absolute px/rem
+#    values are not.
 while IFS= read -r hit; do
   [ -z "$hit" ] && continue
   f="${hit%%:*}"
@@ -33,7 +34,8 @@ while IFS= read -r hit; do
   echo "raw font-size: $hit"
   violations=$((violations + 1))
 done < <(grep -rnE 'font-size:\s*(px|[0-9])' "$SRC" \
-  --include='*.svelte' --include='*.css' | grep -v 'tokens.css')
+  --include='*.svelte' --include='*.css' | grep -v 'tokens.css' \
+  | grep -vE 'font-size:\s*[0-9.]+em\b')
 
 # 3. Border-radius without a token.
 while IFS= read -r hit; do

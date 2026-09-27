@@ -89,7 +89,7 @@
   display: block;
   margin: 0 0 5px 2px;
   color: var(--aa-text-3);
-  font-size: 10px;
+  font-size: var(--aa-text-2xs);
   font-weight: var(--aa-weight-bold);
   letter-spacing: 0.08em;
   line-height: 1;
@@ -294,7 +294,7 @@
   right: -3px;
   bottom: -5px;
   color: var(--aa-text-4);
-  font-size: 8px;
+  font-size: var(--aa-text-2xs);
   font-weight: var(--aa-weight-bold);
   letter-spacing: 0.02em;
 }
@@ -383,7 +383,7 @@
   font-weight: var(--aa-weight-bold);
   padding: 2px 5px;
   border-radius: var(--aa-radius-xs);
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--aa-wash-on-primary);
   color: currentColor;
 }
 

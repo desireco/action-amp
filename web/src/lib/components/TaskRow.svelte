@@ -147,14 +147,14 @@
     text-decoration: line-through;
   }
   .aa-task-row__dot {
-    width: 9px;
-    height: 9px;
+    width: 10px;
+    height: 10px;
     border-radius: var(--aa-radius-full);
     flex: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 9px;
+    font-size: var(--aa-text-2xs);
   }
   .aa-task-row__dot--today {
     background: var(--aa-teal);

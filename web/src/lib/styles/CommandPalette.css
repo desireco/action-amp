@@ -158,7 +158,7 @@
 }
 
 .aa-command-palette mark {
-  border-radius: 2px;
+  border-radius: var(--aa-radius-xs);
   background: var(--aa-teal-soft-strong);
   color: inherit;
   font-weight: inherit;

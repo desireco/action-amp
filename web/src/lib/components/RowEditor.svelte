@@ -135,7 +135,7 @@
     color: var(--aa-text-muted, oklch(0.5 0.01 240));
     text-decoration: none;
     border: 1px solid var(--aa-border, oklch(0.9 0.005 240));
-    border-radius: 7px;
+    border-radius: var(--aa-radius-sm);
     padding: 0.14rem 0.55rem;
   }
   .aa-row-editor__edit:hover {

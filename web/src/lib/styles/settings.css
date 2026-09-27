@@ -392,7 +392,7 @@
   border: 1px solid var(--aa-border-strong);
   background: var(--aa-surface);
   color: var(--aa-text);
-  font-size: 16px;
+  font-size: var(--aa-text-md);
   line-height: 1;
   cursor: pointer;
   transition:
@@ -835,7 +835,8 @@
   padding: var(--aa-space-md) var(--aa-space-lg);
   border-top: 1px solid var(--aa-border);
   background: var(--aa-bg-soft);
-  border-radius: 0 0 var(--aa-radius-md) var(--aa-radius-md);
+  border-radius: var(--aa-radius-none) var(--aa-radius-none) var(--aa-radius-md)
+    var(--aa-radius-md);
 }
 .aa-lenses-edit__acts > div,
 .aa-lenses-edit__save-actions {

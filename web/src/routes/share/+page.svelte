@@ -563,7 +563,7 @@
   .aa-share__description-input {
     width: 100%;
     border: 0;
-    border-radius: 0;
+    border-radius: var(--aa-radius-none);
     background: transparent;
     color: var(--aa-text);
     font: inherit;
@@ -615,7 +615,7 @@
   .aa-share__field select {
     width: 100%;
     border: 0;
-    border-radius: 0;
+    border-radius: var(--aa-radius-none);
     background: transparent;
     color: var(--aa-text);
     font: inherit;

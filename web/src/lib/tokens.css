@@ -16,12 +16,14 @@
   --aa-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* Type scale — calibrated to existing usage. The buckets collapse ~290 ad-hoc
-     font-size declarations to seven named steps. Migrate components as you
+     font-size declarations to eight named steps. Migrate components as you
      touch them; do not bulk-rewrite.
      Fluid: each step holds its laptop size up to an 80rem (1280px) viewport,
      then grows toward its cap (~reached at 2400px) so type breathes on large
      monitors instead of the canvas emptiness carrying the extra space.
+     --aa-text-2xs stays fixed — micro badges/overlines don't breathe.
      --aa-text-3xl stays fixed — it is the focus clock's signed-off size. */
+  --aa-text-2xs: 0.625rem;  /* sub-xs micros: badge labels, glyph counters, tiny overlines */
   --aa-text-xs: clamp(0.7rem, calc(0.7rem + (100vw - 80rem) * 0.0014), 0.8rem);   /* kbd, micro-labels, eyebrow overlines */
   --aa-text-sm: clamp(0.78rem, calc(0.78rem + (100vw - 80rem) * 0.0017), 0.9rem); /* chips, meta, secondary text (most common) */
   --aa-text-base: clamp(0.9rem, calc(0.9rem + (100vw - 80rem) * 0.0021), 1.05rem); /* body, list rows */
@@ -71,6 +73,12 @@
   /* Text/icons on a --aa-primary surface — a constant (never flips in dark
      mode; the accent stays dark enough to carry white in both themes). */
   --aa-primary-contrast: oklch(1 0 0);
+  /* Constant white for content sitting on a dark scrim (never flips in dark
+     mode — the scrim is already dark): the capture attachment's × button. */
+  --aa-text-on-scrim: oklch(1 0 0);
+  /* Translucent white wash for chips nested on a --aa-primary surface (the
+     capture FAB's ⌘K keycap). Constant across themes — the accent carries it. */
+  --aa-wash-on-primary: oklch(1 0 0 / 0.18);
   --aa-accent: var(--aa-teal);        /* selection / focus accent (the bright end) */
   --aa-accent-soft: var(--aa-teal-soft);
 
@@ -191,6 +199,7 @@
   --aa-text-4: oklch(0.62 0.012 230);
 
   /* ---- Radii ---- */
+  --aa-radius-none: 0;   /* structural square — ghost inputs, bars flush to a rounded panel */
   --aa-radius-xs: 4px;
   --aa-radius-sm: 6px;
   --aa-radius-md: 8px;
