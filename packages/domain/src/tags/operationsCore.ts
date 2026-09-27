@@ -12,6 +12,8 @@
  */
 
 import type { Entities, TagFindManyArgs, TagRow } from "../db/index.js";
+import { isEntitled, type EntitlementMessage } from "../billing/entitlements.js";
+import { HttpError } from "../projects/httpError.js";
 
 /** The names the moment matcher ranks on — seeded once per user. */
 export const RESERVED_TAG_NAMES = [
@@ -61,6 +63,48 @@ export function normalizeTagName(raw: string): string {
     .trim()
     .replace(/^[#@]+/, "")
     .toLowerCase();
+}
+
+// ----------------------------------------------------------------
+// Entitlement — the whole-feature Pro gate
+// ----------------------------------------------------------------
+
+/** Tags (energy/time + user tags) are Pro-only as of 2026-09-26 — reversing
+ *  the original spec's "outside billing" call (docs/specs/tag-management.md).
+ *  The reserved seed still runs at onboarding for every account so an
+ *  upgrade finds the matcher names ready; these gates cover the user-facing
+ *  surface (list/link/unlink). Throws the exact 402 shape the other
+ *  whole-feature gates (rituals) use. */
+export const TAGS_MESSAGE: EntitlementMessage = {
+  feature: "Tags",
+  reason: "match tasks to your energy and time with Pro",
+};
+
+/** The subset of a user the gate reads (the acting user satisfies it). */
+export type TagsUser = {
+  plan?: string | null;
+  planRenewsAt?: Date | null;
+  isAdmin?: boolean | null;
+  manualAccessGrant?: "PRO" | "FOUNDER" | "FRIEND" | null;
+};
+
+/** Guard every user-facing tag op (read and write) against the Pro gate.
+ *  `isEntitled` (not `isPlanActive`) is the check: manual grants, FOUNDER
+ *  lifetime, and the admin bypass all pass; a lapsed PRO is FREE. */
+export function assertTagsAllowed(user: TagsUser | null): void {
+  if (
+    !isEntitled(
+      user?.plan,
+      user?.planRenewsAt ?? null,
+      user?.isAdmin,
+      user?.manualAccessGrant,
+    )
+  ) {
+    throw new HttpError(402, `${TAGS_MESSAGE.feature} is a Pro feature.`, {
+      feature: TAGS_MESSAGE.feature,
+      reason: TAGS_MESSAGE.reason,
+    });
+  }
 }
 
 /** The user's tags (id/name/color), name-ordered — the typeahead source. */

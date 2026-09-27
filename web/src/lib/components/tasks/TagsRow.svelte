@@ -11,6 +11,7 @@
   import { tick } from "svelte";
   import Chip from "../ui/Chip.svelte";
   import { client } from "../../api";
+  import { prefs } from "../../stores/prefs.svelte";
   import { RESERVED_TAG_NAMES } from "@actionamp/domain/tags";
 
   let {
@@ -31,10 +32,15 @@
   let draft = $state("");
   let userTags = $state<{ id: string; name: string }[]>([]);
   let linkError = $state<string | null>(null);
+  let gateNote = $state(false);
   let inputEl: HTMLInputElement | null = $state(null);
 
   const isReserved = (name: string) =>
     (RESERVED_TAG_NAMES as readonly string[]).includes(name.toLowerCase());
+
+  // Tags are Pro (2026-09-26). Free accounts see existing chips read-only;
+  // the add affordance surfaces the gate instead of calling the server.
+  const entitled = $derived(prefs.account?.entitled ?? true);
 
   /** Suggestions: the user's tags minus attached ones, reserved first;
    *  an unattached reserved name is still offered (the seeder owns it). */
@@ -106,6 +112,13 @@
       closeAdd();
     }
   }
+
+  /** The Free gate replaces the add affordance (calm, one line — the server
+   *  402 remains the boundary). */
+  function openGate() {
+    gateNote = true;
+    linkError = null;
+  }
 </script>
 
 <div class="aa-tags-row" aria-label="Tags">
@@ -121,7 +134,16 @@
       </Chip>
     {/each}
 
-    {#if editable && adding}
+    {#if editable && !entitled}
+      <button
+        type="button"
+        class="aa-tags-row__add"
+        onclick={openGate}
+        title="Tags are a Pro feature"
+      >
+        + Add tag
+      </button>
+    {:else if editable && adding}
       <span class="aa-tags-row__editor">
         <input
           bind:this={inputEl}
@@ -155,6 +177,11 @@
   </div>
   {#if linkError}
     <span class="aa-tags-row__error" role="alert">{linkError}</span>
+  {:else if gateNote}
+    <span class="aa-tags-row__gate">
+      Tags are a Pro feature — match tasks to your energy and time.
+      <a href="/settings/billing">Pro</a>
+    </span>
   {/if}
 </div>
 
@@ -261,5 +288,16 @@
   .aa-tags-row__error {
     font-size: var(--aa-text-xs);
     color: var(--aa-rose-text);
+  }
+
+  .aa-tags-row__gate {
+    font-size: var(--aa-text-xs);
+    color: var(--aa-text-3);
+  }
+
+  .aa-tags-row__gate a {
+    color: var(--aa-text-2);
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
 </style>

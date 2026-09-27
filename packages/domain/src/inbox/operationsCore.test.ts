@@ -82,6 +82,7 @@ function triage(
     priority?: "LOW" | "NORMAL" | "IMPORTANT";
     size?: "S" | "M" | "L" | "XL";
     content?: string;
+    allowTags?: boolean;
   },
 ) {
   return triageInboxItemCore(asCore(m.entities), {
@@ -339,6 +340,25 @@ describe("triageInboxItemCore — task decisions", () => {
     const call = (m.entities.Task.create as ReturnType<typeof vi.fn>).mock
       .calls[0][0];
     expect(call.data.tags).toBeUndefined();
+  });
+
+  it("allowTags: false skips parsed tags without failing the triage (the Free gate)", async () => {
+    const { m, guards } = arrange({ parsedTags: ["#phone"] });
+    m.entities.Task.create.mockResolvedValue({ id: "t" });
+
+    await triage(m, guards, {
+      inboxItemId: "ix-1",
+      decision: "task-today",
+      lensId: "l",
+      allowTags: false,
+    });
+
+    // No tag rows resolve/connect; the task still files.
+    expect(m.entities.Tag.upsert).not.toHaveBeenCalled();
+    const call = (m.entities.Task.create as ReturnType<typeof vi.fn>).mock
+      .calls[0][0];
+    expect(call.data.tags).toBeUndefined();
+    expect(m.entities.Task.create).toHaveBeenCalled();
   });
 
   it("moves an attachment-backed InboxItem onto the created Task", async () => {

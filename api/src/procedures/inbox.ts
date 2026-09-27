@@ -204,6 +204,13 @@ const inboxTriage = ORPC.inbox.triage.handler(async ({ context, input }) => {
           }),
         );
       },
+      // Tags are Pro (2026-09-26): FREE triage files without parsed tags.
+      allowTags: isEntitled(
+        acting.plan,
+        acting.planRenewsAt ?? null,
+        acting.isAdmin,
+        acting.manualAccessGrant,
+      ),
     });
   } catch (err) {
     asBadRequest(err);

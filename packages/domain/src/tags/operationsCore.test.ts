@@ -8,6 +8,7 @@ import { describe, expect, it, vi } from "vitest";
 import { mockContext } from "../test/mockContext.js";
 import {
   RESERVED_TAG_NAMES,
+  assertTagsAllowed,
   linkTaskTagCore,
   listTagsCore,
   normalizeTagName,
@@ -144,5 +145,40 @@ describe("seedReservedTagsCore", () => {
     await seedReservedTagsCore(m.entities as unknown as TagCore, { userId: "user-1" });
     await seedReservedTagsCore(m.entities as unknown as TagCore, { userId: "user-1" });
     expect(m.entities.Tag.upsert).toHaveBeenCalledTimes(RESERVED_TAG_NAMES.length * 2);
+  });
+});
+
+// The whole-feature Pro gate (2026-09-26): every user-facing tag op is
+// Pro-only — mirrors the rituals gate. Manual grants / FOUNDER / admin pass;
+// a lapsed PRO is FREE.
+describe("assertTagsAllowed", () => {
+  const FUTURE = new Date(Date.now() + 60_000);
+
+  it("throws the 402 shape for a FREE user", () => {
+    expect(() => assertTagsAllowed({ plan: "FREE" })).toThrowError(
+      /Tags is a Pro feature\./,
+    );
+    try {
+      assertTagsAllowed({ plan: "FREE" });
+    } catch (e) {
+      expect((e as { statusCode: number }).statusCode).toBe(402);
+      expect((e as { data?: Record<string, string> }).data).toEqual({
+        feature: "Tags",
+        reason: "match tasks to your energy and time with Pro",
+      });
+    }
+  });
+
+  it("admits active PRO, FOUNDER, manual grants, and admins", () => {
+    expect(() => assertTagsAllowed({ plan: "PRO", planRenewsAt: FUTURE })).not.toThrow();
+    expect(() => assertTagsAllowed({ plan: "FOUNDER" })).not.toThrow();
+    expect(() => assertTagsAllowed({ manualAccessGrant: "FRIEND" })).not.toThrow();
+    expect(() => assertTagsAllowed({ plan: "FREE", isAdmin: true })).not.toThrow();
+  });
+
+  it("treats a lapsed PRO as FREE", () => {
+    expect(() =>
+      assertTagsAllowed({ plan: "PRO", planRenewsAt: new Date(Date.now() - 60_000) }),
+    ).toThrowError(/Pro feature/);
   });
 });

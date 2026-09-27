@@ -523,6 +523,7 @@ export async function triageInboxItemCore(
     priority,
     size,
     content,
+    allowTags = true,
     assertLens,
     assertProjectCap,
   }: {
@@ -536,6 +537,10 @@ export async function triageInboxItemCore(
     priority?: ParsedPriority; // override parsed priority (set deliberately in the triage spec step)
     size?: ParsedSize; // override parsed size (set deliberately in the triage spec step)
     content?: string; // durable task notes/body captured during triage
+    /** Parsed #tags link only when allowed — Pro-only since 2026-09-26. The
+     *  caller resolves entitlement; callers pass false for FREE. Defaults to
+     *  true (legacy behavior for callers that predate the gate). */
+    allowTags?: boolean;
     assertLens?: (lensId: string) => Promise<void>;
     assertProjectCap?: (lensId: string, currentCount: number) => Promise<void>;
   },
@@ -607,11 +612,11 @@ export async function triageInboxItemCore(
     case "task-today":
     case "upcoming":
     case "someday": {
-      const tagRecords = await resolveTagRecords(
-        entities,
-        userId,
-        item.parsedTags,
-      );
+      // Tags are Pro (2026-09-26): a FREE triage still files the task, just
+      // without the parsed tags — calm degradation, never a failed triage.
+      const tagRecords = allowTags
+        ? await resolveTagRecords(entities, userId, item.parsedTags)
+        : [];
       const effectiveProject = await resolveEffectiveProject(
         entities,
         userId,

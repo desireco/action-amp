@@ -899,6 +899,9 @@ export function createCliRoutes(deps: {
         content: bodyString(body, "content"),
         assertLens,
         assertProjectCap,
+        // Tags are Pro (2026-09-26); PAT users are entitled by the PAT gate,
+        // resolved here so the route can never outlive that assumption.
+        allowTags: resolveEffectiveAccess(user).isEntitled,
       });
       return c.json({ result });
     } catch (err) {
