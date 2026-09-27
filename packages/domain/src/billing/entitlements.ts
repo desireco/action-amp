@@ -16,13 +16,16 @@ import type { EntitlementMessage } from "./entitlement-types.js";
  * 1. **Cap decision** (`capViolation`) — FREE users can create up to
  *    `FREE_LIMITS.projects`/`goals` per lens. Counted on non-done entities so
  *    finishing work always frees a slot. Pro is unlimited on these counts.
- * 2. **Lens-scope decision** (`lensViolation`) — FREE users may only read the
- *    included lens (seeded "Me"). Branches on `isIncluded` (NOT the lens
- *    name), so renaming the seeded "Work" lens → "Studio" cannot escape FREE
- *    gating: the flag is the stable handle, the name is just a label.
+ * 2. **Lens-scope decision** (`lensViolation`) — FREE users may read the two
+ *    seeded lenses (Me and Work — identified by the seed flags `isIncluded`
+ *    / `isDefault`; neither is user-editable) but not custom lenses. Branches
+ *    on those flags (NOT the lens name), so renaming cannot escape FREE
+ *    gating: the flags are the stable handles, the name is just a label.
+ *    Both seeded lenses are read-only for FREE — configuration is decision 3.
  * 3. **Lens-config decision** (`lensConfigViolation`) — creating/editing any
- *    lens is Pro-only. FREE sees the seeded two (Me usable, Work locked) and
- *    can configure nothing. Pro is capped at `PRO_LIMITS.lenses` (soft cap).
+ *    lens is Pro-only. FREE sees the seeded two (Me and Work, both usable,
+ *    neither customizable) and can configure nothing. Pro is capped at
+ *    `PRO_LIMITS.lenses` (soft cap).
  *
  * This module is PURE: it returns the violation (or null). The API layer (F8b)
  * turns a violation into an HTTP 402; splitting them keeps the logic
@@ -147,21 +150,25 @@ export function capViolation(
   return null;
 }
 
-/** The subset of a Lens the lens-scope decision reads. */
+/** The subset of a Lens the lens-scope decision reads. Both flags are
+ *  seed-only (never user-editable), so together they identify the seeded
+ *  pair regardless of renames. */
 export interface EntitlementLens {
   name: string;
   isIncluded?: boolean;
+  isDefault?: boolean;
 }
 
 /**
- * Returns the lens-violation message if a FREE user is reading a lens that is
- * not included in the Free plan, else null. Paid users may read any lens.
+ * Returns the lens-violation message if a FREE user is reading a lens outside
+ * the Free plan, else null. Paid users may read any lens.
  *
- * Branches on `isIncluded`, NOT the lens name — this is the rename-safety
- * fix. The seeded "Work"/"Me" names are user-editable on Pro, so keying on
- * the name string would let a rename break FREE gating. `isIncluded` is the
- * stable handle: the included lens (seeded "Me") is allowed for FREE; every
- * other lens is restricted.
+ * The Free plan includes both seeded lenses (Me and Work — flags
+ * `isIncluded` / `isDefault`); every custom lens is Pro-only. Branches on the
+ * flags, NOT the lens name — this is the rename-safety fix. The seeded names
+ * are user-editable on Pro, so keying on the name string would let a rename
+ * break FREE gating (or worse, let a custom lens named "Work" through): the
+ * flags are the stable handles.
  */
 export function lensViolation(
   user: EntitlementUser | null,
@@ -169,7 +176,7 @@ export function lensViolation(
   msg?: EntitlementMessage,
 ): EntitlementMessage | null {
   if (resolveEffectiveAccess(user).isEntitled) return null; // paid → all lenses
-  if (lens && !lens.isIncluded) {
+  if (lens && !lens.isIncluded && !lens.isDefault) {
     return msg ?? WORK_LENS_MESSAGE;
   }
   return null;
@@ -180,8 +187,9 @@ export function lensViolation(
  * configuration (create / rename / recolor / edit-purpose / delete), else null.
  *
  * Lens configuration is Pro-only across the board — FREE gets the seeded two
- * (Me usable, Work visible-but-locked) and can edit nothing. Pro is subject to
- * `PRO_LIMITS.lenses` (a count cap, enforced separately via `assertUnderCap`).
+ * (Me and Work, both usable as-is, neither customizable) and can edit nothing.
+ * Pro is subject to `PRO_LIMITS.lenses` (a count cap, enforced separately via
+ * `assertUnderCap`).
  */
 export function lensConfigViolation(
   user: EntitlementUser | null,
@@ -197,6 +205,7 @@ export interface AccessibleLensRow {
   name: string;
   color: string | null;
   isIncluded: boolean;
+  isDefault: boolean;
 }
 
 /**
@@ -238,7 +247,7 @@ export async function resolveLens(
   if (!lensId) return null;
   const lens = await entities.Lens.findFirst({
     where: { id: lensId, userId },
-    select: { name: true, isIncluded: true },
+    select: { name: true, isIncluded: true, isDefault: true },
   });
   return lens ?? null;
 }
@@ -246,13 +255,11 @@ export async function resolveLens(
 /**
  * The lens ids a user is allowed to READ — the entitlement filter for global,
  * cross-lens views (Today per WORKFLOW.md §5.11). Mirrors `lensViolation`'s
- * rule: entitled users read every lens; non-entitled users read only their
- * `PERSONAL` lenses (the seeded "Me" + any other PERSONAL lens, though in
- * practice that's one). `WORK` and `CUSTOM` lenses are excluded for FREE.
- *
- * Used by global Today so a downgraded user no longer sees Today tasks from
- * now-inaccessible lenses — the set-filter replacement for the per-task
- * `assertLensAllowed` guard that lens-scoped reads use.
+ * rule: entitled users read every lens; non-entitled users read the two
+ * seeded lenses (the flags `isIncluded` / `isDefault` identify them) and no
+ * customs. Used by global Today so a downgraded user no longer sees Today
+ * tasks from now-inaccessible lenses — the set-filter replacement for the
+ * per-task `assertLensAllowed` guard that lens-scoped reads use.
  *
  * Returns the full Lens rows (id + the fields a row pill needs) so the caller
  * doesn't need a second lookup; callers that only want ids map to `.id`.
@@ -264,14 +271,16 @@ export async function resolveAccessibleLenses(
 ): Promise<AccessibleLensRow[]> {
   const where = resolveEffectiveAccess(user).isEntitled
     ? { userId }
-    : { userId, isIncluded: true };
+    : { userId, OR: [{ isIncluded: true }, { isDefault: true }] };
   return entities.Lens.findMany({
     where,
-    select: { id: true, name: true, color: true, isIncluded: true },
+    select: { id: true, name: true, color: true, isIncluded: true, isDefault: true },
   });
 }
 
-/** Default ProGate copy for the Work-lens gate (shared by client + server). */
+/** Default ProGate copy for reading a lens outside the Free plan — a custom
+ *  lens (the seeded Me and Work are both included since 2026-09-26), usually
+ *  met after a Pro→FREE downgrade. Shared by client + server. */
 export const WORK_LENS_MESSAGE: EntitlementMessage = {
   feature: "another Lens",
   reason: "organize more areas of your life with Pro",

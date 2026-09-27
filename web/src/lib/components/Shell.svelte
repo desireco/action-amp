@@ -95,7 +95,7 @@
       return;
     }
     lastDoTap = now;
-    void goto("/");
+    void goto("/next");
   }
   let confirmLogout = $state(false);
 
@@ -191,7 +191,8 @@
   const activeLensName = $derived(lenses.active?.name ?? "Me");
 
   // The lens switch options (+ the webapp's placeholder pair before lenses
-  // load). FREE: only the included lens is usable; the rest render Pro chips.
+  // load). FREE: the two seeded lenses (Me + Work) are usable; customs render
+  // Pro chips.
   interface LensOption {
     id: string;
     label: string;
@@ -206,10 +207,10 @@
           label: l.name,
           color: l.color,
           purpose: l.purpose,
-          proLocked: !entitled && !l.isIncluded,
+          proLocked: !entitled && !l.isIncluded && !l.isDefault,
         }))
       : [
-          { id: "Work", label: "Work", color: "indigo", purpose: null, proLocked: !entitled },
+          { id: "Work", label: "Work", color: "indigo", purpose: null, proLocked: false },
           { id: "Me", label: "Me", color: "emerald", purpose: null, proLocked: false },
         ],
   );
@@ -310,7 +311,7 @@
       if (target?.closest("button, a, [role='button'], [role='link']")) return;
       e.preventDefault();
       setTimeout(() => {
-        if (!e.defaultPrevented) void goto("/");
+        if (!e.defaultPrevented) void goto("/next");
       });
       return;
     }
@@ -535,7 +536,7 @@
 <div class="aa-app" class:is-in-settings={inSettings} class:is-in-focus={inFocus}>
   <!-- ============================ SIDEBAR ============================ -->
   <aside class="aa-app-side">
-    <a class="aa-app-brand" href="/" title="Next">
+    <a class="aa-app-brand" href="/next" title="Next">
       <span class="aa-app-mark" aria-hidden="true">{@render brandMark()}</span>
       <span class="aa-app-brand-name">ActionAmp</span>
     </a>
@@ -591,7 +592,7 @@
       })}
       <!-- Do is focus while a task is Now (WORKFLOW §2.3): the focus route
            reads as Do's active state, not as an unaffiliated page. -->
-      {@render navItem({ icon: starIcon, label: "Do", active: isActive("/") || inFocus, to: "/" })}
+      {@render navItem({ icon: starIcon, label: "Do", active: isActive("/next") || inFocus, to: "/next" })}
     </nav>
 
     <!-- ---- Group nav — always-open Plan + Review labeled groups ----
@@ -715,8 +716,8 @@
         <a
           class="aa-mobile-do-menu__item"
           role="menuitem"
-          class:active={isActive("/")}
-          href="/"
+          class:active={isActive("/next")}
+          href="/next"
           onclick={() => (mobileDoOpen = false)}
         >
           {@render starIcon()}
@@ -818,7 +819,7 @@
       <button
         type="button"
         class="aa-mobile-dock__item"
-        class:active={isActive("/")}
+        class:active={isActive("/next")}
         aria-label="Do"
         aria-expanded={mobileDoOpen}
         aria-haspopup="menu"

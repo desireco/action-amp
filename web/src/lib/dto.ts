@@ -95,6 +95,7 @@ export interface AppData {
     name: string;
     color: string | null;
     isIncluded: boolean;
+    isDefault: boolean;
     purpose: string | null;
   }[];
   counts: {

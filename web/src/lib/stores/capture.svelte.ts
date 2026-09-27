@@ -28,6 +28,7 @@ export interface LensInfo {
   name: string;
   color: string | null;
   isIncluded: boolean;
+  isDefault: boolean;
 }
 
 class CaptureStore {

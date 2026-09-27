@@ -41,7 +41,7 @@ export interface AppDataEntities {
   };
   Lens: {
     findMany(args: LensFindManyArgs): Promise<
-      Array<{ id: string; name: string; color: string | null; isIncluded: boolean; purpose: string | null }>
+      Array<{ id: string; name: string; color: string | null; isIncluded: boolean; isDefault: boolean; purpose: string | null }>
     >;
   };
   Project: {
@@ -66,6 +66,7 @@ export interface AppDataResult {
     name: string;
     color: string | null;
     isIncluded: boolean;
+    isDefault: boolean;
     purpose: string | null;
   }>;
   counts: {

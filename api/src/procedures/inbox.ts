@@ -345,8 +345,9 @@ const inboxProjectsForResolver = ORPC.inbox.projectsForResolver.handler(
 const inboxLenses = ORPC.inbox.lenses.handler(async ({ context }) => {
   const acting = requireUser(context);
   // Webapp parity: the Classify pills source is getAppData's ACCESSIBLE set —
-  // for a FREE user that's the included lens only (a locked Work lens never
-  // offered as a filing destination).
+  // for a FREE user that's the two seeded lenses (Me and Work, the
+  // isIncluded/isDefault flags); custom lenses never offered as a filing
+  // destination.
   // Same db.select shape as prefs.getAccount (the seam's User guard-read
   // select is intentionally narrow).
   const userRows = await context.db
@@ -369,7 +370,10 @@ const inboxLenses = ORPC.inbox.lenses.handler(async ({ context }) => {
       userRow.manualAccessGrant,
     );
   const rows = await context.entities.Lens.findMany({
-    where: { userId: acting.id, ...(entitled ? {} : { isIncluded: true }) },
+    where: {
+      userId: acting.id,
+      ...(entitled ? {} : { OR: [{ isIncluded: true }, { isDefault: true }] }),
+    },
     orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
   });
   return rows.map((l) => ({
@@ -377,6 +381,7 @@ const inboxLenses = ORPC.inbox.lenses.handler(async ({ context }) => {
     name: l.name,
     color: l.color ?? null,
     isIncluded: l.isIncluded,
+    isDefault: l.isDefault,
   }));
 });
 

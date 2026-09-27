@@ -194,9 +194,11 @@ class LensesStore {
         : undefined;
       // Entitlement clamp (webapp AppShell parity): a stored id pointing at a
       // lens the account can't use (a bypass attempt, or stale from a lapsed
-      // plan) falls back to the default so scoped queries don't 402.
+      // plan) falls back to the default so scoped queries don't 402. FREE can
+      // use both seeded lenses (the isIncluded/isDefault flags); customs no.
       const usable =
-        storedLens && (this.entitled(prefs.account) || storedLens.isIncluded);
+        storedLens &&
+        (this.entitled(prefs.account) || storedLens.isIncluded || storedLens.isDefault);
       this.activeLensId = usable ? storedLens.id : this.defaultLensId();
       if (this.activeLensId !== stored) this.persistActive();
       // Counts re-scope: the fetch above assumed `requested`; when the lens
@@ -251,13 +253,14 @@ class LensesStore {
   }
 
   /**
-   * Switch the active lens. A FREE user picking a non-included lens sees the
-   * ProGate instead of switching (the friendly surface; the server 402 is the
-   * boundary). Branches on isIncluded, never the name (rename-safety).
+   * Switch the active lens. A FREE user picking a custom lens sees the ProGate
+   * instead of switching (the friendly surface; the server 402 is the
+   * boundary). Branches on the seed flags (isIncluded/isDefault), never the
+   * name (rename-safety).
    */
   async switch(id: string, account: Account | null): Promise<void> {
     const target = this.lenses.find((l) => l.id === id);
-    if (!this.entitled(account) && target && !target.isIncluded) {
+    if (!this.entitled(account) && target && !target.isIncluded && !target.isDefault) {
       this.gate = { ...WORK_LENS_GATE };
       return;
     }

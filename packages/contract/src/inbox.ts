@@ -204,6 +204,8 @@ export const LensInfoSchema = z.object({
   name: z.string(),
   color: z.string().nullable(),
   isIncluded: z.boolean(),
+  /** Seed flag — the seeded Work lens (Free-readable, not customizable). */
+  isDefault: z.boolean(),
 });
 export const listLenses = oc.output(z.array(LensInfoSchema));
 

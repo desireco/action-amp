@@ -38,12 +38,13 @@ function throwIfViolation(violation: EntitlementMessage | null): void {
 }
 
 /** Guard a lens-scoped read/create against the FREE-lens rule. Resolves
- *  lensId → `{ name, isIncluded }` (tenancy-safe) and checks isIncluded —
- *  the rename-safety fix (NOT the lens name). */
+ *  lensId → `{ name, isIncluded, isDefault }` (tenancy-safe) and checks the
+ *  seed flags — the rename-safety fix (NOT the lens name). FREE reads the two
+ *  seeded lenses; customs are Pro-only. */
 export async function assertLensAllowed(
   entities: { Lens: { findFirst(args: {
     where: { id: string; userId: string };
-    select?: { name?: true; isIncluded?: true };
+    select?: { name?: true; isIncluded?: true; isDefault?: true };
   }): Promise<EntitlementLens | null> } },
   user: GuardUser | null,
   lensId: string,

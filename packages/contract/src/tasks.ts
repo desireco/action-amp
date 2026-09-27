@@ -191,6 +191,7 @@ export const AppDataSchema = z.object({
       name: z.string(),
       color: z.string().nullable(),
       isIncluded: z.boolean(),
+      isDefault: z.boolean(),
       purpose: z.string().nullable(),
     }),
   ),
