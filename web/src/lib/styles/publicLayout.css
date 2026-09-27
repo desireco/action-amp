@@ -53,7 +53,7 @@
   border-bottom: 1px solid var(--aa-border);
 }
 .aa-pub-back {
-  font-size: 14px;
+  font-size: var(--aa-text-sm);
   font-weight: 500;
   color: var(--aa-text-3);
   transition: color var(--aa-dur-fast);
@@ -86,13 +86,13 @@
   border-radius: var(--aa-radius-sm);
 }
 .aa-brand-name {
-  font-size: 17px;
+  font-size: var(--aa-text-md);
   font-weight: 700;
   letter-spacing: -0.015em;
   color: var(--aa-text);
 }
 .aa-brand-name-sm {
-  font-size: 14px;
+  font-size: var(--aa-text-sm);
 }
 
 /* ============================================================
@@ -107,14 +107,14 @@
 }
 
 .aa-markdown-body {
-  font-size: 17px;
+  font-size: var(--aa-text-md);
   line-height: 1.7;
   color: var(--aa-text-2);
 }
 
 /* Headings — clear hierarchy, generous top-margin to separate sections */
 .aa-markdown-body h1 {
-  font-size: 36px;
+  font-size: var(--aa-text-2xl);
   font-weight: 800;
   letter-spacing: -0.025em;
   line-height: 1.15;
@@ -122,7 +122,7 @@
   margin-bottom: 12px;
 }
 .aa-markdown-body h2 {
-  font-size: 22px;
+  font-size: var(--aa-text-lg);
   font-weight: 700;
   letter-spacing: -0.015em;
   color: var(--aa-text);
@@ -130,7 +130,7 @@
   margin-bottom: 12px;
 }
 .aa-markdown-body h3 {
-  font-size: 18px;
+  font-size: var(--aa-text-lg);
   font-weight: 700;
   color: var(--aa-text);
   margin-top: 32px;
@@ -162,7 +162,7 @@
   padding-left: 16px;
   margin-bottom: 28px;
   color: var(--aa-text-3);
-  font-size: 15px;
+  font-size: var(--aa-text-base);
 }
 .aa-markdown-body blockquote p {
   margin-bottom: 0;
@@ -189,7 +189,7 @@
 /* Inline code */
 .aa-markdown-body code {
   font-family: var(--aa-font-mono);
-  font-size: 14px;
+  font-size: var(--aa-text-sm);
   background: var(--aa-surface-muted);
   padding: 2px 6px;
   border-radius: var(--aa-radius-xs);
@@ -236,7 +236,7 @@
   gap: 22px;
 }
 .aa-pub-footer-links a {
-  font-size: 13px;
+  font-size: var(--aa-text-sm);
   color: var(--aa-text-3);
 }
 .aa-pub-footer-links a:hover {
@@ -244,7 +244,7 @@
   text-decoration: none;
 }
 .aa-pub-copy {
-  font-size: 12px;
+  font-size: var(--aa-text-xs);
   color: var(--aa-text-4);
 }
 .aa-pub-copy a {
@@ -264,15 +264,6 @@
   }
   .aa-pub-main {
     padding: 40px 22px;
-  }
-  .aa-markdown-body {
-    font-size: 16px;
-  }
-  .aa-markdown-body h1 {
-    font-size: 28px;
-  }
-  .aa-markdown-body h2 {
-    font-size: 20px;
   }
   .aa-pub-footer {
     padding: 28px 20px;

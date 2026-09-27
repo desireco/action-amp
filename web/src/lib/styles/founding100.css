@@ -9,7 +9,7 @@
 
 .aa-founding-eyebrow {
   color: var(--aa-teal);
-  font-size: 0.82rem;
+  font-size: var(--aa-text-xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   margin-bottom: 0.65rem;
@@ -52,7 +52,7 @@
 }
 
 .aa-founding-price span {
-  font-size: 2.75rem;
+  font-size: var(--aa-text-2xl);
   font-weight: 800;
   letter-spacing: -0.05em;
   line-height: 1;
@@ -66,7 +66,7 @@
 .aa-founding-price-note,
 .aa-founding-comparison {
   color: var(--aa-text-3);
-  font-size: 0.95rem;
+  font-size: var(--aa-text-base);
   margin: 0.5rem 0 0;
 }
 
@@ -90,14 +90,14 @@
 
 .aa-founding-error {
   color: var(--aa-rose);
-  font-size: 0.95rem;
+  font-size: var(--aa-text-base);
   margin-bottom: 1rem;
 }
 
 .aa-founding-spots {
   margin-top: 1rem;
   color: var(--aa-text-3);
-  font-size: 0.95rem;
+  font-size: var(--aa-text-base);
 }
 
 @media (max-width: 600px) {
@@ -105,9 +105,5 @@
     margin-left: -0.5rem;
     margin-right: -0.5rem;
     padding: 1.5rem;
-  }
-
-  .aa-founding-price span {
-    font-size: 2.4rem;
   }
 }

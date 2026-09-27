@@ -94,7 +94,7 @@
 
 /* eyebrow */
 .aa-ob-eyebrow {
-  font-size: 12px;
+  font-size: var(--aa-text-xs);
   font-weight: 600;
   letter-spacing: 0;
   text-transform: uppercase;
@@ -104,7 +104,7 @@
 
 /* headings */
 .aa-ob-h1 {
-  font-size: 44px;
+  font-size: var(--aa-text-2xl);
   font-weight: 800;
   letter-spacing: 0;
   line-height: 1.1;
@@ -116,7 +116,7 @@
   max-width: 18ch;
 }
 .aa-ob-h2 {
-  font-size: 36px;
+  font-size: var(--aa-text-xl);
   font-weight: 700;
   letter-spacing: 0;
   line-height: 1.15;
@@ -130,7 +130,7 @@
 
 /* body */
 .aa-ob-body {
-  font-size: 18px;
+  font-size: var(--aa-text-md);
   line-height: 1.5;
   color: oklch(0.8 0.01 230 / 0.78);
   max-width: 34ch;
@@ -187,7 +187,7 @@
   height: 40px;
   padding: 0 12px;
   font-family: var(--aa-font-mono, ui-monospace, monospace);
-  font-size: 0.95rem;
+  font-size: var(--aa-text-base);
   font-weight: 600;
   color: var(--aa-teal);
   background: oklch(0.72 0.15 220 / 0.12);
@@ -210,7 +210,7 @@
   height: 18px;
 }
 .aa-ob-capture-line {
-  font-size: 0.95rem;
+  font-size: var(--aa-text-base);
   font-style: italic;
   color: var(--aa-text-3);
 }
@@ -242,7 +242,7 @@
   justify-content: center;
   width: 68px;
   padding: 3px 10px;
-  font-size: 0.75rem;
+  font-size: var(--aa-text-xs);
   font-weight: 700;
   color: var(--aa-surface);
   background: var(--aa-teal-cta);
@@ -273,7 +273,7 @@
   flex-shrink: 0;
 }
 .aa-ob-focus-text {
-  font-size: 0.95rem;
+  font-size: var(--aa-text-base);
   font-weight: 600;
   color: var(--aa-text);
 }
@@ -292,7 +292,7 @@
   width: 100%;
   max-width: 320px;
   padding: var(--aa-space-md) 14px;
-  font-size: 1.05rem;
+  font-size: var(--aa-text-md);
   border-radius: var(--aa-radius-md);
   border: 1px solid var(--aa-border-strong);
   background: var(--aa-surface);
@@ -317,7 +317,7 @@
   gap: 8px;
   background: var(--aa-teal-cta);
   color: white;
-  font-size: 16px;
+  font-size: var(--aa-text-md);
   font-weight: 600;
   min-height: 52px;
   min-width: 128px;
@@ -358,15 +358,12 @@
     max-width: 100%;
   }
   .aa-ob-h1 {
-    font-size: 34px;
     max-width: 15ch;
   }
   .aa-ob-h2 {
-    font-size: 30px;
     max-width: 16ch;
   }
   .aa-ob-body {
-    font-size: 17px;
     max-width: 31ch;
     margin-bottom: 28px;
   }
@@ -402,15 +399,6 @@
 @media (max-width: 380px) {
   .aa-ob-stage {
     padding-inline: 24px;
-  }
-  .aa-ob-h1 {
-    font-size: 31px;
-  }
-  .aa-ob-h2 {
-    font-size: 27px;
-  }
-  .aa-ob-body {
-    font-size: 16px;
   }
   .aa-ob-cta {
     width: 100%;
