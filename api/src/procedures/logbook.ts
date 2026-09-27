@@ -24,6 +24,10 @@ import {
   HttpError,
   type GuardUser,
 } from "@actionamp/domain/projects";
+import {
+  FREE_LIMITS,
+  resolveEffectiveAccess,
+} from "@actionamp/domain/billing";
 import { requireUser, type ApiContext } from "../context.js";
 
 const ORPC = implement(logbookContract).$context<ApiContext>();
@@ -138,9 +142,15 @@ const data = ORPC.data.handler(async ({ context, input }) =>
     // Entitlement: the FREE-lens read invariant (added vs the webapp op —
     // see the file header).
     await assertLensAllowed(context.entities, asGuardUser(user), lensId);
+    // History depth (2026-09-26): FREE reads the last 14 days; paid plans
+    // read everything. Read-time only — no row is ever deleted.
+    const historyDays = resolveEffectiveAccess(user).isEntitled
+      ? null
+      : FREE_LIMITS.logbookHistoryDays;
     const rows = await getLogbookData(context.entities, {
       userId: user.id,
       lensId,
+      historyDays,
     });
     return toLogbookDto(rows);
   }),

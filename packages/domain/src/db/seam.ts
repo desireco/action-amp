@@ -712,7 +712,9 @@ export interface InboxItemUpdateInput {
 }
 
 /** S3 — inbox reads/writes scope by owner + status; S9 adds the search's
- *  text probes (Android-share title, body, content, source link). */
+ *  text probes (Android-share title, body, content, source link). S8's
+ *  Logbook reads order on archivedAt; the Free-plan history cap also filters
+ *  on it. */
 export interface InboxItemWhereInput {
   id?: string;
   userId?: string;
@@ -721,6 +723,7 @@ export interface InboxItemWhereInput {
   title?: string | StringNullableFilter;
   content?: string | StringNullableFilter;
   sourceUrl?: string | StringNullableFilter;
+  archivedAt?: Date | null | DateTimeNullableFilter;
   AND?: InboxItemWhereInput[];
   OR?: InboxItemWhereInput[];
   NOT?: InboxItemWhereInput | InboxItemWhereInput[];

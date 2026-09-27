@@ -18,7 +18,9 @@ import type { Plan, UserWhereInput } from "../db/index.js";
 export const FREE_LIMITS = {
   projects: 3,
   goals: 1,
-  workLens: false, // free users can't use the Work Lens (personal/Me scope only)
+  /** How far back the Free Logbook reaches (days). Pro reads full history.
+   *  Enforced at read time — nothing is ever deleted (pricing promise). */
+  logbookHistoryDays: 14,
 } as const;
 
 /**
@@ -88,6 +90,6 @@ export const FOUNDER_MEMBERSHIP_WHERE = {
  * price_data (no Price object in the dashboard) because it's a one-off,
  * non-recurring, sells-out-at-100 tier — there's no reporting or subscription
  * benefit to a Price object here. Single source of truth for the amount; the
- * marketing copy ($139) and CTA label must stay in sync with this value.
+ * marketing copy ($99) and CTA label must stay in sync with this value.
  */
 export const FOUNDING_100_PRICE_CENTS = 9900;

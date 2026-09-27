@@ -208,3 +208,57 @@ describe("getLogbookData — query + return shape", () => {
     });
   });
 });
+
+// The Free-plan history cap (2026-09-26): `historyDays` bounds every category
+// to items completed/declined/archived within the window. Read-time only —
+// rows are never deleted, so a paid plan sees them again.
+describe("getLogbookData — historyDays (the Free history window)", () => {
+  it("bounds all five categories to the window when historyDays is set", async () => {
+    const m = mockContext();
+    m.entities.Task.findMany.mockResolvedValue([]);
+    m.entities.Project.findMany.mockResolvedValue([]);
+    m.entities.Goal.findMany.mockResolvedValue([]);
+    m.entities.InboxItem.findMany.mockResolvedValue([]);
+
+    await getLogbookData(asLogbook(m.entities), {
+      userId: "user-1",
+      lensId: "lens-1",
+      historyDays: 14,
+    });
+
+    const cutoff = expect.any(Date);
+    // Completed tasks + wont-do + projects + goals are lens-scoped…
+    const [doneCall, wontDoCall] = m.entities.Task.findMany.mock.calls;
+    expect(doneCall[0].where.completedAt).toEqual({ not: null, gte: cutoff });
+    expect(wontDoCall[0].where.updatedAt).toEqual({ gte: cutoff });
+    expect(m.entities.Project.findMany.mock.calls[0][0].where.completedAt).toEqual({
+      not: null,
+      gte: cutoff,
+    });
+    expect(m.entities.Goal.findMany.mock.calls[0][0].where.completedAt).toEqual({
+      not: null,
+      gte: cutoff,
+    });
+    // …archived notes are universal but still bounded.
+    expect(m.entities.InboxItem.findMany.mock.calls[0][0].where.archivedAt).toEqual({
+      gte: cutoff,
+    });
+  });
+
+  it("leaves history unlimited when historyDays is absent or null (Pro)", async () => {
+    const m = mockContext();
+    m.entities.Task.findMany.mockResolvedValue([]);
+    m.entities.Project.findMany.mockResolvedValue([]);
+    m.entities.Goal.findMany.mockResolvedValue([]);
+    m.entities.InboxItem.findMany.mockResolvedValue([]);
+
+    await getLogbookData(asLogbook(m.entities), {
+      userId: "user-1",
+      lensId: "lens-1",
+      historyDays: null,
+    });
+    const [doneCall] = m.entities.Task.findMany.mock.calls;
+    expect(doneCall[0].where.completedAt).toEqual({ not: null });
+    expect(m.entities.InboxItem.findMany.mock.calls[0][0].where.archivedAt).toBeUndefined();
+  });
+});

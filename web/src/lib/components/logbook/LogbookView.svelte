@@ -17,10 +17,15 @@
   import Markdown from "./Markdown.svelte";
   import { logbook, groupLogbook, type LogItem } from "../../stores/logbook.svelte";
   import { lenses } from "../../stores/lenses.svelte";
+  import { prefs } from "../../stores/prefs.svelte";
   import "../../styles/logbook.css";
 
   const groups = $derived(logbook.data ? groupLogbook(logbook.data) : []);
   const targetItemId = $derived($page.url.searchParams.get("item") ?? "");
+  // Free keeps the last 14 days (server-enforced); paid plans read it all.
+  const historyNote = $derived(
+    logbook.loaded && prefs.account && !prefs.account.entitled,
+  );
 
   // Lens-scoped read (AppShell parity): re-runs when the switcher moves —
   // tracked read of the shell's active lens keys the effect.
@@ -66,6 +71,13 @@
 
   {#if logbook.error}
     <p class="aa-logbook__error" role="alert">{logbook.error}</p>
+  {/if}
+
+  {#if historyNote && groups.length > 0}
+    <p class="aa-logbook__history-note">
+      Showing the last 14 days. <a href="/settings/billing">Pro</a> keeps your
+      full history.
+    </p>
   {/if}
 
   {#if showEmpty}
@@ -199,5 +211,18 @@
     font-size: var(--aa-text-sm);
     text-align: center;
     padding: var(--aa-space-md) 0;
+  }
+
+  .aa-logbook__history-note {
+    color: var(--aa-text-3);
+    font-size: var(--aa-text-sm);
+    text-align: center;
+    padding: var(--aa-space-xs) 0 var(--aa-space-md);
+  }
+
+  .aa-logbook__history-note a {
+    color: var(--aa-text-2);
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
 </style>

@@ -108,17 +108,31 @@ export interface LogbookData {
 // Scoping note: Tasks, Projects, and Goals carry a lensId; archived InboxItems
 // do NOT (the inbox is universal). Archived notes are returned regardless of
 // the active lens — they belong to the user, not a context.
+//
+// History depth (2026-09-26): `historyDays` bounds every category to items
+// completed/declined/archived within the last N days — the Free-plan cap
+// (`FREE_LIMITS.logbookHistoryDays`); omit it (or pass null) for Pro's
+// unlimited history. Nothing is deleted server-side: the rows stay, a paid
+// plan sees them again (the "nothing is deleted" pricing promise).
 export async function getLogbookData(
   entities: LogbookEntities,
-  { userId, lensId }: { userId: string; lensId: string },
+  {
+    userId,
+    lensId,
+    historyDays,
+  }: { userId: string; lensId: string; historyDays?: number | null },
 ): Promise<LogbookData> {
+  const completedAfter =
+    historyDays && historyDays > 0
+      ? new Date(Date.now() - historyDays * 24 * 60 * 60 * 1000)
+      : null;
   const [tasks, wontDo, projects, goals, archived] = await Promise.all([
     entities.Task.findMany({
       where: {
         userId,
         lensId,
         isDone: true,
-        completedAt: { not: null },
+        completedAt: completedAfter ? { not: null, gte: completedAfter } : { not: null },
       },
       orderBy: { completedAt: "desc" },
       select: {
@@ -140,6 +154,7 @@ export async function getLogbookData(
         userId,
         lensId,
         status: "WONT_DO",
+        ...(completedAfter ? { updatedAt: { gte: completedAfter } } : {}),
       },
       orderBy: { updatedAt: "desc" },
       select: {
@@ -155,7 +170,7 @@ export async function getLogbookData(
         userId,
         lensId,
         isDone: true,
-        completedAt: { not: null },
+        completedAt: completedAfter ? { not: null, gte: completedAfter } : { not: null },
         // Simple-list projects are never completable — keep them out.
         type: "STANDARD",
       },
@@ -173,7 +188,7 @@ export async function getLogbookData(
         userId,
         lensId,
         isDone: true,
-        completedAt: { not: null },
+        completedAt: completedAfter ? { not: null, gte: completedAfter } : { not: null },
       },
       orderBy: { completedAt: "desc" },
       select: {
@@ -187,6 +202,7 @@ export async function getLogbookData(
       where: {
         userId,
         status: "ARCHIVED",
+        ...(completedAfter ? { archivedAt: { gte: completedAfter } } : {}),
       },
       orderBy: { archivedAt: "desc" },
       select: {

@@ -41,6 +41,7 @@ import {
   resolveAccessibleLenses,
   capViolation,
   cliAccessViolation,
+  resolveEffectiveAccess,
   WORK_LENS_MESSAGE,
   type EntitlementMessage,
   type EntitlementUser,
@@ -1962,9 +1963,16 @@ export function createCliRoutes(deps: {
     }
 
     try {
+      // History depth mirrors the web read: FREE gets the 14-day window
+      // (PAT users are entitled by the PAT gate, so this is normally null —
+      // resolved here so the route can never outlive that assumption).
+      const historyDays = resolveEffectiveAccess(user).isEntitled
+        ? null
+        : FREE_LIMITS.logbookHistoryDays;
       const logbook = await getLogbookData(entities, {
         userId: user.id,
         lensId,
+        historyDays,
       });
       return c.json(logbook);
     } catch (err) {
