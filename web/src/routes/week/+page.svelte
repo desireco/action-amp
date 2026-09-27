@@ -90,7 +90,8 @@
 <style>
   .aa-week {
     padding: 1.5rem 1rem 3rem;
-    max-width: 44rem;
+    /* Definite width — max-width + auto margins shrink-wraps a flex item. */
+    width: min(100%, var(--aa-w-narrow));
     margin: 0 auto;
     display: flex;
     flex-direction: column;

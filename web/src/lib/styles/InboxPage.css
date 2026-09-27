@@ -1,7 +1,7 @@
 @import "../tokens.css";
 
 .aa-inbox {
-  width: min(100%, 760px);
+  width: min(100%, var(--aa-w-narrow));
   margin: 0 auto;
 }
 

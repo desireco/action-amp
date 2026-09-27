@@ -208,9 +208,9 @@
      of the overlay; the showForTask trigger stays here). -->
 
 <style>
-  /* ---- Column: webapp TodayPage.css `.aa-today` — 840px centered. ---- */
+  /* ---- Column: webapp TodayPage.css `.aa-today` — the narrow measure. ---- */
   .aa-today {
-    width: min(100%, 840px);
+    width: min(100%, var(--aa-w-narrow));
     margin: 0 auto;
   }
 

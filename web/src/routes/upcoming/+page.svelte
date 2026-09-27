@@ -193,9 +193,9 @@
 </section>
 
 <style>
-  /* ---- Column: webapp UpcomingPage.css `.aa-upcoming` — 840px centered. */
+  /* ---- Column: webapp UpcomingPage.css `.aa-upcoming` — the narrow measure. */
   .aa-upcoming {
-    width: min(100%, 840px);
+    width: min(100%, var(--aa-w-narrow));
     margin: 0 auto;
   }
 

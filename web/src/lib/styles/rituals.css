@@ -5,7 +5,7 @@
 
 /* ---- /rituals Planning page ---- */
 .aa-rituals {
-  width: min(100%, 720px);
+  width: min(100%, var(--aa-w-narrow));
   margin: 0 auto;
 }
 

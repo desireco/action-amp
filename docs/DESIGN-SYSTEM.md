@@ -1,9 +1,10 @@
 # ActionAmp Design System — Decided
 
-> **Status: Decided.** Source of truth is `webapp/src/styles/tokens.css` — this
-> doc is the human-readable mirror, not a separate spec. Every value below maps
-> to a `--aa-*` token (see §6). If the two disagree, `tokens.css` wins; fix this
-> doc.
+> **Status: Decided.** Source of truth is `web/src/lib/tokens.css` (the new
+> stack; the legacy `webapp/src/styles/tokens.css` is the retired mirror) —
+> this doc is the human-readable mirror, not a separate spec. Every value below
+> maps to a `--aa-*` token (see §6). If the two disagree, `tokens.css` wins;
+> fix this doc.
 >
 > **Lineage.** This replaces the earlier `DESIGN-SYSTEM-DRAFT.md`, which framed
 > the system as four open questions (D1–D4, "decisions before tokens"). Those
@@ -106,12 +107,14 @@ This is the visual layer Things doesn't have, layered on top of the shared DNA.
 ## §6. Token map
 
 Every decision above resolves to a `--aa-*` token group in
-`webapp/src/styles/tokens.css`. Line numbers are approximate; treat
+`web/src/lib/tokens.css`. Line numbers are approximate; treat
 `tokens.css` as authoritative.
 
 | Decision | Token group | `tokens.css` |
 |---|---|---|
 | Type family (native, no web font) | `--aa-font`, `--aa-font-mono` | L8–11 |
+| Type scale (fluid) | `--aa-text-*` | L21–33 |
+| Content measures (fluid page columns) | `--aa-w-narrow`, `--aa-w-detail`, `--aa-w-list` | L35–43 |
 | Teal — system/state | `--aa-teal*` | L14–20 |
 | Amber — human emphasis | `--aa-amber*` | L23–26 |
 | Violet — projects/goals | `--aa-violet*` | L29–31 |
@@ -125,6 +128,19 @@ Every decision above resolves to a `--aa-*` token group in
 | Shadows (blue-tinted, layered) | `--aa-shadow-*`, `--aa-hero-shadow` | L156–161 |
 | Motion | `--aa-ease-*`, `--aa-dur-*` | L164–149 |
 | Dark-theme overrides | `[data-theme="dark"]` block | L178–230 |
+
+Two token groups are **fluid** — they hold their laptop value up to an 80rem
+(1280px) viewport and grow toward a cap (~2400px), so large monitors get
+bigger type and fuller pages instead of a floating narrow column:
+
+- **Type scale** `--aa-text-xs`…`--aa-text-2xl` — `clamp()` ramps
+  (e.g. body 0.9→1.05rem, page titles 1.5→1.85rem). `--aa-text-3xl` (the
+  focus clock) stays fixed — its size is signed off.
+- **Content measures** `--aa-w-narrow` / `--aa-w-detail` / `--aa-w-list` —
+  floor / preferred share of the main area / cap (e.g. detail:
+  860px floor, 72% preferred, 80rem cap). Always consume as
+  `width: min(100%, var(--aa-w-*))` or `max-width: var(--aa-w-*)` so small
+  screens collapse to the container.
 
 When adding a new lens color: add a `--aa-lens-<k>*` ramp in `:root`, mirror it
 in the `[data-theme="dark"]` block, and add a `[data-lens="<k>"]` block. The

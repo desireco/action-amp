@@ -5,7 +5,7 @@
    keeps the GroupedList overrides from leaking into other surfaces. */
 
 .aa-logbook {
-  width: min(100%, 760px);
+  width: min(100%, var(--aa-w-narrow));
   margin: 0 auto;
 }
 

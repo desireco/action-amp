@@ -36,13 +36,13 @@
   ];
 
   const typeScale = [
-    { token: "--aa-text-xs", size: "0.7rem", use: "kbd, micro-labels, eyebrow overlines" },
-    { token: "--aa-text-sm", size: "0.78rem", use: "chips, meta, secondary text (most common)" },
-    { token: "--aa-text-base", size: "0.9rem", use: "body, list rows" },
-    { token: "--aa-text-md", size: "1rem", use: "primary body, button labels" },
-    { token: "--aa-text-lg", size: "1.1rem", use: "card titles, hero subtitles" },
-    { token: "--aa-text-xl", size: "1.5rem", use: "page titles" },
-    { token: "--aa-text-2xl", size: "2rem", use: "hero, detail-page title" },
+    { token: "--aa-text-xs", size: "0.7–0.8rem", use: "kbd, micro-labels, eyebrow overlines" },
+    { token: "--aa-text-sm", size: "0.78–0.9rem", use: "chips, meta, secondary text (most common)" },
+    { token: "--aa-text-base", size: "0.9–1.05rem", use: "body, list rows" },
+    { token: "--aa-text-md", size: "1–1.16rem", use: "primary body, button labels" },
+    { token: "--aa-text-lg", size: "1.1–1.3rem", use: "card titles, hero subtitles" },
+    { token: "--aa-text-xl", size: "1.5–1.85rem", use: "page titles" },
+    { token: "--aa-text-2xl", size: "2–2.5rem", use: "hero, detail-page title" },
   ];
 
   const neutrals = [

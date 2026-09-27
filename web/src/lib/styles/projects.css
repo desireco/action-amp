@@ -10,12 +10,12 @@
 
 .aa-projects,
 .aa-goals {
-  width: min(100%, 980px);
+  width: min(100%, var(--aa-w-list));
   margin: 0 auto;
 }
 
 .aa-goals {
-  width: min(100%, 760px);
+  width: min(100%, var(--aa-w-narrow));
 }
 
 /* List header — webapp ListShell.css `.aa-list-header` (the eyebrow + big
@@ -297,7 +297,11 @@
    ============================================================ */
 
 .aa-detail {
-  max-width: 860px;
+  /* Definite width, not max-width: this is a flex-column item and auto
+     margins disable stretch — max-width alone shrink-wraps the column to its
+     content (the "narrow floating page" bug), while the floor in the measure
+     keeps it a real page. */
+  width: min(100%, var(--aa-w-detail));
   margin: 0 auto;
   padding: var(--aa-space-2xl) var(--aa-space-lg);
   display: flex;
@@ -497,7 +501,8 @@
 }
 
 .aa-project__progress-track {
-  flex: 0 1 260px;
+  flex: 1 1 260px;
+  max-width: 420px;
   height: 5px;
   background: var(--aa-surface-muted-2);
   border-radius: var(--aa-radius-full);

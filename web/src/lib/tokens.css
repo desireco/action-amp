@@ -17,15 +17,29 @@
 
   /* Type scale — calibrated to existing usage. The buckets collapse ~290 ad-hoc
      font-size declarations to seven named steps. Migrate components as you
-     touch them; do not bulk-rewrite. */
-  --aa-text-xs: 0.7rem;     /* kbd, micro-labels, eyebrow overlines */
-  --aa-text-sm: 0.78rem;    /* chips, meta, secondary text (most common) */
-  --aa-text-base: 0.9rem;   /* body, list rows */
-  --aa-text-md: 1rem;       /* primary body, button labels */
-  --aa-text-lg: 1.1rem;     /* card titles, hero subtitles */
-  --aa-text-xl: 1.5rem;     /* page titles */
-  --aa-text-2xl: 2rem;      /* hero, detail-page title */
-  --aa-text-3xl: 3rem;      /* display numbers — the focus clock */
+     touch them; do not bulk-rewrite.
+     Fluid: each step holds its laptop size up to an 80rem (1280px) viewport,
+     then grows toward its cap (~reached at 2400px) so type breathes on large
+     monitors instead of the canvas emptiness carrying the extra space.
+     --aa-text-3xl stays fixed — it is the focus clock's signed-off size. */
+  --aa-text-xs: clamp(0.7rem, calc(0.7rem + (100vw - 80rem) * 0.0014), 0.8rem);   /* kbd, micro-labels, eyebrow overlines */
+  --aa-text-sm: clamp(0.78rem, calc(0.78rem + (100vw - 80rem) * 0.0017), 0.9rem); /* chips, meta, secondary text (most common) */
+  --aa-text-base: clamp(0.9rem, calc(0.9rem + (100vw - 80rem) * 0.0021), 1.05rem); /* body, list rows */
+  --aa-text-md: clamp(1rem, calc(1rem + (100vw - 80rem) * 0.0023), 1.16rem);      /* primary body, button labels */
+  --aa-text-lg: clamp(1.1rem, calc(1.1rem + (100vw - 80rem) * 0.0029), 1.3rem);   /* card titles, hero subtitles */
+  --aa-text-xl: clamp(1.5rem, calc(1.5rem + (100vw - 80rem) * 0.005), 1.85rem);   /* page titles */
+  --aa-text-2xl: clamp(2rem, calc(2rem + (100vw - 80rem) * 0.0071), 2.5rem);      /* hero, detail-page title */
+  --aa-text-3xl: 3rem;      /* display numbers — the focus clock (fixed, signed off) */
+
+  /* Content measures — the app's page-column widths, fluid with the main
+     area. Each floors at its laptop width, prefers a share of the canvas
+     (the % leg), and caps on ultrawide, so large monitors read as a filled
+     page instead of a narrow floating column. Always consume as
+     `width: min(100%, var(--aa-w-*))` (or `max-width: var(--aa-w-*)`) so
+     small screens still collapse to the container. */
+  --aa-w-narrow: min(64rem, max(46rem, 62%));      /* inbox, logbook, rituals, settings, today/upcoming/someday/week */
+  --aa-w-detail: min(80rem, max(53.75rem, 72%));   /* project + goal detail */
+  --aa-w-list: min(85rem, max(61.25rem, 76%));     /* projects + goals card grids */
 
   --aa-weight-regular: 400;
   --aa-weight-medium: 500;
