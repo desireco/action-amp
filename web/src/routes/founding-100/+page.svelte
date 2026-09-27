@@ -96,7 +96,7 @@
       <ul class="aa-founding-includes">
         <li>Unlimited projects, goals, and Logbook history</li>
         <li>Work, personal, and custom Lenses</li>
-        <li>Command palette, search, and multi-device sync</li>
+        <li>Command palette and search, plus energy and time tags</li>
         <li>Every future Pro feature, with no renewal</li>
         <li>A direct line for feedback and product input</li>
       </ul>

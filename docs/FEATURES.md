@@ -142,7 +142,7 @@ The home screen (`/do`). Every other app opens to a list. ActionAmp opens to a _
 | **F22** | Sitewide search (`/`)    | ✅ Shipped | Bounded relevance-safe search covers all Task states plus Project, Goal, Resource, and live/archived Inbox text with exact destinations and browser-verified pointer/touch entry. |
 | **F23** | Offline-capable          | 🟡 Phase 2 | Capture & complete offline; sync on reconnect (React Query cache helps).                                                                                                          |
 | **F24** | Dark mode + calm default | ✅ Shipped | `[data-theme="dark"]` via Settings → Preferences. See `DESIGN-SYSTEM.md` §3.                                                                                                      |
-| **F25** | Multi-device sync        | 🟡 Phase 2 | Web now; Wasp architecture gets us cross-device later.                                                                                                                            |
+| **F25** | Multi-device sync        | ❌ Dropped | Removed from the plan + pricing copy 2026-09-26 (PRICING.md §8) — no device model ever existed; revisit only with usage signal.                                                     |
 | **F26** | Custom Lenses            | ✅ Shipped | `/do/settings/lenses`. Pro-only CRUD beyond the seeded Work/Me pair. See `specs/custom-lenses.md`.                                                                               |
 
 ---

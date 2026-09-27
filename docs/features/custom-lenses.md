@@ -15,9 +15,11 @@ per-lens identity color, kind taxonomy, and Pro-tier CRUD.
 **Today.** Full CRUD on `/do/settings/lenses` (Pro), seeded kinds +
 purpose in onboarding + `getAppData`, adaptive switcher (chip+popover at ≥4
 lenses) with `⌘L`, active-lens state keyed by `id` (not name), entitlement
-gated on `LensKind` (Work lens visible-but-locked for FREE). Six curated hue
-ramps in `tokens.css`. FREE gets a `<ProGate>` moment on the Work lens + lens
-config. `isAdmin` staff/dev bypass in the entitlement layer for testing.
+gated on the seed flags (`isIncluded`/`isDefault` — never the name). Since
+2026-09-26 Free reads BOTH seeded lenses (Me + Work); custom lenses are
+Pro-only. Six curated hue ramps in `tokens.css`. FREE gets a `<ProGate>`
+moment on custom lenses + lens config. `isAdmin` staff/dev bypass in the
+entitlement layer for testing.
 
 **Spec.** `docs/specs/done/custom-lenses.md` (shipped); review at
 `docs/reviews/custom-lenses.md`.

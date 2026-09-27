@@ -43,6 +43,12 @@ project's only moat.
   predates grammar v2.1 (#14) — tags ride `#` tokens (first `#` is the
   project hint, the rest are tags). The triage path is unchanged.
 
+**Pro gate (2026-09-26).** Tags are a Pro feature (PRICING.md §8) —
+`assertTagsAllowed` 402s every user-facing op (list/link/unlink), and FREE
+triage files tasks without parsed tags (`allowTags: false`, calm
+degradation). The onboarding reserved-seed still runs for every account so an
+upgrade finds the matcher names ready.
+
 **Done?** Shipped: seeding (7 names, idempotent, conflict-preserving), the
 Tags row (chips + add typeahead + remove), the three ops, domain tests
 (normalize, resolve-vs-create, idempotence, unlink-keeps-row, tenancy), e2e

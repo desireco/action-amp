@@ -51,8 +51,9 @@
 > Neutral default/included flags protect seeded and Free-plan behavior.
 > `Lens.purpose` adds
 > one short line ("what this lens is for"). Lens configuration (create/rename/
-> recolor/edit-purpose/delete) is Pro-only; FREE gets the seeded two (Me usable,
-> Work visible-but-locked). See `docs/specs/done/custom-lenses.md`.
+> recolor/edit-purpose/delete) is Pro-only; FREE gets the seeded two (Me and
+> Work, both usable as-is, not customizable — 2026-09-26). See
+> `docs/specs/done/custom-lenses.md`.
 >
 > v5 (2026-07-04): **Capture grammar v2.** The NL sigils are reorganized: `#`
 > is tags (was: project + tags), `@` is time only (was: tags + time), `[[lens]]`
@@ -278,8 +279,8 @@ bare Projects):
 
 - **Default Lenses: `Work` and `Me`.** **User-defined lenses ship on Pro**
   (shipped 2026-07-03; was Phase 2): create / rename / recolor / edit-purpose /
-  delete at `/do/settings/lenses`. FREE gets the seeded two — Me usable, Work
-  visible-but-locked.
+  delete at `/do/settings/lenses`. FREE gets the seeded two — Me and Work,
+  both usable as-is and not customizable (2026-09-26).
 - In the active Lens, Projects, Goals, Tasks, Resources, and the
   focus engine are scoped normally. A Simple-list Project is just a Project
   page — there is no checklist shell mode (removed 2026-08-18).

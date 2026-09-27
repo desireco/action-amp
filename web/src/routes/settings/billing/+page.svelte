@@ -175,7 +175,7 @@
             <span>Free plan</span>
           </div>
           <p class="aa-billing-active-renewal">
-            Personal scope · 3 projects · 1 goal
+            Me &amp; Work lenses · 3 projects · 1 goal
           </p>
         </div>
         <span class="aa-billing-payment-state">No payment method</span>

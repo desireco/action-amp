@@ -182,32 +182,35 @@ Pro = Work + unlimited structure + power.
 | Next focus engine (F8–F10) — *the wedge* | **Full** | Full |
 | Today (capped at 5, F12) | **Full** | Full (cap configurable/off) |
 | Basic triage (F6) | **Full** | Full |
-| Completion + Logbook (F16/F18) | **Full** (30-day history) | Full (unlimited history) |
-| **Lens** (Work/Me scope) | **Me only** (personal scope; Work visible-but-locked) | Work + Me + custom Lenses (soft cap 8) |
+| Completion + Logbook (F16/F18) | **Full** (14-day history) | Full (unlimited history) |
+| **Lens** (Work/Me scope) | **Me + Work** (the two seeded lenses, as-is — not customizable) | Work + Me + custom Lenses (soft cap 8) |
 | **Projects** | **3** | Unlimited |
 | **Goals** | **1** | Unlimited |
-| **Rituals** (habits layer — recurring rhythms, check-off only) | — | ✅ |
+| Rituals (habits layer — recurring rhythms, check-off only) | — | ✅ |
 | Upcoming / Someday views | **Full** | Full |
 | Command palette (F20) | — | ✅ |
 | Sitewide search across work + Inbox history (F22) | — | ✅ |
-| Multi-device sync (F25) | 1 device | Unlimited |
 | CLI + personal API tokens (terminal + agents) | — | ✅ |
 | Energy/time tags for the matcher (refinement) | — | ✅ |
 
+*(Multi-device sync was removed from the plan table 2026-09-26 — no device
+model exists and it never carried an enforcement surface; see the decision
+log.)*
+
 **Why these exact caps:**
 
-- **Personal scope (Me Lens) only is the strongest single trigger.** The
-  personal/work split is the most natural "oh, I need Pro" moment: someone
-  starts managing their personal life in ActionAmp, then wants to add work
-  projects — and hits the wall at peak perceived value. This beats any
-  arbitrary project count as an upgrade driver. (The app's term is **Lens**,
-  chosen over "context" to avoid GTD's @context — in pricing copy "personal
-  mode" / "personal scope" reads cleaner than "personal context".)
+- **Personal scope (Me Lens) only was the original strongest trigger — amended
+  2026-09-26: Free now includes the Work lens too** (both seeded lenses,
+  read-only). The upgrade trigger moved up a level: Free caps *structure*
+  (3 projects / 1 goal per lens, no customization, no custom lenses) while
+  the personal/work split itself is free. (The app's term is **Lens**, chosen
+  over "context" to avoid GTD's @context — in pricing copy "personal mode" /
+  "personal scope" reads cleaner than "personal context".)
 - **Unlimited Tasks is the load-bearing decision, and it's correct.** The
   product's whole thesis is "capture the firehose, surface the next drop."
   Capping tasks would punish the one behavior the app exists to encourage, and
   would make the app feel like it's fighting you. Tasks are cheap, and a user
-  with 500 flat tasks but only 1 goal / 3 projects / 1 lens still can't
+  with 500 flat tasks but only 1 goal / 3 projects / 2 lenses still can't
   *organize at scale* — the structure cap is what they bump into. The "leak"
   (someone using ActionAmp free forever as a flat list) is small, and that user
   isn't the Pro customer anyway.
@@ -216,6 +219,11 @@ Pro = Work + unlimited structure + power.
   (more than one goal, more than three projects) pushes you to Pro fast. (User
   floated 5 projects first, then settled on 3; 3 is tighter and fits the
   premium positioning — Todoist's 5 is the reference for a cheaper-feeling app.)
+- **14-day Logbook history (2026-09-26)** keeps the daily loop free while
+  making long-range reflection a Pro surface. Read-time only — nothing is ever
+  deleted, so a paid plan reveals the full history again (the "nothing is
+  deleted" promise on the pricing page). The originally documented 30-day cap
+  had never been enforced anywhere; 14 is the decided number.
 
 ---
 
@@ -229,7 +237,7 @@ one-time lifetime option alongside the recurring/prepaid Pro ladder.)*
 
 | Tier | Price | Story |
 |---|---|---|
-| **Free** | $0 (feature-capped) | The full focus loop, **personal scope only**, capped at 3 Projects / 1 Goal. Tasks unlimited. See §4. |
+| **Free** | $0 (feature-capped) | The full focus loop, **Me + Work lenses (read-only)**, capped at 3 Projects / 1 Goal per lens; Logbook history limited to 14 days. Tasks unlimited. See §4. |
 | **Pro** *(regular annual)* | **$79.50/yr** | Charm-priced. "About a dollar-fifty a week." (~$1.53/wk, ~$6.63/mo equiv). Includes one goal-setting workshop. |
 | **Pro prepaid** *(non-recurring, not publicly advertised)* | **$90/yr** | Same Pro, **no auto-renew**. Retained as an internal option, not part of public pricing copy. |
 | **Pro monthly** *(optional)* | **$12.95/mo** | Commitment-phobe option — ~2.0× the annual equiv, a clear push to yearly. |
@@ -250,7 +258,7 @@ feature. Monthly, Free, Founding 100, and prepaid stay outside this offer.
 ### Why $80 anchor (the user's call)
 
 - **Premium positioning for a broad paid feature set.** The rationale is that a
-  bunch of Pro features are coming (unlimited Lenses, multi-device, command
+  bunch of Pro features are coming (unlimited Lenses, tags, command
   palette, search, focus refinement) — the price needs to carry that breadth,
   not just the wedge. $80 signals "serious tool," not "$3/mo commodity."
 - **Charm-priced to $79.50** (user's call). Slight note logged: `.50` is an
@@ -317,9 +325,10 @@ build order, security checklist — lives in **`BILLING-INTEGRATION.md`**.
 **Schema shape (summary):** a `Plan` enum (`FREE | PRO | FOUNDER`) +
 `stripeCustomerId` + `planRenewsAt` on `User`. Entitlement is enforced
 **server-side in operations** (never trust the client): `context.user.plan`
-gates creating the 4th Project, 2nd Goal, or using the Work Lens. `FOUNDER` is
-the Founding 100 lifetime tier (`planRenewsAt` null; `isPlanActive` always
-true).
+gates creating the 4th Project, the 2nd Goal, custom Lenses, Rituals, tags,
+the command palette/search, CLI access — and bounds the Free Logbook to
+14 days of history. `FOUNDER` is the Founding 100 lifetime tier
+(`planRenewsAt` null; `isPlanActive` always true).
 
 **Load before coding:** the `stripe-best-practices` skill (restricted API keys,
 webhook as source of truth, signature verification, idempotency).
@@ -367,3 +376,7 @@ webhook as source of truth, signature verification, idempotency).
 | 2026-06-22 | **Founder tier reversed: dropped from catalog, schema, and UI** | Lifetime-locked tier added entitlement-model complexity (third plan state, non-expiring `planRenewsAt`) for a benefit the $90 prepaid already covers. Trust-gap concern real but cheaper to solve with a time-limited launch discount later if churn demands it. Removed `FOUNDER` from `Plan` enum, `billing/`, `BillingPage`, and docs. |
 | 2026-07-10 | **Founding 100 launch price: $99 one-time, lifetime, capped at 100 spots** | Lower launch price improves early conversion while preserving a hard 100-spot cap. $99 pays for itself in ~1.25yr vs annual. Existing page, checkout, webhook entitlement, and cap enforcement are used. |
 | 2026-08-11 | **Recurring yearly Pro includes one goal-setting workshop; prepaid stays unadvertised** | Strengthens yearly value with hands-on help turning priorities into goals. Monthly, Free, Founding 100, and prepaid are excluded; scheduling follows purchase. |
+| 2026-09-26 | **Free includes the Work lens** — both seeded lenses (Me + Work), read-only; customization stays Pro-only | The lens split itself was reclassified as core loop, not structure: Free caps structure (3 projects / 1 goal per lens, no customization). Enforcement keys on the seed flags (`isIncluded`/`isDefault`), never the name. |
+| 2026-09-26 | **Free Logbook history: 14 days** (replaces the never-enforced 30-day line); Pro unlimited | Long-range reflection becomes the paid surface; the daily loop stays free. Read-time only — nothing is deleted, honoring the pricing-page promise. |
+| 2026-09-26 | **Multi-device sync removed from the plan and all copy** | No device model ever existed; the cap was unenforceable as written. Dropped rather than built. |
+| 2026-09-26 | **Tags (energy/time + user tags) become Pro-only** | Reverses tag-management's original outside-billing call. Whole-feature gate; FREE triage with #tags still files the task, just without tags. |

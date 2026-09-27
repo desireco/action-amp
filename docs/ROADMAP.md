@@ -811,7 +811,8 @@ specs — they predate the protocol.)
   in WORKFLOW.md §5.6; soft focus ships and proves the model first.
 - Lifetime tier beyond Founding 100 (Model B). Parked per PRICING.md unless
   churn data demands it.
-- Multi-device sync beyond web.
+- Multi-device sync beyond web — dropped from the plan and all copy
+  2026-09-26 (PRICING.md §8); revisit only with usage signal.
 
 ---
 
@@ -875,10 +876,10 @@ Known remaining entitlement questions are product-scope, not launch blockers:
 
 | Limit / gate | Current read |
 |---|---|
-| Logbook ≤ 30 days | Still not enforced; defer until Review/logbook becomes a paid surface. |
-| Multi-device: 1 device | No device model exists; not worth building before usage signal. |
+| Logbook history | Enforced 2026-09-26: Free reads 14 days, Pro unlimited (`FREE_LIMITS.logbookHistoryDays`; read-time only, nothing deleted). |
+| Multi-device: 1 device | Dropped 2026-09-26 — removed from the plan and all copy; no device model exists. |
 | Command palette / search | Shipped and server-authoritatively Pro-gated. |
-| Energy/time matcher tags | Feature missing; gated behind tag-management + focus-engine-v2. |
+| Energy/time matcher tags | Shipped and Pro-gated 2026-09-26 (whole-feature gate; FREE triage files without tags). |
 
 ### B. Free-user experience — improved, still unmeasured
 
