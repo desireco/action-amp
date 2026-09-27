@@ -82,7 +82,7 @@
     const ok = await onboarding.complete(skipGuidance);
     if (!ok) return; // stay on the panel; the error renders; retry allowed
     leaving = true;
-    goto("/");
+    goto("/next");
   }
 
   function next() {

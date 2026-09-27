@@ -19,7 +19,7 @@
 </script>
 
 <div class="aa-settings-hub">
-  <a class="aa-settings-back" href="/">
+  <a class="aa-settings-back" href="/next">
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <path
         d="M10 3l-5 5 5 5"

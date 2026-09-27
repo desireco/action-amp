@@ -11,7 +11,7 @@
 
 <div class="aa-public">
   <nav class="aa-pub-nav">
-    <a href="/" class="aa-brand">
+    <a href="/next" class="aa-brand">
       <span class="aa-brand-mark">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
           <path
@@ -25,7 +25,7 @@
       </span>
       <span class="aa-brand-name">ActionAmp</span>
     </a>
-    <a href="/" class="aa-pub-back">← Home</a>
+    <a href="/next" class="aa-pub-back">← Home</a>
   </nav>
 
   <main class="aa-pub-main">
@@ -34,7 +34,7 @@
 
   <footer class="aa-pub-footer">
     <div class="aa-pub-footer-inner">
-      <a href="/" class="aa-brand">
+      <a href="/next" class="aa-brand">
         <span class="aa-brand-mark aa-brand-mark-sm">
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
             <path

@@ -152,7 +152,7 @@
     outcomeDraft = "";
     void (async () => {
       await whatNow.complete(task.id, note);
-      goto("/");
+      goto("/next");
     })().catch(() => {
       completedLocally = false;
       completingTask = false;
@@ -226,7 +226,7 @@
   // re-enters the still-running session (the honest state).
   async function exitFocus() {
     await whatNow.pause(task.id).catch(() => {});
-    goto("/");
+    goto("/next");
   }
 
   // Window-scoped keyboard. Esc — layered: snooze sheet → composer → cancel
@@ -401,7 +401,7 @@
             <button
               type="button"
               class="aa-focus-timer__action aa-focus-timer__action--complete"
-              aria-label="Complete task"
+              aria-label="Wrap up"
               title="Wrap up (d)"
               aria-expanded={task.isOnboardingSample ? undefined : composerMode === "completion"}
               aria-controls={task.isOnboardingSample ? undefined : "aa-focus-completion-composer"}
@@ -572,7 +572,7 @@
       taskTitle={task.description}
       onSnooze={async (preset) => {
         await whatNow.snooze(task.id, preset);
-        goto("/");
+        goto("/next");
       }}
       onClose={() => (snoozeOpen = false)}
     />

@@ -97,9 +97,9 @@ function titleContext(
 
   // Entity pages, keyed by route id so params are type-honest.
   switch (page.routeId) {
-    case "/": {
+    case "/next": {
       // The What Now stage card — the task on the table right now.
-      return src.topTask?.description ?? "Do";
+      return src.topTask?.description ?? "Next";
     }
     case "/today/[permalink]": {
       return src.picked?.description ?? "Today";

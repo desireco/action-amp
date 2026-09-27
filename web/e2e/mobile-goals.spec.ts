@@ -113,7 +113,7 @@ test("mobile: Do tap grammar — tap → Next, double tap → the menu", async (
 
   // Single tap → the What-Now chooser (Do's default).
   await doBtn.click();
-  await expect(page).toHaveURL(/\/$/, { timeout: 10_000 });
+  await expect(page).toHaveURL(/\/next$/, { timeout: 10_000 });
 
   // Space the taps past the 300ms double-tap window (same reasoning as
   // Plan), then the double tap opens the menu on the already-open Do page.

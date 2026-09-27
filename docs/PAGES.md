@@ -7,10 +7,12 @@
 > expanding-section nav (one open at a time), with the **context switch (Lens)**
 > above it and Capture pinned outside both.
 >
-> All authenticated app routes use the `/do` prefix (e.g. `/do`, `/do/inbox`,
-> `/do/tasks/:permalink`). The page-by-page descriptions below stay accurate
-> for each route's contents; the chrome mockup (§0) shows the post-2026-06-23
-> focus-switch sidebar.
+> The legacy stack served authenticated routes under the `/do` prefix (e.g.
+> `/do`, `/do/inbox`, `/do/tasks/:permalink`); the new stack gives every page
+> its own explicit path (`/next`, `/inbox`, `/today/:permalink`), with `/` and
+> the `/do/*` legacy paths redirecting. The page-by-page descriptions below
+> stay accurate for each route's contents; the chrome mockup (§0) shows the
+> post-2026-06-23 focus-switch sidebar.
 
 ---
 
@@ -55,7 +57,7 @@ Persistent UI that frames every page:
 These are the main destinations. Scoped surfaces use the active Lens;
 universal surfaces aggregate all lenses.
 
-### P1. Next → `/do`
+### P1. Next → `/next` (new stack; `/do` in the legacy map)
 
 **The home page. The wedge.** Not a list — a chooser. (FEATURES F8/F10.)
 

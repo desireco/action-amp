@@ -123,7 +123,7 @@ test("fresh user: gate bounces the app home to /welcome, full flow completes and
 
   // finish → back to the app home (and it STICKS — no gate bounce-back)
   await page.getByRole("button", { name: "Try the practice task →" }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/next$/);
   await page.waitForTimeout(300);
   await expect(page).not.toHaveURL(/\/welcome/);
 
@@ -172,7 +172,7 @@ test("skip path: Esc-less skip ends COMPLETE with no sample task", async ({
 
   // "Skip intro" = finish(true): returning-member path, guidance suppressed.
   await page.getByRole("button", { name: "Skip intro" }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/next$/);
   await expect(page).not.toHaveURL(/\/welcome/);
 
   const status = await getStatus(page, user.id);

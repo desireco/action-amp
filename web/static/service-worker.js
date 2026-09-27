@@ -94,8 +94,8 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const paths = {
-    capture: "/?capture=1",
-    next: "/",
+    capture: "/next?capture=1",
+    next: "/next",
     today: "/today"
   };
   const url = new URL(paths[event.action] || event.notification.data?.url || "/today", self.location.origin).href;

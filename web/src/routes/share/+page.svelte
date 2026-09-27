@@ -267,7 +267,7 @@
     <main class="aa-share">
       <div class="aa-share__card">
         <h1 class="aa-share__title">{ERROR_COPY.get("empty") ?? MISSING_ERROR_COPY}</h1>
-        <a class="aa-share__link" href="/">Back to ActionAmp</a>
+        <a class="aa-share__link" href="/next">Back to ActionAmp</a>
       </div>
     </main>
   {:else}
@@ -380,7 +380,7 @@
   <main class="aa-share">
     <div class="aa-share__card">
       <h1 class="aa-share__title">{ERROR_COPY.get(errorParam) ?? MISSING_ERROR_COPY}</h1>
-      <a class="aa-share__link" href="/">Back to ActionAmp</a>
+      <a class="aa-share__link" href="/next">Back to ActionAmp</a>
     </div>
   </main>
 {/if}

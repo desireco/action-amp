@@ -83,7 +83,8 @@ test.describe("share target (S12)", () => {
       };
     };
     expect(manifest.name).toBe("ActionAmp");
-    expect(manifest.start_url).toBe("/");
+    // The PWA launches at the explicit home URL, not the redirect shim.
+    expect(manifest.start_url).toBe("/next");
     expect(manifest.display).toBe("standalone");
     expect(manifest.share_target.action).toBe("/share");
     expect(manifest.share_target.method).toBe("POST");
@@ -312,7 +313,7 @@ test.describe("share target (S12)", () => {
     await page.goto(`/share?pending=${encodeURIComponent(pendingId)}`);
     await expect(page.getByText("Keep this for later.")).toBeVisible();
     await page.getByRole("button", { name: "Not now" }).click();
-    await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?$/);
+    await expect(page).toHaveURL(/\/next$/);
     // The stash row is gone.
     const count = await page.evaluate(
       () =>

@@ -107,7 +107,9 @@ Triage drains the universal Inbox across every Lens.
 
 ### 2.3 Work Area — doing, right now
 
-- Where **Now / Next** lives. The home screen (`/do`) is a chooser, not a list.
+- Where **Now / Next** lives. The home screen is a chooser, not a list — at
+  the explicit URL `/next` on the new stack (`/` and legacy `/do` redirect
+  there; every page owns a named address).
 - Two surfaces:
   - **Next** — the single focus task. State machine:
     `Next → (Start) → Now → (Done | Defer | Pause) → Next`. The Now state

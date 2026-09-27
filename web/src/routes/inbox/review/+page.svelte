@@ -578,7 +578,7 @@
       <h2 class="aa-triage-empty__title">Inbox zero.</h2>
       <p class="aa-triage-empty__text">Nothing left to decide. Go do something.</p>
       <div class="aa-triage-empty__actions">
-        <a href="/" class="aa-btn aa-btn--primary">Done →</a>
+        <a href="/next" class="aa-btn aa-btn--primary">Done →</a>
         <a href="/inbox" class="aa-btn aa-btn--secondary">Back to inbox</a>
       </div>
     </div>

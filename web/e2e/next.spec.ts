@@ -52,7 +52,7 @@ async function findTask(
 test.describe("What Now home", () => {
   test("an Upcoming task (no due date) also surfaces on home", async ({ page }) => {
     await loginAs(page, EMAIL);
-    await page.goto("/");
+    await page.goto("/next");
 
     // Pool = Today + undated/future-due Upcoming (WORKFLOW §5.2): with no
     // Today commit, the undated bench task is the engine's #1.
@@ -69,7 +69,7 @@ test.describe("What Now home", () => {
     // Today (the pool's court outranks the bench).
     await apiPost(page, "/rpc/tasks/updateStatus", { id: deep.id, status: "TODAY" });
 
-    await page.goto("/");
+    await page.goto("/next");
     await expect(page.getByText("Deep work task")).toBeVisible();
 
     await page.getByRole("button", { name: /^start$/i }).click();
@@ -88,10 +88,10 @@ test.describe("What Now home", () => {
     const deep = await findTask(page, lensId, "Deep work task");
     await apiPost(page, "/rpc/tasks/updateStatus", { id: deep.id, status: "TODAY" });
 
-    await page.goto("/");
+    await page.goto("/next");
 
     // Do-is-focus handoff (1c1e7c8): when the task is already Now — F13 left
-    // it running, and re-runs too — "/" hands off straight to /focus and no
+    // it running, and re-runs too — "/next" hands off straight to /focus and no
     // Start button exists. A fresh state shows the card with Start instead;
     // wait for whichever state lands, then enter focus.
     const focusUp = page.getByRole("dialog", { name: /^Focus:/i });
@@ -106,7 +106,7 @@ test.describe("What Now home", () => {
     await page.getByRole("button", { name: /wrap up/i }).click();
     await page.getByRole("button", { name: /mark complete/i }).click();
 
-    await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?$/);
+    await expect(page).toHaveURL(/\/next$/);
     // Scoped to main: getByText also matches the document <title>, which can
     // carry the task name for the transition frame before the stage reloads.
     await expect(page.getByRole("main")).not.toContainText("Deep work task");

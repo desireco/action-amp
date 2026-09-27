@@ -34,7 +34,7 @@
   <div class="aa-admin-denied">
     <h1>Admin access required.</h1>
     <p>This area is only available to ActionAmp administrators.</p>
-    <a href="/">Back to Next</a>
+    <a href="/next">Back to Next</a>
   </div>
 {:else}
   <main class="aa-admin-content">

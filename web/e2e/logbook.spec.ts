@@ -61,8 +61,8 @@ test("declining a task surfaces it in the Logbook; Restore returns it to Upcomin
   await page.getByRole("button", { name: "Mark won't do" }).click();
 
   // Declining drops the task from the active surface — the detail page
-  // returns home ("/"), and the bench no longer lists it.
-  await expect(page).toHaveURL(/^https?:\/\/[^/]+\/?$/, { timeout: 10_000 });
+  // returns home ("/next"), and the bench no longer lists it.
+  await expect(page).toHaveURL(/\/next$/, { timeout: 10_000 });
   await page.goto("/upcoming");
   await expect(page.getByText(title)).toHaveCount(0, { timeout: 10_000 });
 

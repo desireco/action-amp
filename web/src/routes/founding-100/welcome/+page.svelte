@@ -83,7 +83,7 @@
       </p>
 
       <div class="aa-founding-cta">
-        <a href="/" class="aa-btn aa-btn--primary aa-btn--lg">See your Next</a>
+        <a href="/next" class="aa-btn aa-btn--primary aa-btn--lg">See your Next</a>
         <p class="aa-founding-spots">Thank you, genuinely, for the bet.</p>
         <p class="aa-founding-spots">
           <a href="https://actionamp.com/roadmap">See how we're doing →</a>
@@ -99,7 +99,7 @@
           shortly. No action needed on your part.
         </p>
         <div class="aa-founding-cta">
-          <a href="/" class="aa-btn aa-btn--secondary aa-btn--lg">
+          <a href="/next" class="aa-btn aa-btn--secondary aa-btn--lg">
             Continue to the app
           </a>
           <p class="aa-founding-spots">

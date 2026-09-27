@@ -67,7 +67,7 @@ test.describe("auth — passwordless login (S10)", () => {
     await codeInput.fill("111111");
     await page.getByRole("button", { name: "Continue" }).click();
 
-    // The verify hard-navigates to returnTo ("/"). A brand-new account has
+    // The verify hard-navigates to returnTo ("/next"). A brand-new account has
     // hasSeenOnboarding=false, so the shell's onboarding gate (the webapp App
     // gate's behavioral twin) intercepts to /welcome — same as webapp today.
     await page.waitForURL(/^https?:\/\/[^/]+\/(welcome\/?)?$/, { timeout: 15_000 });
@@ -184,7 +184,7 @@ test.describe("auth — passwordless login (S10)", () => {
   }) => {
     const email = uniqueEmail();
     await page.goto(`/login?devEmail=${encodeURIComponent(email)}`);
-    await page.waitForURL(/^https?:\/\/[^/]+\/?$/, { timeout: 15_000 });
+    await page.waitForURL(/\/next\/?$/, { timeout: 15_000 });
     // The autologin route stamps the same session cookie; the app side sees
     // a normal signed-in browser.
     const cookie = (await page.context().cookies()).find((c) => c.name === "wasp_session");
@@ -212,7 +212,7 @@ test.describe("auth — logout (the real UI)", () => {
   }) => {
     // Login through the app as the seeded fixture user.
     await page.goto(`/login?devEmail=${encodeURIComponent(DEV_EMAIL)}`);
-    await page.waitForURL(/^https?:\/\/[^/]+\/?$/, { timeout: 15_000 });
+    await page.waitForURL(/\/next\/?$/, { timeout: 15_000 });
 
     // Control content: capture + triage a TODAY task so "no data visible"
     // below is a real assertion, not an empty account.

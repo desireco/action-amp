@@ -7,7 +7,7 @@ import type { Page } from "@playwright/test";
  * Auth convention (every future spec copies this — do NOT roll your own):
  *
  *   await loginAs(page, "someone@test.local");   // via the dev login route
- *   await page.goto("/");
+ *   await page.goto("/next");
  *
  * `loginAs` POSTs `/api/dev/login?email=…` through `page.request`, which
  * shares the browser context's cookie jar AND resolves the relative URL

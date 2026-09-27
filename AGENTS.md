@@ -227,8 +227,8 @@ of GH issues in `desireco/action-amp` — the issue body is the story text.
 - **Native, not custom.** System font only. No custom display/web font.
 - **Keyboard-first.** Every action has a shortcut. Modal navigation, not sidebars
   of nouns.
-- **The list is demoted.** The home screen (`/do`) is a chooser (What Now), not
-  a list.
+- **The list is demoted.** The home screen (`/next`) is a chooser (What Now),
+  not a list.
 - **Structure changes start in `docs/WORKFLOW.md`.** Update it first, then
   cascade to the docs it governs (its §6 lists the cascade).
 - **Wasp edits:** follow `webapp/AGENTS.md` (config-format detection, `with { type:
