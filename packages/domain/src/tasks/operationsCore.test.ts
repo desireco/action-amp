@@ -152,7 +152,7 @@ describe("getTopTaskData", () => {
       isDone: false,
     });
     expect(call.include).toEqual({
-      project: { select: { id: true, name: true } },
+      project: { select: { id: true, permalink: true, name: true } },
       goal: { select: { id: true, name: true } },
     });
   });
@@ -361,7 +361,7 @@ describe("getTaskAlternativesData", () => {
     snoozeAt(expected).setTime(snoozeAt(call.where).getTime());
     expect(call.where).toMatchObject(expected);
     expect(call.include).toEqual({
-      project: { select: { id: true, name: true } },
+      project: { select: { id: true, permalink: true, name: true } },
       goal: { select: { id: true, name: true } },
     });
   });

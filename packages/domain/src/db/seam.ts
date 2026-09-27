@@ -969,9 +969,10 @@ export interface TaskListInclude {
 export interface TaskLensListInclude extends TaskListInclude {
   lens: LensPillInclude;
 }
-/** fetchRankedActiveTasks (getTopTaskData / getTaskAlternativesData). */
+/** fetchRankedActiveTasks (getTopTaskData / getTaskAlternativesData). The
+ *  project ref carries the permalink so the alternatives rail can link it. */
 export interface RankedPoolInclude {
-  project: ProjectRefInclude;
+  project: ProjectPermalinkInclude;
   goal: ProjectRefInclude;
 }
 /** getTaskData — the task-detail lookup. */
@@ -1009,9 +1010,10 @@ export interface TaskLensListRow extends TaskListRow {
 }
 
 /** A ranked-pool candidate: base task + the project/goal refs rankTopTask ties
- *  break on and the Next/Focus surfaces display. */
+ *  break on and the Next/Focus surfaces display. The project permalink rides
+ *  along for the rail's project link. */
 export interface RankedPoolRow extends Task {
-  project: { id: string; name: string } | null;
+  project: { id: string; permalink: string; name: string } | null;
   goal: { id: string; name: string } | null;
 }
 

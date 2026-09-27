@@ -159,6 +159,7 @@
             permalink: t.permalink,
             title: t.description,
             project: t.project?.name,
+            projectPermalink: t.project?.permalink,
             due: dueLabelFor(t) ?? undefined,
             size: sizeLabel(t.size),
             suggested: t.id === whatNow.topTask?.id,

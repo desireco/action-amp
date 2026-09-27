@@ -261,7 +261,9 @@ function toLensListRowDto(row: TaskLensListRow | DoneTodayRow) {
 function toRankedDto(row: RankedPoolRow) {
   return {
     ...toFullDto(row),
-    project: row.project ? { id: row.project.id, name: row.project.name } : null,
+    project: row.project
+      ? { id: row.project.id, permalink: row.project.permalink, name: row.project.name }
+      : null,
     goal: row.goal ? { id: row.goal.id, name: row.goal.name } : null,
   };
 }

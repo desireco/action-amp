@@ -1,8 +1,11 @@
 <script lang="ts">
   // AlternativesRail — "Or choose another task in <Lens>" below the card
-  // (webapp ui/NextAlternatives verbatim port: markup + CSS). Choosing is
-  // pure navigation; nothing mutates. Calm by design: one hairline, quiet
+  // (webapp ui/NextAlternatives port: markup + CSS). Choosing is pure
+  // navigation; nothing mutates. Calm by design: one hairline, quiet
   // borderless rows; teal only as selection intent on hover/focus.
+  // Deviation from the verbatim port: the row is a role="button" div
+  // (TaskRow's pattern) so the project name inside the meta can be a real
+  // link to the project page — it stops propagation and navigates on its own.
   export interface NextAlternative {
     /** Task id — used as the key and to exclude the on-stage task */
     id: string;
@@ -10,6 +13,8 @@
     permalink: string;
     title: string;
     project?: string;
+    /** Project permalink — present when `project` is; links the project page. */
+    projectPermalink?: string;
     due?: string;
     size?: string;
     /** True when this row is the focus engine's current #1 — the
@@ -38,7 +43,16 @@
     <ul class="aa-wn-alts__list">
       {#each tasks as task (task.id)}
         <li>
-          <button class="aa-wn-alts__row" type="button" onclick={() => onChoose(task)}>
+          <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_click_events_have_key_events -->
+          <div
+            class="aa-wn-alts__row"
+            role="button"
+            tabindex={0}
+            onclick={() => onChoose(task)}
+            onkeydown={(e) => {
+              if (e.key === "Enter") onChoose(task);
+            }}
+          >
             <span class="aa-wn-alts__row-main">
               {#if task.suggested}
                 <span class="aa-wn-alts__kicker">Suggested</span>
@@ -46,12 +60,21 @@
               <span class="aa-wn-alts__row-title">{task.title}</span>
               {#if task.project || task.due || task.size}
                 <span class="aa-wn-alts__row-meta">
-                  {[task.project, task.due, task.size].filter(Boolean).join(" · ")}
+                  {#if task.project}
+                    <a
+                      class="aa-wn-alts__row-project"
+                      href="/projects/{task.projectPermalink}"
+                      onclick={(e) => e.stopPropagation()}
+                      onkeydown={(e) => e.stopPropagation()}
+                    >{task.project}</a>
+                  {/if}
+                  {#if task.project && (task.due || task.size)}{" · "}{/if}
+                  {[task.due, task.size].filter(Boolean).join(" · ")}
                 </span>
               {/if}
             </span>
             <span class="aa-wn-alts__row-action" aria-hidden="true">Choose instead</span>
-          </button>
+          </div>
         </li>
       {/each}
     </ul>
@@ -115,9 +138,10 @@
     list-style: none;
   }
 
-  /* One row = one button. Whitespace separates rows (no chrome); hover and
-     focus carry the intent: title shifts toward teal (selection, never amber),
-     the trailing affordance underlines. */
+  /* One row = one choose target (role="button" div, so the project link can
+     nest inside). Whitespace separates rows (no chrome); hover and focus
+     carry the intent: title shifts toward teal (selection, never amber), the
+     trailing affordance underlines. */
   .aa-wn-alts__row {
     display: grid;
     grid-template-columns: 1fr auto;
@@ -163,6 +187,20 @@
   .aa-wn-alts__row-meta {
     font-size: var(--aa-text-sm);
     color: var(--aa-text-3);
+  }
+
+  /* Project link inside the meta — same treatment as the card's context-line
+     link: quiet gray + thin underline at rest, violet (project identity) on
+     hover. stopPropagation keeps it from choosing the task. */
+  .aa-wn-alts__row-project {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--aa-border-strong);
+    text-underline-offset: 3px;
+  }
+  .aa-wn-alts__row-project:hover {
+    color: var(--aa-violet-text);
+    text-decoration-color: var(--aa-violet-text);
   }
 
   .aa-wn-alts__row-action {

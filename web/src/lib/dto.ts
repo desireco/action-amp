@@ -55,7 +55,7 @@ export interface WhatNowTask extends TaskFull {
 }
 
 export interface RankedTask extends TaskFull {
-  project: { id: string; name: string } | null;
+  project: { id: string; permalink: string; name: string } | null;
   goal: { id: string; name: string } | null;
 }
 

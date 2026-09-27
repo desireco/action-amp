@@ -147,9 +147,12 @@ export const WhatNowTaskSchema = TaskFullSchema.extend({
   attachments: z.array(AttachmentDtoSchema),
 });
 
-/** A ranked-pool candidate (alternatives rail): scalars + light refs. */
+/** A ranked-pool candidate (alternatives rail): scalars + light refs. The
+ *  project permalink lets the rail link the project page. */
 export const RankedTaskSchema = TaskFullSchema.extend({
-  project: z.object({ id: z.string(), name: z.string() }).nullable(),
+  project: z
+    .object({ id: z.string(), permalink: z.string(), name: z.string() })
+    .nullable(),
   goal: z.object({ id: z.string(), name: z.string() }).nullable(),
 });
 

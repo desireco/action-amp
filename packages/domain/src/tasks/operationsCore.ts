@@ -525,7 +525,8 @@ export const TASK_ALTERNATIVES_LIMIT = 2;
 // same ranked pool as the top task, minus whatever is already on stage — the
 // ranked #1 while browsing the recommendation, or the picked task while
 // inspecting one (so the recommendation itself re-enters the list and stays
-// available). Rows stay light: project/goal names only, no history hydration.
+// available). Rows stay light: project name + permalink (the rail links it),
+// goal name only — no history hydration.
 export async function getTaskAlternativesData(
   entities: RankedPoolEntities,
   {
@@ -622,7 +623,7 @@ async function fetchRankedActiveTasks(
   const candidates = await entities.Task.findMany({
     where: activePoolWhere({ userId, lensId, timeZone }),
     include: {
-      project: { select: { id: true, name: true } },
+      project: { select: { id: true, permalink: true, name: true } },
       goal: { select: { id: true, name: true } },
     },
   });
