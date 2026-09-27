@@ -110,7 +110,6 @@
       : null;
     return {
       title: t.description,
-      project: t.project?.name,
       due: dueLabelFor(t) ?? undefined,
       size: sizeLabel(t.size),
       why: (why.lead || why.detail) || undefined,
@@ -142,6 +141,10 @@
     >
       {#snippet context()}
         {isNow ? "Now" : pickedToken ? "Picked" : "Next"} in
+        {#if task?.project}
+          <a href="/projects/{task.project.permalink}" class="aa-wn-card__context-project">{task.project.name}</a>
+          <span class="aa-wn-card__context-sep" aria-hidden="true">/</span>
+        {/if}
         <span class="aa-wn-card__context-lens">{whatNow.lens?.name ?? ""}</span>
       {/snippet}
     </WhatNowCard>
@@ -295,6 +298,24 @@
   .aa-wn-card__context-lens {
     font-weight: var(--aa-weight-semibold);
     color: var(--aa-active-lens-text);
+  }
+
+  .aa-wn-card__context-sep {
+    color: var(--aa-border-strong);
+  }
+
+  /* Project link in the context line — quiet gray at rest, violet (project
+     identity) on hover, so the resting line carries no extra hue. Reads
+     "project / lens" ahead of the title. */
+  .aa-wn-card__context-project {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--aa-border-strong);
+    text-underline-offset: 3px;
+  }
+  .aa-wn-card__context-project:hover {
+    color: var(--aa-violet-text);
+    text-decoration-color: var(--aa-violet-text);
   }
 
   .aa-wn-veil {

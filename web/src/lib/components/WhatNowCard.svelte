@@ -11,7 +11,6 @@
 
   export interface NextTaskDisplay {
     title: string;
-    project?: string;
     due?: string;
     size?: string;
     why?: string;
@@ -53,10 +52,8 @@
 
   <h2 class="aa-wn-card__title" class:strike={doing}>{task.title}</h2>
 
-  {#if task.project || task.due || task.size}
+  {#if task.due || task.size}
     <div class="aa-wn-card__meta">
-      {#if task.project}<span class="aa-wn-card__meta-item">{task.project}</span>{/if}
-      {#if task.project && task.due}<span class="aa-wn-card__sep" aria-hidden="true">·</span>{/if}
       {#if task.due}<span class="aa-wn-card__meta-item">{task.due}</span>{/if}
       {#if task.due && task.size}<span class="aa-wn-card__sep" aria-hidden="true">·</span>{/if}
       {#if task.size}<span class="aa-wn-card__meta-item">{task.size}</span>{/if}
@@ -167,7 +164,8 @@
     color: var(--aa-text-3);
   }
 
-  /* Meta line (project · due · size) */
+  /* Meta line (due · size) — the project lives in the context line above
+     the title, linked to the project page. */
   .aa-wn-card__meta {
     font-size: var(--aa-text-base);
     color: var(--aa-text-3);
