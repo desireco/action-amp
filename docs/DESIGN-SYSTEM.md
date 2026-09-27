@@ -123,7 +123,7 @@ Every decision above resolves to a `--aa-*` token group in
 | Lens identity (user hues) | `--aa-lens-{slate,cyan,coral,honey,lime,magenta}*` | L63–96 |
 | Active-lens runtime | `--aa-active-lens*`, `[data-lens="…"]` blocks | L99–106, L276–334 |
 | Neutral ramp (light) | `--aa-bg*`, `--aa-surface*`, `--aa-border*`, `--aa-text*` | L120–132 |
-| Radii (4/8 grid) | `--aa-radius-*`, goal identity `--aa-radius-goal` | L135–142 |
+| Radii (4/8 grid) | `--aa-radius-*` (incl. `none`), goal identity `--aa-radius-goal` | L135–142 |
 | Spacing (4/8 grid) | `--aa-space-*` | L145–153 |
 | Shadows (blue-tinted, layered) | `--aa-shadow-*`, `--aa-hero-shadow` | L156–161 |
 | Motion | `--aa-ease-*`, `--aa-dur-*` | L164–149 |
@@ -134,8 +134,11 @@ Two token groups are **fluid** — they hold their laptop value up to an 80rem
 bigger type and fuller pages instead of a floating narrow column:
 
 - **Type scale** `--aa-text-xs`…`--aa-text-2xl` — `clamp()` ramps
-  (e.g. body 0.9→1.05rem, page titles 1.5→1.85rem). `--aa-text-3xl` (the
-  focus clock) stays fixed — its size is signed off.
+  (e.g. body 0.9→1.05rem, page titles 1.5→1.85rem). `--aa-text-2xs`
+  (0.625rem, micro badges/overlines) and `--aa-text-3xl` (the focus clock)
+  stay fixed. As of the 2026-09-26 sweep every surface — app, public
+  marketing, onboarding — draws type from these steps; former raw-px heroes
+  read slightly smaller at wide viewports (the collapse's recorded trade).
 - **Content measures** `--aa-w-narrow` / `--aa-w-detail` / `--aa-w-list` —
   floor / preferred share of the main area / cap (e.g. detail:
   860px floor, 72% preferred, 80rem cap). Always consume as
@@ -189,7 +192,7 @@ live — open it to see every component against the real tokens.
 - Reserve amber for genuine human emphasis (Important, "why this matters").
 - Layer two soft, blue-tinted shadows for elevation; add a 1px hairline border for definition.
 - Leave generous whitespace. If a section feels crowded, remove something.
-- Keep radii in the 4–8px range for UI; `radius-full` only for the completion circle. Two identity exceptions, both Jake, 2026-09-19: goal cards carry `--aa-radius-goal` (80px, ≈25% of the card's min-height) — the soft-round shape separates goals from projects at a glance — and ritual cards carry `--aa-radius-ritual` (36px), between projects (2xl) and goals: shape orders the Planning surfaces, outcomes roundest, rhythms between, work sharpest.
+- Keep radii in the 4–8px range for UI; `radius-full` only for the completion circle. Two identity exceptions, both Jake, 2026-09-19: goal cards carry `--aa-radius-goal` (80px, ≈25% of the card's min-height) — the soft-round shape separates goals from projects at a glance — and ritual cards carry `--aa-radius-ritual` (36px), between projects (2xl) and goals: shape orders the Planning surfaces, outcomes roundest, rhythms between, work sharpest. Structural squares (ghost inputs, bars flush to a rounded panel) use `--aa-radius-none`.
 - Make secondary/tertiary buttons look tappable: visible `border-strong` + subtle shadow, never a faint outline alone.
 - Lay out buttons `inline-flex` with icon *leading*, never stacked above the label.
 - Set `<html data-theme>` and `<html data-lens>` so the runtime tokens resolve.
@@ -197,7 +200,7 @@ live — open it to see every component against the real tokens.
 **Don't**
 - Don't introduce a custom display/web font. It breaks the native trust.
 - Don't use color decoratively. Every hue must mean something.
-- Don't use pure `#000` or `#fff`. Use the cool-tinted neutral ramp.
+- Don't use pure `#000` or `#fff`. Use the cool-tinted neutral ramp. (The sanctioned whites are the scrim constants in tokens.css — `--aa-text-on-scrim`, `--aa-wash-on-primary` — for content on dark scrims/brand surfaces, constant across themes.)
 - Don't use `radius-full` (pill) shapes on buttons or cards — it dilutes the completion circle.
 - Don't use gradients as decoration. Flat color + physical depth, not chromatic.
 - Don't add badges, red-dot counts, streaks, or guilt-trip UI. The calm is the point.
