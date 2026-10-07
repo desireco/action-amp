@@ -599,27 +599,45 @@ app.get("/api/attachments/:id", async (c) => {
 // suite runs the API without WEB_DIST_DIR, so only the deployed image (or a
 // local run with WEB_DIST_DIR set) exercises this ordering.
 if (servingSpa) {
+  // Cache discipline for the served SPA. The installed PWA reads index.html
+  // at every cold start: it must revalidate every launch, or a deploy leaves
+  // the phone on stale HTML whose hashed /_app assets no longer exist — the
+  // app never boots and Android holds the launch splash screen forever (the
+  // browser tab hides this because it re-fetches HTML far more often). The
+  // hashed bundles are the exception: content-addressed, cache forever.
+  const serveWeb: typeof serveStatic = (options = {}) =>
+    serveStatic({
+      ...options,
+      onFound: (path, c) => {
+        const immutable = path.includes("/_app/immutable/");
+        c.header(
+          "Cache-Control",
+          immutable ? "public, max-age=31536000, immutable" : "no-cache",
+        );
+        return options.onFound?.(path, c);
+      },
+    });
   // Legacy /app + /do URLs redirect home / strip the prefix (see
   // legacy-redirects.ts for why this lives server-side). Above the catch-all,
   // which would otherwise answer them with the SPA shell and leave the
   // client router to 404.
   app.route("/", createLegacyRedirectRoutes());
   // Assets first (immutable), then the SPA fallback for client-side routes.
-  app.use("/_app/*", serveStatic({ root: webDist }));
-  app.use("/static/*", serveStatic({ root: webDist }));
-  app.get("/manifest.json", serveStatic({ root: webDist }));
-  app.get("/service-worker.js", serveStatic({ root: webDist }));
-  app.get("/version.json", serveStatic({ root: webDist }));
+  app.use("/_app/*", serveWeb({ root: webDist }));
+  app.use("/static/*", serveWeb({ root: webDist }));
+  app.get("/manifest.json", serveWeb({ root: webDist }));
+  app.get("/service-worker.js", serveWeb({ root: webDist }));
+  app.get("/version.json", serveWeb({ root: webDist }));
   // Brand icons (web/static/) — without these the catch-all answers with the
   // SPA shell and the tab shows a generic globe.
-  app.get("/favicon.svg", serveStatic({ root: webDist }));
-  app.get("/favicon.ico", serveStatic({ root: webDist }));
-  app.get("/apple-touch-icon.png", serveStatic({ root: webDist }));
-  app.get("/icon-192.png", serveStatic({ root: webDist }));
-  app.get("/icon-512.png", serveStatic({ root: webDist }));
-  app.get("/icon-512-maskable.png", serveStatic({ root: webDist }));
+  app.get("/favicon.svg", serveWeb({ root: webDist }));
+  app.get("/favicon.ico", serveWeb({ root: webDist }));
+  app.get("/apple-touch-icon.png", serveWeb({ root: webDist }));
+  app.get("/icon-192.png", serveWeb({ root: webDist }));
+  app.get("/icon-512.png", serveWeb({ root: webDist }));
+  app.get("/icon-512-maskable.png", serveWeb({ root: webDist }));
   // Better Stack's frontend tag (web/static/betterstack.js → build root).
-  app.get("/betterstack.js", serveStatic({ root: webDist }));
+  app.get("/betterstack.js", serveWeb({ root: webDist }));
   // The SPA fallback answers client-side routes with the shell. Paths that
   // look like files (a final extension — /postgres/.env, /wp-login.php) are
   // not routes: fall through to the 404 handler instead of serving HTML with
@@ -627,7 +645,7 @@ if (servingSpa) {
   // missing-asset errors too. (Client routes are dotless slugs.)
   app.get("*", (c, next) => {
     if (/\.[a-zA-Z0-9]+$/.test(c.req.path)) return next();
-    return serveStatic({
+    return serveWeb({
       root: webDist,
       rewriteRequestPath: () => "/index.html",
     })(c, next);
