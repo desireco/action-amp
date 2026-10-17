@@ -99,13 +99,17 @@ The `/api/cli/capture` route forwards them to the same `createInboxItemCore`,
 so a CLI capture and a PWA share produce identical InboxItem rows.
 
 **Browser bookmarklet (2026-10-16, #21).** Desktop browsers get the same
-review flow without the share sheet: the Account settings page's
-**Browser bookmarklet** section offers the drag-to-install button (built from
-the current origin, so dev installs the localhost twin) plus a copy-paste
-fallback and steps. `/share` composes the same ShareFields from the query
-when there's no `?pending=` id — a bookmarklet can't write the app origin's
-IndexedDB and a cross-site POST can't carry SameSite cookies, so the query
-handoff is the only path (and reuses the confirm ops unchanged). New-stack
-wiring: `web/src/routes/share/+page.svelte` (query branch),
-`web/src/routes/settings/+page.svelte` (install section),
+review flow without the share sheet: the Preferences tab's **Browser
+bookmarklet** section offers the drag-to-install button (built from the
+current origin, so dev installs the localhost twin) plus a copy-paste
+fallback, steps, and the **After saving** choice — the confirmed capture's
+tab opens the Inbox (triage now, the default) or just closes; a tab that
+can't be script-closed (the OS share launch) falls back to the app home.
+`/share` composes the same ShareFields from the query when there's no
+`?pending=` id — a bookmarklet can't write the app origin's IndexedDB and a
+cross-site POST can't carry SameSite cookies, so the query handoff is the
+only path (and reuses the confirm ops unchanged). Wiring:
+`web/src/routes/share/+page.svelte` (query branch + after-save landing),
+`web/src/routes/settings/preferences/+page.svelte` (install + choice),
+`User.shareAfterSave` + `/rpc/prefs/saveShareAfterSave` (the preference),
 `bookmarklet/` (standalone source + install page + README).

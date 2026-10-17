@@ -381,12 +381,12 @@ test.describe("share target (S12)", () => {
     await expect(page.getByText("Couldn't find that capture.")).toBeVisible();
   });
 
-  test("settings surfaces the bookmarklet install — drag link targets this origin", async ({
+  test("preferences surfaces the bookmarklet install — drag link targets this origin", async ({
     page,
   }) => {
     await loginAs(page, DEV_EMAIL);
     await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
-    await page.goto("/settings");
+    await page.goto("/settings/preferences");
 
     await expect(
       page.getByRole("heading", { name: "Browser bookmarklet" }),
@@ -404,5 +404,53 @@ test.describe("share target (S12)", () => {
     await page.getByRole("button", { name: "Copy code" }).click();
     await expect(page.getByRole("button", { name: "Copied" })).toBeVisible();
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(href);
+
+    // The after-save choice persists through the contract op (inbox default).
+    await expect(
+      page.getByRole("radio", { name: "Triage now — open the Inbox" }),
+    ).toBeChecked();
+    await page.getByRole("radio", { name: "Just close this tab" }).click();
+    await expect(
+      page.getByRole("radio", { name: "Just close this tab" }),
+    ).toBeChecked({ timeout: 10_000 });
+    const prefsRow = await apiPost<{ shareAfterSave: string }>(
+      page,
+      "/rpc/prefs/getPreferences",
+    );
+    expect(prefsRow.shareAfterSave).toBe("close");
+    await page.getByRole("radio", { name: "Triage now — open the Inbox" }).click();
+    await expect(
+      page.getByRole("radio", { name: "Triage now — open the Inbox" }),
+    ).toBeChecked({ timeout: 10_000 });
+  });
+
+  test("after-save 'close' preference closes the share tab on confirm", async ({
+    page,
+  }) => {
+    await loginAs(page, DEV_EMAIL);
+    // Flip the pref straight through the contract op (the settings control is
+    // covered above); restored in the finally so other tests keep the default.
+    await apiPost(page, "/rpc/prefs/saveShareAfterSave", { value: "close" });
+    try {
+      // The real bookmarklet opens the review tab with window.open from a
+      // real page (a script-opened tab is the only kind window.close() may
+      // shut — a goto-opened page ignores close() and the fallback goes
+      // home instead). The opener must be ON a page: from about:blank the
+      // relative /share URL never resolves.
+      await page.goto("/");
+      const popupPromise = page.context().waitForEvent("page");
+      await page.evaluate(
+        (url) => window.open(url),
+        "/share?title=E2E%20close&text=tab&url=https%3A%2F%2Fexample.com%2Fclose",
+      );
+      const popup = await popupPromise;
+      await expect(
+        popup.getByText("Keep this for later."),
+      ).toBeVisible({ timeout: 15_000 });
+      await popup.locator(".aa-share__button").click();
+      await popup.waitForEvent("close", { timeout: 15_000 });
+    } finally {
+      await apiPost(page, "/rpc/prefs/saveShareAfterSave", { value: "inbox" });
+    }
   });
 });

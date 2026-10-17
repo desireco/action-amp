@@ -33,6 +33,10 @@ is no silent one-click path without CORS + token work (out of scope, #21).
 
 - **Be logged in first** — the review page needs your session to confirm;
   logged out, the confirm fails with the standard error copy.
+- **After saving** — the tab goes to your Inbox (triage now) or just closes,
+  per the **After saving** choice in Settings → Preferences (default: Inbox).
+  A tab that can't be script-closed (e.g. the OS share launch) falls back to
+  the app home.
 - **2000-char field cap** — each field truncates to the app's field cap; a
   very long selection gets cut.
 - **Popup blockers** — the capture opens a new tab; a blocker that eats it

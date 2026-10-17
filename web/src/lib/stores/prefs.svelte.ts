@@ -24,6 +24,7 @@ export interface Preferences {
   todayCap: number;
   focusSessionMinutes: 25 | 45;
   reviewPreferences: { today: boolean; week: boolean; month: boolean };
+  shareAfterSave: ShareAfterSave;
   timeZone: string;
 }
 
@@ -43,6 +44,11 @@ export const FOCUS_SESSION_OPTIONS = [25, 45] as const;
 export type FocusSessionMinutes = (typeof FOCUS_SESSION_OPTIONS)[number];
 export const FOCUS_SESSION_DEFAULT: FocusSessionMinutes = 25;
 
+/** Where the share review tab goes once a capture is confirmed (#21). */
+export const SHARE_AFTER_SAVE_OPTIONS = ["inbox", "close"] as const;
+export type ShareAfterSave = (typeof SHARE_AFTER_SAVE_OPTIONS)[number];
+export const SHARE_AFTER_SAVE_DEFAULT: ShareAfterSave = "inbox";
+
 interface PrefsClientSlice {
   updateProfile(input: {
     fullName: string;
@@ -57,6 +63,7 @@ interface PrefsClientSlice {
     week: boolean;
     month: boolean;
   }): Promise<{ ok: true }>;
+  saveShareAfterSave(input: { value: ShareAfterSave }): Promise<{ ok: true }>;
   saveDailyReminder(input: {
     enabled: boolean;
     time: string;
@@ -124,6 +131,10 @@ class PrefsStore {
 
   async saveReviewPreferences(next: { today: boolean; week: boolean; month: boolean }) {
     return await rpc.saveReviewPreferences(next);
+  }
+
+  async saveShareAfterSave(value: ShareAfterSave) {
+    return await rpc.saveShareAfterSave({ value });
   }
 
   async saveDailyReminder(enabled: boolean, time: string, timeZone: string) {

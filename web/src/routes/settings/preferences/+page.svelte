@@ -4,13 +4,14 @@
   // (stepper, dirty-only Save), focus session (25/45 commit-on-click), the
   // daily Today reminder, and the review toggles (optimistic + rollback) are
   // wired; "Completion sounds" and "Momentum" stay "soon" chips — honesty over
-  // fake toggles.
+  // fake toggles. The Browser-bookmarklet section (#21) carries the install
+  // button + the after-save landing choice.
   //
   // No settings-specific keyboard shortcuts (s11 notes §4) — mouse/tap only.
   import { onMount } from "svelte";
   import Chip from "../../../lib/components/ui/Chip.svelte";
   import Field from "../../../lib/components/settings/Field.svelte";
-  import { prefs, systemTimeZone, FOCUS_SESSION_OPTIONS, TODAY_CAP_DEFAULT, TODAY_CAP_MIN, TODAY_CAP_MAX, FOCUS_SESSION_DEFAULT, type FocusSessionMinutes } from "../../../lib/stores/prefs.svelte";
+  import { prefs, systemTimeZone, FOCUS_SESSION_OPTIONS, TODAY_CAP_DEFAULT, TODAY_CAP_MIN, TODAY_CAP_MAX, FOCUS_SESSION_DEFAULT, SHARE_AFTER_SAVE_DEFAULT, type FocusSessionMinutes, type ShareAfterSave } from "../../../lib/stores/prefs.svelte";
   import { enablePushSubscription } from "../../../lib/push";
   import { applyTheme, preferredTheme, type AppTheme } from "../../../lib/theme";
 
@@ -134,6 +135,46 @@
     } catch (error) {
       notificationStatus = "error";
       notificationError = error instanceof Error ? error.message : "Could not update reminders.";
+    }
+  }
+
+  // ---- Share after save (commit-on-click, #21) ----
+  const shareAfterSave = $derived(storedPrefs?.shareAfterSave ?? SHARE_AFTER_SAVE_DEFAULT);
+  let shareStatus = $state<"idle" | "saving" | "error">("idle");
+  let shareError = $state<string | null>(null);
+
+  async function commitShareAfterSave(value: ShareAfterSave) {
+    if (value === shareAfterSave || shareStatus === "saving") return;
+    shareStatus = "saving";
+    shareError = null;
+    try {
+      await prefs.saveShareAfterSave(value);
+      await prefs.loadPreferences();
+      shareStatus = "idle";
+    } catch (error) {
+      shareStatus = "error";
+      shareError =
+        error instanceof Error ? error.message : "Could not save the after-save choice.";
+    }
+  }
+
+  // ---- Browser bookmarklet (#21, moved from the Account tab) ----
+  // The same one-liner as bookmarklet/install.html, built from this origin so
+  // dev installs the localhost twin and prod the real one. Clicking it here
+  // would run it on this page, so the click is caught and the drag hint
+  // shows instead.
+  const bookmarkletHref = `javascript:(function(){var p=new URLSearchParams();p.set('title',document.title.trim().slice(0,2000));p.set('url',location.href);var s=String(getSelection()).trim();if(s)p.set('text',s.slice(0,2000));window.open('${location.origin}/share?'+p)})();`;
+  let bookmarkletCopied = $state(false);
+  let bookmarkletDragHint = $state(false);
+
+  async function copyBookmarklet() {
+    try {
+      await navigator.clipboard.writeText(bookmarkletHref);
+      bookmarkletCopied = true;
+      setTimeout(() => (bookmarkletCopied = false), 2000);
+    } catch {
+      // Clipboard blocked (permissions/insecure context) — the steps below
+      // still cover install via drag.
     }
   }
 
@@ -280,6 +321,77 @@
     </Field>
   {/if}
   {#if notificationError}<p class="aa-settings-error">{notificationError}</p>{/if}
+</section>
+
+<section class="aa-settings-section">
+  <div class="aa-settings-section-head">
+    <h2 class="aa-settings-sh">Browser bookmarklet</h2>
+    <p class="aa-settings-note">
+      A bookmarks-bar button that captures the page you're reading — title,
+      link, and any text you've selected — into the same review your phone's
+      share uses. Nothing is saved until you confirm there.
+    </p>
+  </div>
+  <div class="aa-bookmarklet">
+    <a
+      class="aa-bookmarklet__drag"
+      href={bookmarkletHref}
+      draggable="true"
+      onclick={(e) => {
+        e.preventDefault();
+        bookmarkletDragHint = true;
+      }}
+    >Add to ActionAmp</a>
+    <button type="button" class="aa-settings-btn" onclick={copyBookmarklet}>
+      {bookmarkletCopied ? "Copied" : "Copy code"}
+    </button>
+  </div>
+  {#if bookmarkletDragHint}
+    <p class="aa-bookmarklet__hint" role="status">
+      Drag the button to your bookmarks bar — clicking it here would capture this settings page.
+    </p>
+  {/if}
+  <ol class="aa-bookmarklet__steps">
+    <li>Show your bookmarks bar (Ctrl+Shift+B in Chrome and Firefox).</li>
+    <li>Drag <strong>Add to ActionAmp</strong> onto it — or paste the copied code into a new bookmark's URL field.</li>
+    <li>On any page, click the bookmark: ActionAmp opens in a new tab, prefilled. Add a note, pick a destination, confirm.</li>
+  </ol>
+  <Field
+    label="After saving"
+    description="Where this tab goes once you confirm the capture."
+  >
+    <div
+      class="aa-settings-choice"
+      role="radiogroup"
+      aria-label="After saving"
+      aria-busy={shareStatus === "saving"}
+    >
+      <button
+        type="button"
+        role="radio"
+        aria-checked={shareAfterSave === "inbox"}
+        class="aa-settings-choice__option {shareAfterSave === "inbox" ? "is-selected" : ""}"
+        onclick={() => void commitShareAfterSave("inbox")}
+        disabled={shareStatus === "saving"}
+      >
+        Triage now — open the Inbox
+      </button>
+      <button
+        type="button"
+        role="radio"
+        aria-checked={shareAfterSave === "close"}
+        class="aa-settings-choice__option {shareAfterSave === "close" ? "is-selected" : ""}"
+        onclick={() => void commitShareAfterSave("close")}
+        disabled={shareStatus === "saving"}
+      >
+        Just close this tab
+      </button>
+    </div>
+  </Field>
+  {#if shareError}<p class="aa-settings-error">{shareError}</p>{/if}
+  <p class="aa-bookmarklet__note">
+    Be logged in first — the review page needs your session. Titles and selections are capped at 2,000 characters.
+  </p>
 </section>
 
 <section class="aa-settings-section">

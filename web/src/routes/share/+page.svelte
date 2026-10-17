@@ -42,6 +42,7 @@
     type ResolverProject,
     type ShareFields,
   } from "../../lib/share";
+  import { prefs, SHARE_AFTER_SAVE_DEFAULT } from "../../lib/stores/prefs.svelte";
 
   const MISSING_ERROR_COPY = "Couldn't find that capture.";
   const ERROR_COPY = new Map<string, string>([
@@ -95,7 +96,27 @@
       .catch(() => {
         // The dropdown degrades to Inbox-only; the confirm paths re-validate.
       });
+    // The after-save landing choice; failure degrades to the Inbox default.
+    void prefs.loadPreferences();
   });
+
+  const shareAfterSave = $derived(prefs.preferences?.shareAfterSave ?? SHARE_AFTER_SAVE_DEFAULT);
+
+  /**
+   * The after-save landing (Settings → Preferences): "close" shuts this tab —
+   * the bookmarklet opened it, so window.close works there; a direct visit or
+   * the OS share launch isn't script-closable, so home is the fallback.
+   * "inbox" keeps the usual landings (the Inbox highlight, or the destination
+   * project/list page).
+   */
+  async function landAfterSave(destination: string): Promise<void> {
+    if (shareAfterSave === "close") {
+      window.close();
+      if (!window.closed) await goto("/", { replaceState: true });
+      return;
+    }
+    await goto(destination, { replaceState: true });
+  }
 
   // Load the pending stash when ?pending= changes; ?title=…&text=…&url=
   // (the bookmarklet) skips the stash entirely.
@@ -220,7 +241,7 @@
           attachments: attachments.length ? attachments : undefined,
         });
         await clearPendingShare(pending.id);
-        await goto(`/projects/${listProject.permalink}`, { replaceState: true });
+        await landAfterSave(`/projects/${listProject.permalink}`);
         return;
       }
 
@@ -249,7 +270,7 @@
           attachments: attachments.length ? attachments : undefined,
         });
         await clearPendingShare(pending.id);
-        await goto(`/projects/${targetProject.permalink}`, { replaceState: true });
+        await landAfterSave(`/projects/${targetProject.permalink}`);
         return;
       }
 
@@ -265,7 +286,7 @@
       });
       await clearPendingShare(pending.id);
       // `?item=` is the Inbox page's scroll/highlight contract.
-      await goto(`/inbox?item=${encodeURIComponent(created.id)}`, { replaceState: true });
+      await landAfterSave(`/inbox?item=${encodeURIComponent(created.id)}`);
     } catch (err) {
       submitError = err instanceof Error ? err.message : "Could not add this to your inbox.";
     } finally {
