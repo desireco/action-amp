@@ -336,4 +336,48 @@ test.describe("share target (S12)", () => {
     );
     expect(count).toBe(0);
   });
+
+  test("bookmarklet query handoff: ?title=&text=&url= prefills and confirms into the Inbox", async ({
+    page,
+  }) => {
+    await loginAs(page, DEV_EMAIL);
+    await page.goto(
+      "/share?title=E2E%20bookmarklet&text=Selected%20note&url=https%3A%2F%2Fexample.com%2Fbm",
+    );
+
+    // Same review page as the OS share, prefilled from the query.
+    await expect(page.getByText("Keep this for later.")).toBeVisible();
+    await expect(page.locator(".aa-share__title-input")).toHaveValue(
+      "E2E bookmarklet",
+    );
+    await expect(page.locator(".aa-share__description-input")).toHaveValue(
+      "Selected note",
+    );
+    await expect(page.getByText("example.com/bm")).toBeVisible();
+    await expect(page.locator(".aa-share__button")).toContainText("Add to Inbox");
+
+    // Confirm → the normal authenticated capture op → the inbox.
+    await page.locator(".aa-share__button").click();
+    await expect(page).toHaveURL(/\/inbox\?item=/, { timeout: 15_000 });
+    const itemId = decodeURIComponent(
+      new URL(page.url()).searchParams.get("item") ?? "",
+    );
+    const items = await apiPost<InboxItemDto[]>(page, "/rpc/inbox/list");
+    const created = items.find((item) => item.id === itemId);
+    expect(created?.text).toBe(
+      "E2E bookmarklet: Selected note — https://example.com/bm",
+    );
+  });
+
+  test("bookmarklet handoff blank fields → 'Nothing to capture.'; bare /share unchanged", async ({
+    page,
+  }) => {
+    // Render-only outcomes: the error cards render logged out (same as the
+    // direct-route outcomes test above).
+    await page.goto("/share?title=%20%20");
+    await expect(page.getByText("Nothing to capture.")).toBeVisible();
+
+    await page.goto("/share");
+    await expect(page.getByText("Couldn't find that capture.")).toBeVisible();
+  });
 });

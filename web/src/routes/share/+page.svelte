@@ -17,6 +17,12 @@
    * `?id=<itemId>` (the /api/share 303 target) shows the captured
    * confirmation — the webapp rendered the same "Couldn't find that
    * capture." card for it; the id is fire-and-forget there (error map miss).
+   *
+   * The browser bookmarklet (#21) rides this page too: with no `?pending=`,
+   * `?title=&text=&url=` compose the same ShareFields (same review UI, same
+   * confirm ops) — the only cross-origin handoff that works, since a
+   * bookmarklet can't write this origin's IndexedDB or carry cookies on a
+   * cross-site POST.
    */
   import { onMount } from "svelte";
   import { page } from "$app/state";
@@ -50,6 +56,23 @@
   const pendingId = $derived(new URL(page.url.href).searchParams.get("pending") ?? null);
   const errorParam = $derived(new URL(page.url.href).searchParams.get("error") ?? "");
 
+  // The bookmarklet handoff: ?title=&text=&url= (any of them, without
+  // ?pending=) becomes a pending record straight away. Synthetic id "query"
+  // never exists in the stash, so confirm/discard's clearPendingShare is a
+  // harmless no-op delete — and the prefill effect (keyed on pending.id)
+  // fires exactly once.
+  const QUERY_PENDING_ID = "query";
+  const queryPending = $derived.by(() => {
+    if (pendingId) return null;
+    const params = new URL(page.url.href).searchParams;
+    const fields: ShareFields = {};
+    for (const key of ["title", "text", "url"] as const) {
+      const value = params.get(key);
+      if (value !== null) fields[key] = value;
+    }
+    return Object.keys(fields).length > 0 ? { id: QUERY_PENDING_ID, fields, files: [] } : null;
+  });
+
   let pending = $state<PendingState>(null);
   // The ?pending= effect below sets this on mount; it starts false so the
   // no-pending error card never flashes behind a load.
@@ -74,8 +97,15 @@
       });
   });
 
-  // Load the pending stash when ?pending= changes.
+  // Load the pending stash when ?pending= changes; ?title=…&text=…&url=
+  // (the bookmarklet) skips the stash entirely.
   $effect(() => {
+    const fromQuery = queryPending;
+    if (fromQuery) {
+      pending = fromQuery;
+      loadingPending = false;
+      return;
+    }
     const id = pendingId;
     if (!id) {
       loadingPending = false;
@@ -262,7 +292,7 @@
 
 {#if loadingPending}
   <main class="aa-share"><div class="aa-share__card"><h1 class="aa-share__title">Preparing capture…</h1></div></main>
-{:else if pendingId && pending && capture}
+{:else if pending && capture}
   {#if !capture.text && pending.files.length === 0}
     <main class="aa-share">
       <div class="aa-share__card">
