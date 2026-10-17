@@ -27,6 +27,7 @@ import { user } from "@actionamp/domain/db";
 import { isEntitled } from "@actionamp/domain/billing";
 import {
   prefsContract,
+  SHARE_AFTER_SAVE_OPTIONS,
   TODAY_CAP_MIN,
   TODAY_CAP_MAX,
   FOCUS_SESSION_OPTIONS,
@@ -119,6 +120,7 @@ const getPreferences = ORPC.getPreferences.handler(async ({ context }) => {
       todayReviewEnabled: user.todayReviewEnabled,
       weekReviewEnabled: user.weekReviewEnabled,
       monthReviewEnabled: user.monthReviewEnabled,
+      shareAfterSave: user.shareAfterSave,
       timeZone: user.timeZone,
     })
     .from(user)
@@ -133,6 +135,7 @@ const getPreferences = ORPC.getPreferences.handler(async ({ context }) => {
       week: row?.weekReviewEnabled ?? true,
       month: row?.monthReviewEnabled ?? true,
     },
+    shareAfterSave: row?.shareAfterSave === "close" ? ("close" as const) : ("inbox" as const),
     timeZone: row?.timeZone ?? "UTC",
   };
 });
@@ -195,6 +198,21 @@ const saveReviewPreferences = ORPC.saveReviewPreferences.handler(
         .where(eq(user.id, acting.id));
       return { ok: true as const };
     }),
+);
+
+const saveShareAfterSave = ORPC.saveShareAfterSave.handler(async ({ context, input }) =>
+  guard(async () => {
+    const acting = requireUser(context);
+    // SAFETY: the closed set is also zod-enforced by the contract input.
+    if (!SHARE_AFTER_SAVE_OPTIONS.includes(input.value)) {
+      throw new Error("Share after save must be inbox or close.");
+    }
+    await context.db
+      .update(user)
+      .set({ shareAfterSave: input.value })
+      .where(eq(user.id, acting.id));
+    return { ok: true as const };
+  }),
 );
 
 const saveDailyReminder = ORPC.saveDailyReminder.handler(async ({ context, input }) =>
@@ -261,6 +279,7 @@ export const prefsProcedures = {
   saveTodayCap,
   saveFocusSessionMinutes,
   saveReviewPreferences,
+  saveShareAfterSave,
   saveDailyReminder,
   getNotificationPreferences,
 };

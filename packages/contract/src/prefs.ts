@@ -38,6 +38,11 @@ export const FOCUS_SESSION_OPTIONS = [25, 45] as const;
 export type FocusSessionMinutes = (typeof FOCUS_SESSION_OPTIONS)[number];
 export const FOCUS_SESSION_DEFAULT: FocusSessionMinutes = 25;
 
+/** Where the share review tab goes once a capture is confirmed (#21). */
+export const SHARE_AFTER_SAVE_OPTIONS = ["inbox", "close"] as const;
+export type ShareAfterSave = (typeof SHARE_AFTER_SAVE_OPTIONS)[number];
+export const SHARE_AFTER_SAVE_DEFAULT: ShareAfterSave = "inbox";
+
 /** `24h HH:mm` — the daily-reminder time format (`^([01]\d|2[0-3]):[0-5]\d$`). */
 const ReminderTime = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 
@@ -71,6 +76,7 @@ export const getPreferences = oc.output(
     todayCap: z.number().int(),
     focusSessionMinutes: z.union([z.literal(25), z.literal(45)]),
     reviewPreferences: z.object({ today: z.boolean(), week: z.boolean(), month: z.boolean() }),
+    shareAfterSave: z.union([z.literal("inbox"), z.literal("close")]),
     timeZone: z.string(),
   }),
 );
@@ -88,6 +94,11 @@ export const saveFocusSessionMinutes = oc
 /** Review cadence visibility — saving never touches Review or work records. */
 export const saveReviewPreferences = oc
   .input(z.object({ today: z.boolean(), week: z.boolean(), month: z.boolean() }))
+  .output(z.object({ ok: z.literal(true) }));
+
+/** The share review's after-save landing — Inbox for triage now, or close. */
+export const saveShareAfterSave = oc
+  .input(z.object({ value: z.union([z.literal("inbox"), z.literal("close")]) }))
   .output(z.object({ ok: z.literal(true) }));
 
 /**
@@ -120,8 +131,8 @@ export const getNotificationPreferences = oc.output(
 /**
  * The prefs namespace — paths: POST /rpc/prefs/{updateProfile,getAccount,
  * getPreferences,saveTodayCap,saveFocusSessionMinutes,saveReviewPreferences,
- * saveDailyReminder,getNotificationPreferences}. Composed into the tree by
- * src/router.ts (the composition line lives in
+ * saveShareAfterSave,saveDailyReminder,getNotificationPreferences}. Composed
+ * into the tree by src/router.ts (the composition line lives in
  * docs/plans/slices/s7-s11-wiring.md).
  */
 export const prefsContract = {
@@ -131,6 +142,7 @@ export const prefsContract = {
   saveTodayCap,
   saveFocusSessionMinutes,
   saveReviewPreferences,
+  saveShareAfterSave,
   saveDailyReminder,
   getNotificationPreferences,
 };

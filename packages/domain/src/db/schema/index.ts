@@ -577,6 +577,7 @@ export const user = pgTable("User", {
 	todayReviewEnabled: boolean().default(true).notNull(),
 	weekReviewEnabled: boolean().default(true).notNull(),
 	monthReviewEnabled: boolean().default(true).notNull(),
+	shareAfterSave: text().default('inbox').notNull(),
 	onboardingStage: onboardingStage().default('COMPLETE').notNull(),
 	lastLoginAt: timestamp({ precision: 3, mode: 'date' }),
 	manualAccessGrant: manualAccessGrant(),

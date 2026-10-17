@@ -67,11 +67,13 @@ export {
   prefsContract,
   FOCUS_SESSION_DEFAULT,
   FOCUS_SESSION_OPTIONS,
+  SHARE_AFTER_SAVE_DEFAULT,
+  SHARE_AFTER_SAVE_OPTIONS,
   TODAY_CAP_DEFAULT,
   TODAY_CAP_MAX,
   TODAY_CAP_MIN,
 } from "./prefs.js";
-export type { FocusSessionMinutes } from "./prefs.js";
+export type { FocusSessionMinutes, ShareAfterSave } from "./prefs.js";
 // S2+S3 (capture + inbox/triage) fragment — additive exports of the slice's
 // own schemas only; the router composition line lives in
 // docs/plans/slices/s2-s3-wiring.md.
