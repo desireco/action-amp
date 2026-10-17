@@ -380,4 +380,29 @@ test.describe("share target (S12)", () => {
     await page.goto("/share");
     await expect(page.getByText("Couldn't find that capture.")).toBeVisible();
   });
+
+  test("settings surfaces the bookmarklet install — drag link targets this origin", async ({
+    page,
+  }) => {
+    await loginAs(page, DEV_EMAIL);
+    await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto("/settings");
+
+    await expect(
+      page.getByRole("heading", { name: "Browser bookmarklet" }),
+    ).toBeVisible();
+
+    // The drag link is the one-liner targeting THIS origin (dev → localhost,
+    // prod → app.actionamp.com) — never a hardcoded host.
+    const href =
+      (await page.locator(".aa-bookmarklet__drag").getAttribute("href")) ?? "";
+    const origin = await page.evaluate(() => location.origin);
+    expect(href.startsWith("javascript:")).toBe(true);
+    expect(href).toContain(`${origin}/share?`);
+
+    // The copy fallback puts the same one-liner on the clipboard.
+    await page.getByRole("button", { name: "Copy code" }).click();
+    await expect(page.getByRole("button", { name: "Copied" })).toBeVisible();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(href);
+  });
 });

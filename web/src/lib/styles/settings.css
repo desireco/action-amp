@@ -922,3 +922,58 @@
   font-size: var(--aa-text-sm);
   color: var(--aa-text-2);
 }
+
+/* ============================================================
+   Browser bookmarklet (#21) — the Settings install row
+   ============================================================ */
+.aa-bookmarklet {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--aa-space-md);
+}
+
+.aa-bookmarklet__drag {
+  display: inline-block;
+  border: 1px solid transparent;
+  border-radius: var(--aa-radius-md);
+  background: var(--aa-teal-cta);
+  color: var(--aa-surface);
+  font-size: var(--aa-text-sm);
+  font-weight: var(--aa-weight-semibold);
+  padding: 0.45rem 0.9rem;
+  cursor: grab;
+  text-decoration: none;
+}
+
+.aa-bookmarklet__drag:hover {
+  background: var(--aa-teal-cta-hover);
+}
+
+.aa-bookmarklet__drag:focus-visible {
+  outline: 2px solid var(--aa-teal);
+  outline-offset: 2px;
+}
+
+.aa-bookmarklet__hint,
+.aa-bookmarklet__note {
+  margin: var(--aa-space-sm) 0 0;
+  font-size: var(--aa-text-sm);
+  line-height: var(--aa-leading-snug);
+  color: var(--aa-text-3);
+}
+
+.aa-bookmarklet__steps {
+  margin: var(--aa-space-md) 0 0;
+  padding-left: var(--aa-space-lg);
+  display: grid;
+  gap: var(--aa-space-xs);
+  font-size: var(--aa-text-md);
+  line-height: var(--aa-leading-normal);
+  color: var(--aa-text-2);
+}
+
+.aa-bookmarklet__steps strong {
+  color: var(--aa-text);
+  font-weight: var(--aa-weight-medium);
+}
