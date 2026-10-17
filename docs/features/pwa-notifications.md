@@ -97,3 +97,13 @@ fields and up to four images: `--title`, `--content`, `--source-url`, and `--fil
 <path>` (read, size-checked ≤5MB, base64-encoded; JPEG/PNG/GIF/WebP/HEIC/HEIF).
 The `/api/cli/capture` route forwards them to the same `createInboxItemCore`,
 so a CLI capture and a PWA share produce identical InboxItem rows.
+
+**Browser bookmarklet (2026-10-16, #21).** Desktop browsers get the same
+review flow without the share sheet: the repo's `bookmarklet/` folder ships an
+install page whose bookmarks-bar button opens `/share?title=&text=&url=` with
+the page's title, URL, and text selection. `/share` composes the same
+ShareFields from the query when there's no `?pending=` id — a bookmarklet
+can't write the app origin's IndexedDB and a cross-site POST can't carry
+SameSite cookies, so the query handoff is the only path (and reuses the
+confirm ops unchanged). New-stack wiring: `web/src/routes/share/+page.svelte`
+(query branch) + `bookmarklet/` (source, install page, README).
