@@ -113,3 +113,12 @@ only path (and reuses the confirm ops unchanged). Wiring:
 `web/src/routes/settings/preferences/+page.svelte` (install + choice),
 `User.shareAfterSave` + `/rpc/prefs/saveShareAfterSave` (the preference),
 `bookmarklet/` (standalone source + install page + README).
+
+**Chrome extension (2026-10-18, #22).** The recommended user-facing capture
+(`extension/`): a real toolbar icon + Alt+Shift+A opens `/share?title=&text=&url=`
+for the active tab — the same grammar and review flow as the bookmarklet.
+Permissions stay minimal (`activeTab`, `scripting`, `storage`); the target
+origin is configurable in its Options for dev. The bookmarklet remains the
+no-install option — its generic bookmarks-bar icon is a browser limitation
+(favicons for `javascript:` bookmarks aren't a thing), which is why the
+extension exists.

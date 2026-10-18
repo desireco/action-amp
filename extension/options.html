@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  /* Options: one field, system font, calm — same tone as the app. */
+  body {
+    margin: 0;
+    padding: 16px;
+    width: 340px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #1c1c1a;
+  }
+  label { display: block; font-weight: 600; margin-bottom: 4px; }
+  p { margin: 0 0 12px; color: #71717a; }
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    border: 1px solid #d4d4d8;
+    border-radius: 6px;
+    font: inherit;
+  }
+  .row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+  button {
+    font: inherit;
+    padding: 6px 14px;
+    border: 1px solid #d4d4d8;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+  }
+  button:hover { border-color: #0d9488; color: #0d9488; }
+  #status { color: #0d9488; }
+</style>
+</head>
+<body>
+  <label for="origin">ActionAmp address</label>
+  <p>Where captures open. The default is production; for local testing use http://localhost:5174.</p>
+  <input id="origin" type="url" placeholder="https://app.actionamp.com" />
+  <div class="row">
+    <button type="button" id="save">Save</button>
+    <span id="status" role="status"></span>
+  </div>
+  <script type="module" src="options.js"></script>
+</body>
+</html>
