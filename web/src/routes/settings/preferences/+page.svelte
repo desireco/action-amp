@@ -341,7 +341,11 @@
         e.preventDefault();
         bookmarkletDragHint = true;
       }}
-    >Add to ActionAmp</a>
+    ><span class="aa-bookmarklet__brand" aria-hidden="true">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+          <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </span>Add to ActionAmp</a>
     <button type="button" class="aa-settings-btn" onclick={copyBookmarklet}>
       {bookmarkletCopied ? "Copied" : "Copy code"}
     </button>

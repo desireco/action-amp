@@ -25,7 +25,9 @@
     margin: 24px 0;
   }
   .install a {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     padding: 10px 16px;
     border: 1px solid #d4d4d8;
     border-radius: 8px;
@@ -36,6 +38,18 @@
     cursor: grab;
   }
   .install a small { display: block; font-weight: 400; color: #a1a1aa; }
+  /* The ActionAmp brand mark — the app's check tile (/share page pattern). */
+  .install a .brand {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    background: #0d9488;
+    color: #fff;
+    flex: none;
+  }
   ol { padding-left: 20px; color: #52525b; }
   ol li { margin: 6px 0; }
   details { margin-top: 24px; }
@@ -59,8 +73,8 @@
   <p>A bookmarks-bar button that captures the page you're reading — title, URL, and any text you have selected — and opens it in ActionAmp's share review, the same confirm flow your phone's share sheet uses. Nothing is captured until you confirm there.</p>
 
   <div class="install">
-    <a href="javascript:(function(){var p=new URLSearchParams();p.set('title',document.title.trim().slice(0,2000));p.set('url',location.href);var s=String(getSelection()).trim();if(s)p.set('text',s.slice(0,2000));window.open('https://app.actionamp.com/share?'+p)})();">Add to ActionAmp<small>production — drag me to the bookmarks bar</small></a>
-    <a href="javascript:(function(){var p=new URLSearchParams();p.set('title',document.title.trim().slice(0,2000));p.set('url',location.href);var s=String(getSelection()).trim();if(s)p.set('text',s.slice(0,2000));window.open('http://localhost:5174/share?'+p)})();">Add to ActionAmp (dev)<small>localhost:5174 — for local testing</small></a>
+    <a href="javascript:(function(){var p=new URLSearchParams();p.set('title',document.title.trim().slice(0,2000));p.set('url',location.href);var s=String(getSelection()).trim();if(s)p.set('text',s.slice(0,2000));window.open('https://app.actionamp.com/share?'+p)})();"><span class="brand" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Add to ActionAmp<small>production — drag me to the bookmarks bar</small></span></a>
+    <a href="javascript:(function(){var p=new URLSearchParams();p.set('title',document.title.trim().slice(0,2000));p.set('url',location.href);var s=String(getSelection()).trim();if(s)p.set('text',s.slice(0,2000));window.open('http://localhost:5174/share?'+p)})();"><span class="brand" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Add to ActionAmp (dev)<small>localhost:5174 — for local testing</small></span></a>
   </div>
 
   <ol>

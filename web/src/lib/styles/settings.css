@@ -934,7 +934,9 @@
 }
 
 .aa-bookmarklet__drag {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--aa-space-sm);
   border: 1px solid transparent;
   border-radius: var(--aa-radius-md);
   background: var(--aa-teal-cta);
@@ -944,6 +946,18 @@
   padding: 0.45rem 0.9rem;
   cursor: grab;
   text-decoration: none;
+}
+
+/* The ActionAmp brand mark (the /share page's check tile) — icon + label. */
+.aa-bookmarklet__brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--aa-radius-sm);
+  background: var(--aa-surface);
+  color: var(--aa-teal-cta);
 }
 
 .aa-bookmarklet__drag:hover {
